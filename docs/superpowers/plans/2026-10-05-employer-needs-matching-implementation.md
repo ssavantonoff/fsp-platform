@@ -194,7 +194,7 @@ The provider is an integration abstraction, not a persistence owner. Future Asse
 - Produces frozen `EligibleCandidate(candidate: CandidateMatchInput, verified_grade: Grade, normalized_assessment_score: int, assessment_verified_at: datetime | None, grade_fit: float)`; construct it only after validating the provider DTO, so downstream grade/score types are nonnullable.
 - Produces `grade_fit(required_grade: Grade, verified_grade: Grade) -> float | None` and `eligible_candidate(need: NeedCriteria, candidate: CandidateMatchInput, assessment: CandidateAssessment | None) -> EligibleCandidate | None`.
 
-- [ ] Write parameterized `test_grade_compatibility`: literal matrix JUNIOR→JUNIOR1/MIDDLE0.75/SENIORNone, MIDDLE→JUNIORNone/MIDDLE1/SENIOR0.75, SENIOR→JUNIORNone/MIDDLENone/SENIOR1.
+- [x] Write parameterized `test_grade_compatibility`: literal matrix JUNIOR→JUNIOR1/MIDDLE0.75/SENIORNone, MIDDLE→JUNIORNone/MIDDLE1/SENIOR0.75, SENIOR→JUNIORNone/MIDDLENone/SENIOR1.
 
 Test assertions use the producing interface directly, for example:
 
@@ -205,15 +205,15 @@ assert grade_fit(Grade.MIDDLE, Grade.JUNIOR) is None
 assert grade_fit(Grade.JUNIOR, Grade.SENIOR) is None
 ```
 
-- [ ] Run `pytest -q tests/test_matching_rules.py -k grade_compatibility`; expect absent function/module failure.
-- [ ] Implement the explicit compatibility lookup in `matching_rules.py`.
-- [ ] Run the grade tests; expect PASS.
-- [ ] Write `test_eligibility_hard_filters` with one altered input per case: wrong specialization, consent false, null verified grade, incompatible grade, one missing must-have, missing provider record, mismatched record candidate ID, null score, score -1/101/NaN/infinity; each `result is None`. `test_eligible_zero_score` asserts score0 is eligible with otherwise valid inputs. `test_consent_false_excludes_verified_perfect_candidate` uses score100, all skills and exact grade.
-- [ ] Run `pytest -q tests/test_matching_rules.py -k 'eligibility or eligible_zero or consent_false'`; expect missing eligibility function failure.
-- [ ] Implement ordered filters according to the spec: consent, specialization, present grade, compatible grade, all must-have, available finite 0–100 score. Return no eligible object on failure; do not call scoring here.
-- [ ] Run `pytest -q tests/test_matching_rules.py`; expect PASS.
-- [ ] Run `pytest -q tests/test_candidate_assessments.py`; expect PASS.
-- [ ] Commit declared files: `feat: implement matching hard-filter eligibility`.
+- [x] Run `pytest -q tests/test_matching_rules.py -k grade_compatibility`; expect absent function/module failure.
+- [x] Implement the explicit compatibility lookup in `matching_rules.py`.
+- [x] Run the grade tests; expect PASS.
+- [x] Write `test_eligibility_hard_filters` with one altered input per case: wrong specialization, consent false, null verified grade, incompatible grade, one missing must-have, missing provider record, mismatched record candidate ID, null score, score -1/101/NaN/infinity; each `result is None`. `test_eligible_zero_score` asserts score0 is eligible with otherwise valid inputs. `test_consent_false_excludes_verified_perfect_candidate` uses score100, all skills and exact grade.
+- [x] Run `pytest -q tests/test_matching_rules.py -k 'eligibility or eligible_zero or consent_false'`; expect missing eligibility function failure.
+- [x] Implement ordered filters according to the spec: consent, specialization, present grade, compatible grade, all must-have, available finite 0–100 score. Return no eligible object on failure; do not call scoring here.
+- [x] Run `pytest -q tests/test_matching_rules.py`; expect PASS.
+- [x] Run `pytest -q tests/test_candidate_assessments.py`; expect PASS.
+- [x] Commit declared files: `feat: implement matching hard-filter eligibility`.
 
 ### Task 5: Pure scoring, explainable contributions and deterministic ranking
 
