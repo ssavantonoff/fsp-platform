@@ -2,8 +2,9 @@
 
 ## Status and intent
 
-Architecture approved by the user on 2026-10-05. This written specification
-requires review before the implementation plan and product implementation.
+Architecture initially approved by the user on 2026-10-05, with subsequent
+team-agreed corrections recorded below. This written specification is NOT approved;
+it requires review before the implementation plan and product implementation.
 
 Deliver Employer Profile → Create Need → Publish Need → Eligibility → Matching
 → Ranking → Explainability → Candidate Preview. Preserve the existing platform
@@ -49,35 +50,46 @@ Add one normalized association object EmployerNeedSkill:
 - Composite PK (need_id, skill_id) forbids duplicate and cross-kind assignments.
 - Eager/batched relationship loading; deterministic skill ordering.
 
-Add CandidateCompetenceSnapshot with candidate_id PK/FK → candidate_profiles.id,
-normalized_assessment_score constrained to finite 0–100, and verified_at.
-This is a technical storage adapter, not an assessment attempt or skill evidence.
+CandidateProfile is the sole source of truth for current verification/assessment
+state. Keep its existing verified_grade and add nullable normalized_assessment_score
+(finite 0–100 when present) and nullable assessment_verified_at. Neither of the
+last two fields exists in the inspected baseline model; future TASK O1
+implementation must add them through a new Alembic migration. Assessment history
+is outside TASK O1.
 
-Migration `0002`, down_revision `0001`, creates the three new tables and required
-indexes/checks. Do not rewrite `0001` or use create_all(). Downgrade removes only
-O1 tables. Verify upgrade 0001 → 0002 → downgrade 0001 → upgrade head, existing
+Future migration `0002`, down_revision `0001`, creates the two need-related tables,
+adds the two assessment columns to candidate_profiles, and adds required
+indexes/checks. Do not create the migration at this specification-review stage.
+Do not rewrite `0001` or use create_all(). Downgrade removes only O1 tables and
+the two added columns; existing verified_grade and baseline tables remain intact.
+Verify upgrade 0001 → 0002 → downgrade 0001 → upgrade head, existing baseline
 data preservation, and Alembic model/schema consistency on PostgreSQL.
 
 ## Assessment integration boundary
 
-Define CandidateAssessmentProvider as a typed protocol with one batch operation:
+Keep CandidateAssessmentProvider as a read-only batch abstraction over current
+CandidateProfile state: verified_grade, nullable normalized_assessment_score and
+nullable assessment_verified_at. Conceptually, it receives candidate profile IDs
+and returns their current assessment data in batches. Select the concrete interface
+during implementation to fit the existing synchronous Session/service patterns;
+this specification does not prescribe a method signature or add a repository layer.
 
-`get_scores(candidate_ids: Sequence[str]) -> Mapping[str, float]`
+CandidateProfile is the only current source of truth. The future Testing Engine
+writes these canonical fields; Matching only reads them and never modifies any of
+the three. Matching depends on the provider contract, not future Testing Engine
+tables or implementation details. Do not design assessment history in TASK O1.
 
-IDs refer to CandidateProfile.id. A missing mapping entry means no normalized
-assessment is available. Values must be finite and in 0–100; zero is a valid
-available score. Invalid values fail eligibility, never become a fallback score.
+A missing candidate entry or normalized_assessment_score = null fails eligibility
+before scoring. Present scores must be finite and in 0–100; zero is a valid available
+score. Invalid values fail eligibility, never become a fallback score. Assessment
+timestamps do not add a scoring factor or an additional hard filter.
 
-The DB adapter reads snapshots in batches. Matching receives this contract through
-dependency injection and never queries snapshot internals itself. Tests can inject
-an in-memory provider. A future Testing Engine can replace the adapter without
-changing eligibility, scoring, ranking or employer API.
-
-Persisted storage is justified because the existing repository has no normalized
-assessment source and O1 requires a working endpoint/demo flow, not only unit tests.
-Only trusted internal code/explicit demo seeding may populate snapshots. Add no
-public score-write endpoint and no candidate/employer ability to write verified_grade.
-Do not derive normalized scores from declared_grade, raw percentages or FSP IDs.
+No public, employer or manual API may write assessment scores, verified_grade or
+assessment_verified_at. Future unit/integration tests may prepare canonical fields
+through fixtures/factories/seed following existing test patterns; this is not a
+production write API. Tests may inject an in-memory read provider. Do not derive
+normalized scores from declared_grade, raw percentages or FSP IDs; raw percentages
+from different assessments must not be compared directly.
 
 ## Need API, validation and lifecycle
 
@@ -116,14 +128,20 @@ CLOSED is terminal. No delete, reopen or invitation behavior.
 
 Keep eligibility and scoring logically separate. Eligibility requires, in order:
 
-1. Exact specialization (BACKEND / FRONTEND / DATA_ML).
-2. verified_grade present.
-3. Compatible verified grade.
-4. All must-have skill IDs present in profile skills.
-5. Available valid normalized score from the provider.
+1. CandidateProfile.personal_data_consent == true.
+2. Exact specialization (BACKEND / FRONTEND / DATA_ML).
+3. verified_grade present.
+4. Compatible verified grade.
+5. All must-have skill IDs present in profile skills.
+6. Available valid normalized_assessment_score from the provider.
+
+All six hard filters must pass before scoring. personal_data_consent = false
+excludes a candidate from new ranked matching results regardless of specialization,
+verified_grade, assessment score, skills, experience or FSP. A null normalized score
+also excludes the candidate before scoring; no declared-grade fallback is allowed.
 
 declared_grade never enters the matching input contract. Skills are self-declared;
-snapshot score does not verify individual skills. Do not label them verified.
+an assessment score does not verify individual skills. Do not label them verified.
 
 | Required grade | Eligible candidate grade and GradeFit |
 | --- | --- |
@@ -165,8 +183,10 @@ professional_fit_score, breakdown, matched_must_have_skills,
 matched_nice_to_have_skills and missing_nice_to_have_skills.
 
 User-approved privacy choice: exclude free-text about, which could contain contacts.
-Also exclude email, phone, Telegram/messenger fields, address, fsp_id, consent and
-consent timestamp, user_id, full surname, declared_grade and other internal fields.
+Also exclude email, phone, Telegram/messenger fields, address, fsp_id,
+personal_data_consent, personal_data_consent_at, assessment_verified_at, user_id,
+full surname, declared_grade and other internal fields. personal_data_consent is
+an internal eligibility field and must never be returned in employer preview responses.
 No separate endpoint reveals full candidate data or contacts.
 
 Breakdown contains assessment, grade (including exact_match), nice_to_have
@@ -206,7 +226,10 @@ Tests precede implementation and exercise behavior:
 - Need creation, roles, anonymous access, ownership on all routes, trusted Origin,
   invalid IDs/skills/duplicates/overlap/missing must-have/salary/experience/extra fields,
   atomic rejected updates, DRAFT editing and lifecycle restrictions.
-- Every specialization/verified-grade/grade/must-have/score eligibility branch,
+- Required backend test: a verified candidate with valid specialization, all required
+  skills and an available assessment, but personal_data_consent = false, is excluded
+  from matching results before scoring.
+- Every consent/specialization/verified-grade/grade/must-have/score eligibility branch,
   including score zero and invalid/nonfinite provider values.
 - Independent numeric expectations for each contribution, experience cap/missing/zero,
   all optional-factor exclusions and renormalization, score bounds.
