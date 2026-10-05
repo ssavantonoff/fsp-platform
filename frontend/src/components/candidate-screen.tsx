@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/api";
 import { gradeLabels, specializationLabels } from "@/types";
 import type { CandidateProfile, Grade, Skill, Specialization } from "@/types";
+import { dateLabel } from "@/assessment";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
 
@@ -89,6 +90,14 @@ function CandidateContent({ edit }: { edit: boolean }) {
             ? gradeLabels[profile.verified_grade]
             : "не подтверждён"}
         </dd>
+        <dt>Результат assessment</dt>
+        <dd>
+          {profile.normalized_assessment_score === null
+            ? "не подтверждён"
+            : `${profile.normalized_assessment_score} / 100`}
+        </dd>
+        <dt>Дата подтверждения</dt>
+        <dd>{dateLabel(profile.assessment_verified_at)}</dd>
         <dt>Навыки</dt>
         <dd>{profile.skills.map((s) => s.name).join(", ") || "Не указаны"}</dd>
         <dt>Город</dt>
@@ -102,9 +111,14 @@ function CandidateContent({ edit }: { edit: boolean }) {
         <dt>Согласие на обработку данных</dt>
         <dd>{profile.personal_data_consent ? "Дано" : "Не дано"}</dd>
       </dl>
-      <Link className="button" href="/candidate/edit">
-        Редактировать профиль
-      </Link>
+      <div className="actions">
+        <Link className="button" href="/candidate/edit">
+          Редактировать профиль
+        </Link>
+        <Link className="button secondary" href="/candidate/assessment">
+          Подтвердить уровень
+        </Link>
+      </div>
     </section>
   );
 }

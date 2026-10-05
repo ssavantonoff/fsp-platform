@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, field_validator
@@ -79,6 +79,8 @@ class CandidateOut(BaseModel):
     specialization: Specialization
     declared_grade: Grade
     verified_grade: Grade | None
+    normalized_assessment_score: int | None
+    assessment_verified_at: datetime | None
     years_of_experience: float | None
     fsp_id: str | None
     personal_data_consent: bool
@@ -86,6 +88,13 @@ class CandidateOut(BaseModel):
     skills: list[SkillOut]
     created_at: datetime
     updated_at: datetime
+
+    @field_validator(
+        "assessment_verified_at", "personal_data_consent_at", "created_at", "updated_at"
+    )
+    @classmethod
+    def utc_dates(cls, value: datetime | None) -> datetime | None:
+        return value.replace(tzinfo=UTC) if value and value.tzinfo is None else value
 
 
 class EmployerWrite(InputModel):

@@ -14,6 +14,7 @@ from app.models import (
     User,
     utcnow,
 )
+from app.question_bank import seed_questions
 from app.security import password_hasher
 
 SKILLS = ["Python", "Django", "FastAPI", "PostgreSQL", "React", "TypeScript", "SQL"]
@@ -22,6 +23,7 @@ SKILLS = ["Python", "Django", "FastAPI", "PostgreSQL", "React", "TypeScript", "S
 def seed(db: Session, *, demo: bool = False, demo_password: str | None = None) -> None:
     # Repeated runs preserve existing accounts and commit all seed data together.
     with db.begin():
+        seed_questions(db)
         for name in SKILLS:
             if db.scalar(select(Skill).where(Skill.name == name)) is None:
                 db.add(Skill(name=name))

@@ -64,6 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: cp .env.example .env
       - run: docker compose up --build -d --wait --wait-timeout 180
+      - run: docker compose exec -T backend python -m app.seed --demo && docker compose exec -T backend python -m app.seed --demo
       - run: curl --fail http://localhost:8000/health && curl --fail http://localhost:3000/api/skills
       - if: always()
         run: docker compose logs && docker compose down

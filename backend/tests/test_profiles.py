@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import select
 
-from app.models import CandidateProfile, Grade
+from app.models import CandidateProfile, Grade, utcnow
 
 
 @pytest.mark.parametrize(
@@ -91,6 +91,8 @@ def test_existing_verified_grade_is_preserved(
             select(CandidateProfile).where(CandidateProfile.user_id == user["id"])
         )
         profile.verified_grade = Grade.MIDDLE
+        profile.normalized_assessment_score = 80
+        profile.assessment_verified_at = utcnow()
         db.commit()
     candidate_data["declared_grade"] = "SENIOR"
     assert (
