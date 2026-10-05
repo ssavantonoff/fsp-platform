@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "status": "DRAFT_FOR_HUMAN_FREEZE",
   "created_against_main": "9892400d57b57fe3104d1871fa3513e56e24c4b5",
   "created_at": "2026-10-05T14:32:03Z",
@@ -10,7 +10,7 @@
     "matching_implementation_read": false,
     "production_ranking_used": false,
     "professional_fit_calculated": false,
-    "expectations_authoring": "Вручную, по требованиям P1; генерация Markdown только отображает эти заранее заданные ожидания."
+    "expectations_authoring": "Ручной qualitative ranking по P1 и human review v2; hard eligibility следует только frozen product matrix и обязательным условиям. Matching formula/output не использовались."
   },
   "skill_catalog": {
     "source_path": "backend/app/seed.py",
@@ -28,8 +28,7 @@
   "grade_compatibility": {
     "JUNIOR": [
       "JUNIOR",
-      "MIDDLE",
-      "SENIOR"
+      "MIDDLE"
     ],
     "MIDDLE": [
       "MIDDLE",
@@ -39,7 +38,7 @@
       "SENIOR"
     ]
   },
-  "eligibility_policy": "Нужны consent=true, совпадение specialization, verified_grade из compatible grades, все must-have и непустой assessment score. Nice-to-have и target experience — не hard filters.",
+  "eligibility_policy": "Нужны consent=true, совпадающая specialization, verified_grade строго из frozen product matrix, все must-have и непустой assessment score. Verification triple canonical: либо grade/score/assessment_verified_at все заполнены, либо все null. Nice-to-have и target experience — не hard filters.",
   "score_interpretation": "Score используется как один качественный сигнал. Scores разных grades не являются психометрически эквивалентной шкалой.",
   "needs": [
     {
@@ -122,7 +121,8 @@
         "Django",
         "PostgreSQL"
       ],
-      "years_of_experience": 3
+      "years_of_experience": 3,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C02",
@@ -137,7 +137,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 7
+      "years_of_experience": 7,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C03",
@@ -150,7 +151,8 @@
         "FastAPI",
         "PostgreSQL"
       ],
-      "years_of_experience": 3
+      "years_of_experience": 3,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C04",
@@ -165,7 +167,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 1
+      "years_of_experience": 1,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C05",
@@ -180,7 +183,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 12
+      "years_of_experience": 12,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C06",
@@ -194,7 +198,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 5
+      "years_of_experience": 5,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C07",
@@ -207,7 +212,8 @@
         "Django",
         "SQL"
       ],
-      "years_of_experience": 1
+      "years_of_experience": 1,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C08",
@@ -221,7 +227,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 6
+      "years_of_experience": 6,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C09",
@@ -236,7 +243,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 3
+      "years_of_experience": 3,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C10",
@@ -251,7 +259,8 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 4
+      "years_of_experience": 4,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     },
     {
       "candidate_id": "C11",
@@ -266,22 +275,61 @@
         "PostgreSQL",
         "SQL"
       ],
-      "years_of_experience": 4
+      "years_of_experience": 4,
+      "assessment_verified_at": null
     },
     {
       "candidate_id": "C12",
       "specialization": "BACKEND",
       "verified_grade": "SENIOR",
-      "normalized_assessment_score": null,
+      "normalized_assessment_score": 80,
       "personal_data_consent": true,
       "skills": [
         "Python",
-        "FastAPI",
         "Django",
-        "PostgreSQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 4,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "candidate_id": "C13",
+      "specialization": "BACKEND",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 95,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
         "SQL"
       ],
-      "years_of_experience": 8
+      "years_of_experience": 0.5,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "candidate_id": "C14",
+      "specialization": "BACKEND",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 75,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "Django"
+      ],
+      "years_of_experience": 2,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
+    },
+    {
+      "candidate_id": "C15",
+      "specialization": "BACKEND",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 90,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "SQL"
+      ],
+      "years_of_experience": 2,
+      "assessment_verified_at": "2026-10-01T12:00:00Z"
     }
   ],
   "expectations": {
@@ -301,7 +349,7 @@
             "missing_must_have_skill"
           ],
           "reasons": [
-            "JUNIOR ниже требуемого MIDDLE.",
+            "JUNIOR несовместим с required MIDDLE по frozen product matrix.",
             "Отсутствует must-have FastAPI."
           ]
         },
@@ -336,15 +384,43 @@
           ],
           "reasons": [
             "verified_grade=null: нет подтверждённой квалификации.",
-            "normalized_assessment_score=null."
+            "normalized_assessment_score=null; assessment_verified_at=null: canonical unverified profile."
           ]
         },
         "C12": {
           "reason_codes": [
-            "missing_assessment_score"
+            "missing_must_have_skill"
           ],
           "reasons": [
-            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+            "Отсутствует must-have FastAPI."
+          ]
+        },
+        "C13": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR несовместим с required MIDDLE по frozen product matrix.",
+            "Отсутствует must-have FastAPI."
+          ]
+        },
+        "C14": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR несовместим с required MIDDLE по frozen product matrix.",
+            "Отсутствует must-have FastAPI."
+          ]
+        },
+        "C15": {
+          "reason_codes": [
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "Отсутствует must-have FastAPI."
           ]
         }
       },
@@ -415,15 +491,53 @@
     "H2": {
       "eligible": [
         "C01",
-        "C02",
-        "C03",
         "C04",
-        "C05",
-        "C06",
         "C07",
-        "C08"
+        "C13",
+        "C14",
+        "C15"
       ],
       "excluded": {
+        "C02": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "SENIOR несовместим с required JUNIOR по frozen product matrix."
+          ]
+        },
+        "C03": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "SENIOR несовместим с required JUNIOR по frozen product matrix."
+          ]
+        },
+        "C05": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "SENIOR несовместим с required JUNIOR по frozen product matrix."
+          ]
+        },
+        "C06": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "SENIOR несовместим с required JUNIOR по frozen product matrix."
+          ]
+        },
+        "C08": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "SENIOR несовместим с required JUNIOR по frozen product matrix."
+          ]
+        },
         "C09": {
           "reason_codes": [
             "specialization_mismatch"
@@ -447,79 +561,97 @@
           ],
           "reasons": [
             "verified_grade=null: нет подтверждённой квалификации.",
-            "normalized_assessment_score=null."
+            "normalized_assessment_score=null; assessment_verified_at=null: canonical unverified profile."
           ]
         },
         "C12": {
           "reason_codes": [
-            "missing_assessment_score"
+            "incompatible_grade"
           ],
           "reasons": [
-            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+            "SENIOR несовместим с required JUNIOR по frozen product matrix."
           ]
         }
       },
       "expected_top5": [
         "C07",
         "C04",
-        "C01",
-        "C02",
-        "C08"
+        "C13",
+        "C14",
+        "C15"
       ],
       "ranking_rationales": [
         {
           "position": 1,
           "candidate_id": "C07",
-          "rationale": "Exact Junior, один год опыта, оба optional skill Django/SQL. Профиль наиболее точно соответствует базовым задачам под наставничеством."
+          "rationale": "Exact Junior, год опыта и оба optional skill Django/SQL. Выше C04: при одинаковых полезных skills и стаже выбрана точность Junior grade для задач под наставничеством; сильный результат Middle assessment C04 не уравнивается с Junior score. Выше C13: полнота stack и готовность к базовой работе предпочтены Junior assessment 95 и меньшему стажу; close call, сравнение score только внутри Junior."
         },
         {
           "position": 2,
           "candidate_id": "C04",
-          "rationale": "Совместимый Middle, один год опыта и полный полезный Django/SQL stack. Выше C01: более сильный результат внутри Middle и SQL предпочтены дополнительным двум годам опыта C01."
+          "rationale": "Compatible Middle с годом опыта и полным Django/SQL stack. Выше C13: готовность к задачам в существующем Django backend предпочтена exact Junior и его сильному результату; close call, одинаковые баллы разных grades не считаются эквивалентными."
         },
         {
           "position": 3,
-          "candidate_id": "C01",
-          "rationale": "Middle ближе к требуемому Junior, чем Senior-профили; три года опыта и Django полезны. Выше C02: близость grade/стажа предпочтена SQL и семи годам опыта C02; close call, баллы разных grades напрямую не сравниваются."
+          "candidate_id": "C13",
+          "rationale": "Exact Junior с сильным результатом своего assessment и SQL, но без Django и с половиной года опыта. Выше C14: assessment внутри Junior и SQL предпочтены Django и большему опыту C14; close call."
         },
         {
           "position": 4,
-          "candidate_id": "C02",
-          "rationale": "Оба optional skill и сильный результат Senior assessment. Выше C08: при одинаковом полезном H2 stack выбран более высокий результат внутри Senior; стаж C08 на год ближе к ориентиру — встречный аргумент."
+          "candidate_id": "C14",
+          "rationale": "Exact Junior, Django и два года опыта; SQL отсутствует. Выше C15: соответствие уровню задач под наставничеством и Django предпочтены более высокому verified grade и SQL у C15; close call, scores разных grades напрямую не сравниваются."
         },
         {
           "position": 5,
-          "candidate_id": "C08",
-          "rationale": "Оба optional skill Django/SQL. Выше C06: полнота фундаментального stack и более сильный результат в том же Senior assessment предпочтены стажу C06 на год ближе к ориентиру; close call. FastAPI не нужен H2."
+          "candidate_id": "C15",
+          "rationale": "Compatible Middle, SQL и два года опыта. Выше C01 (шестого eligible): более высокий assessment внутри Middle и SQL предпочтены Django и дополнительному году опыта C01; close call. FastAPI/PostgreSQL не являются требованиями H2."
         }
       ],
       "ambiguous_tradeoffs": [
         {
           "candidates": [
+            "C07",
+            "C13"
+          ],
+          "preferred_candidate": "C07",
+          "close_call": true,
+          "rationale": "Junior 85, Django/SQL и год опыта против Junior 95, только SQL и половины года; готовность и полный optional stack против assessment."
+        },
+        {
+          "candidates": [
             "C04",
-            "C01"
+            "C13"
           ],
           "preferred_candidate": "C04",
           "close_call": true,
-          "rationale": "Middle 95, Django/SQL и опыт 1 против Middle 85, без SQL и опыта 3; выбран профиль ближе к базовым задачам."
+          "rationale": "Compatible Middle с Django/SQL и годом опыта против exact Junior с SQL и половиной года; stack/готовность против точности grade, без уравнивания scores разных уровней."
         },
         {
           "candidates": [
-            "C01",
-            "C02"
+            "C13",
+            "C14"
           ],
-          "preferred_candidate": "C01",
+          "preferred_candidate": "C13",
           "close_call": true,
-          "rationale": "Более близкий к Junior Middle против более опытного Senior с полным optional stack; scores разных grades не уравниваются."
+          "rationale": "Junior 95, SQL и опыт 0.5 против Junior 75, Django и опыта 2; assessment/SQL против Django и практического стажа."
         },
         {
           "candidates": [
-            "C08",
-            "C06"
+            "C14",
+            "C15"
           ],
-          "preferred_candidate": "C08",
+          "preferred_candidate": "C14",
           "close_call": true,
-          "rationale": "Оба optional skill и Senior 85 при опыте 6 против отсутствия Django, Senior 80 и опыта 5; стаж C06 ближе к цели."
+          "rationale": "Exact Junior с Django против compatible Middle с SQL при одинаковом опыте 2; точность grade и Django против более высокого grade и SQL."
+        },
+        {
+          "candidates": [
+            "C15",
+            "C01"
+          ],
+          "preferred_candidate": "C15",
+          "close_call": true,
+          "rationale": "Middle 90, SQL и опыт 2 против Middle 85, Django и опыта 3; assessment/SQL против Django и дополнительного опыта на границе Top-5."
         }
       ]
     },
@@ -529,7 +661,8 @@
         "C03",
         "C05",
         "C06",
-        "C08"
+        "C08",
+        "C12"
       ],
       "excluded": {
         "C01": {
@@ -537,7 +670,7 @@
             "incompatible_grade"
           ],
           "reasons": [
-            "MIDDLE ниже требуемого SENIOR."
+            "MIDDLE несовместим с required SENIOR по frozen product matrix."
           ]
         },
         "C04": {
@@ -545,7 +678,7 @@
             "incompatible_grade"
           ],
           "reasons": [
-            "MIDDLE ниже требуемого SENIOR."
+            "MIDDLE несовместим с required SENIOR по frozen product matrix."
           ]
         },
         "C07": {
@@ -554,7 +687,7 @@
             "missing_must_have_skill"
           ],
           "reasons": [
-            "JUNIOR ниже требуемого SENIOR.",
+            "JUNIOR несовместим с required SENIOR по frozen product matrix.",
             "Отсутствует must-have PostgreSQL."
           ]
         },
@@ -565,7 +698,7 @@
           ],
           "reasons": [
             "FRONTEND не совпадает с BACKEND Need.",
-            "MIDDLE ниже требуемого SENIOR."
+            "MIDDLE несовместим с required SENIOR по frozen product matrix."
           ]
         },
         "C10": {
@@ -575,7 +708,7 @@
           ],
           "reasons": [
             "personal_data_consent=false.",
-            "MIDDLE ниже требуемого SENIOR."
+            "MIDDLE несовместим с required SENIOR по frozen product matrix."
           ]
         },
         "C11": {
@@ -585,15 +718,37 @@
           ],
           "reasons": [
             "verified_grade=null: нет подтверждённой квалификации.",
-            "normalized_assessment_score=null."
+            "normalized_assessment_score=null; assessment_verified_at=null: canonical unverified profile."
           ]
         },
-        "C12": {
+        "C13": {
           "reason_codes": [
-            "missing_assessment_score"
+            "incompatible_grade",
+            "missing_must_have_skill"
           ],
           "reasons": [
-            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+            "JUNIOR несовместим с required SENIOR по frozen product matrix.",
+            "Отсутствует must-have PostgreSQL."
+          ]
+        },
+        "C14": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR несовместим с required SENIOR по frozen product matrix.",
+            "Отсутствует must-have PostgreSQL."
+          ]
+        },
+        "C15": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "MIDDLE несовместим с required SENIOR по frozen product matrix.",
+            "Отсутствует must-have PostgreSQL."
           ]
         }
       },
@@ -628,7 +783,7 @@
         {
           "position": 5,
           "candidate_id": "C03",
-          "rationale": "Exact Senior с высоким результатом своего assessment. Стаж три года и отсутствие SQL/Django ограничивают qualitative data-fit; высокий score сам по себе не заменяет совпадение с Need."
+          "rationale": "Exact Senior с высоким результатом своего assessment. Стаж три года и отсутствие SQL/Django ограничивают qualitative data-fit; высокий score сам по себе не заменяет совпадение с Need. Выше нового C12: Senior assessment 100 и FastAPI предпочтены Django и дополнительному году опыта C12 (Senior 80); close call, SQL отсутствует у обоих."
         }
       ],
       "ambiguous_tradeoffs": [
@@ -658,6 +813,15 @@
           "preferred_candidate": "C05",
           "close_call": true,
           "rationale": "Senior 70, опыт 12, полный stack против Senior 100, опыта 3 и отсутствия SQL/Django; высокий assessment против data-fit."
+        },
+        {
+          "candidates": [
+            "C03",
+            "C12"
+          ],
+          "preferred_candidate": "C03",
+          "close_call": true,
+          "rationale": "Senior 100, FastAPI и опыт 3 против Senior 80, Django и опыта 4; сильный assessment/API против Django и дополнительного опыта на границе Top-5."
         }
       ]
     },
@@ -667,7 +831,8 @@
         "C02",
         "C04",
         "C05",
-        "C08"
+        "C08",
+        "C12"
       ],
       "excluded": {
         "C03": {
@@ -692,7 +857,7 @@
             "missing_must_have_skill"
           ],
           "reasons": [
-            "JUNIOR ниже требуемого MIDDLE.",
+            "JUNIOR несовместим с required MIDDLE по frozen product matrix.",
             "Отсутствует must-have PostgreSQL."
           ]
         },
@@ -719,15 +884,35 @@
           ],
           "reasons": [
             "verified_grade=null: нет подтверждённой квалификации.",
-            "normalized_assessment_score=null."
+            "normalized_assessment_score=null; assessment_verified_at=null: canonical unverified profile."
           ]
         },
-        "C12": {
+        "C13": {
           "reason_codes": [
-            "missing_assessment_score"
+            "incompatible_grade",
+            "missing_must_have_skill"
           ],
           "reasons": [
-            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+            "JUNIOR несовместим с required MIDDLE по frozen product matrix.",
+            "Отсутствует must-have Django, PostgreSQL."
+          ]
+        },
+        "C14": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR несовместим с required MIDDLE по frozen product matrix.",
+            "Отсутствует must-have PostgreSQL."
+          ]
+        },
+        "C15": {
+          "reason_codes": [
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "Отсутствует must-have Django, PostgreSQL."
           ]
         }
       },
@@ -762,7 +947,7 @@
         {
           "position": 5,
           "candidate_id": "C05",
-          "rationale": "Полный stack и большой опыт обеспечивают допустимость. Профиль поставлен после C04 в спорном сравнении подходящего grade/результата и опыта. Это не утверждение, что меньший стаж всегда лучше."
+          "rationale": "Полный stack и большой опыт обеспечивают допустимость. Профиль поставлен после C04 в спорном сравнении подходящего grade/результата и опыта. Это не утверждение, что меньший стаж всегда лучше. Выше нового C12: явный SQL, FastAPI и достаточный стаж предпочтены более высокому Senior assessment и опыту ближе к ориентиру у C12; close call."
         }
       ],
       "ambiguous_tradeoffs": [
@@ -792,6 +977,15 @@
           "preferred_candidate": "C04",
           "close_call": true,
           "rationale": "Exact Middle, сильный результат своего уровня и опыт 1 против Senior с полным stack и опытом 12; спорная точность grade против опыта."
+        },
+        {
+          "candidates": [
+            "C05",
+            "C12"
+          ],
+          "preferred_candidate": "C05",
+          "close_call": true,
+          "rationale": "Senior 70 с SQL/FastAPI и опытом 12 против Senior 80 без обоих optional skills и опыта 4; полный data stack/стаж против assessment и близости к целевому опыту."
         }
       ]
     }
@@ -820,9 +1014,10 @@
     }
   },
   "fixture_limitations": [
-    "C12 — намеренно некорректный snapshot с grade без score. Он не представим в current main БД из-за consistent_verification; будущая проверка должна использовать реальную input/validation boundary без ослабления constraint и без заполнения score.",
-    "C09 — синтетический wrong-specialization snapshot; он не утверждает наличие production Frontend assessment bank.",
-    "Поля являются проекцией для research; контактов, declared_grade, дат, FSP bonus и profile recency нет."
+    "Все verification triples canonical: grade, score и assessment_verified_at либо одновременно заполнены, либо одновременно null. C11 — отдельный BACKEND unverified case, одновременно покрывающий отсутствие verification и assessment score.",
+    "C09 — отдельный FRONTEND wrong-specialization case с согласованной verification triple. Это допустимое состояние CandidateProfile в БД; fixture не утверждает наличие текущего Frontend assessment bank. Подготовка через доверенный isolated fixture adapter, а не через CandidateWrite и не через несуществующий Frontend assessment flow.",
+    "У всех verified profiles одинаковый assessment_verified_at; дата не участвует в ranking. Контактов, declared_grade, FSP bonus и profile recency signals нет.",
+    "Invalid-provider snapshot с grade без score удалён из end-to-end holdout. Defensive invalid-provider cases остаются обязанностью Matching unit/provider tests; в P1 такие tests не создаются."
   ],
   "freeze_policy": {
     "current_status": "DRAFT_FOR_HUMAN_FREEZE",
@@ -837,5 +1032,14 @@
       "metric definitions and targets"
     ],
     "post_evaluation_rule": "Не менять dataset/expectations/metrics и не тюнить ranking coefficients по holdout без отдельного product decision; новый набор требует отдельной версии и независимой процедуры."
+  },
+  "revised_at": "2026-10-05T18:31:11Z",
+  "revision_note": "Draft v2 до freeze: human review исправил grade matrix; невозможный C12 заменён canonical Senior; добавлены C13–C15; H2 ranking составлен заново. Baseline создания сохранён.",
+  "grade_compatibility_source": "Frozen product matrix из human review; SENIOR несовместим с required JUNIOR. Общее правило higher-grade compatibility не применяется.",
+  "ranking_revision_rationale": {
+    "H1": "Top-5 сохранён: C12 и C13–C15 не проходят must-have/grade. Старые полезные eligible profiles не менялись.",
+    "H2": "Top-5 составлен заново: все Senior исключены frozen matrix; среди шести eligible C01 остаётся вне Top-5 после close call с C15.",
+    "H3": "C12 становится шестым eligible. Вручную оставлен после C03: Django/дополнительный год против сильного Senior assessment и FastAPI. Старый Top-5 сохранён.",
+    "H4": "C12 становится шестым eligible. Вручную оставлен после C05: более сильный Senior assessment и стаж ближе к цели против полного SQL/FastAPI stack и достаточного опыта. Старый Top-5 сохранён."
   }
 }
