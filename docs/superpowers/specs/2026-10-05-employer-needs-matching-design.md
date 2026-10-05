@@ -51,45 +51,73 @@ Add one normalized association object EmployerNeedSkill:
 - Eager/batched relationship loading; deterministic skill ordering.
 
 CandidateProfile is the sole source of truth for current verification/assessment
-state. Keep its existing verified_grade and add nullable normalized_assessment_score
-(finite 0–100 when present) and nullable assessment_verified_at. Neither of the
-last two fields exists in the inspected baseline model; future TASK O1
-implementation must add them through a new Alembic migration. Assessment history
-is outside TASK O1.
+state: verified_grade, nullable normalized_assessment_score (finite 0–100 when
+present), and nullable assessment_verified_at. Candidate Assessment Engine owns
+persistence/schema evolution of the assessment fields and their consistency with
+verified_grade. The last two fields are absent from the inspected baseline; their
+addition belongs to Candidate Assessment Engine, not TASK O1. Matching consumes
+canonical current state read-only; it is not an assessment source of truth.
+Assessment history also belongs to Candidate Assessment Engine and is outside O1.
 
-Future migration `0002`, down_revision `0001`, creates the two need-related tables,
-adds the two assessment columns to candidate_profiles, and adds required
-indexes/checks. Do not create the migration at this specification-review stage.
-Do not rewrite `0001` or use create_all(). Downgrade removes only O1 tables and
-the two added columns; existing verified_grade and baseline tables remain intact.
-Verify upgrade 0001 → 0002 → downgrade 0001 → upgrade head, existing baseline
-data preservation, and Alembic model/schema consistency on PostgreSQL.
+Future TASK O1 Alembic migrations may create only the EmployerNeed and
+EmployerNeedSkill tables and their required indexes/checks. Matching must not
+create assessment columns, temporary assessment storage, or assessment-field
+migrations. Candidate Assessment Engine owns normalized_assessment_score and
+assessment_verified_at schema changes. Select the O1 revision and down_revision
+against the actual migration head after integrating current main; do not reserve
+`0002` independently of parallel development. Do not create a migration at this
+specification-review stage, rewrite `0001`, or use create_all(). O1 downgrade removes
+only O1-owned need tables/indexes/checks and preserves CandidateProfile assessment
+fields. Verify upgrade/downgrade/upgrade against the integrated migration chain,
+baseline/assessment data preservation, and Alembic schema consistency on PostgreSQL.
 
 ## Assessment integration boundary
 
 Keep CandidateAssessmentProvider as a read-only batch abstraction over current
-CandidateProfile state: verified_grade, nullable normalized_assessment_score and
-nullable assessment_verified_at. Conceptually, it receives candidate profile IDs
-and returns their current assessment data in batches. Select the concrete interface
-during implementation to fit the existing synchronous Session/service patterns;
-this specification does not prescribe a method signature or add a repository layer.
+CandidateProfile state, exposing candidate_id (CandidateProfile.id), verified_grade,
+nullable normalized_assessment_score and nullable assessment_verified_at.
+Conceptually, it receives candidate profile IDs and returns their current assessment
+data in batches. It is the integration boundary between Matching and Candidate
+Assessment Engine. Select the concrete interface during implementation to fit the
+existing synchronous Session/service patterns; this specification does not prescribe
+a method signature or add a repository layer.
 
-CandidateProfile is the only current source of truth. The future Testing Engine
-writes these canonical fields; Matching only reads them and never modifies any of
-the three. Matching depends on the provider contract, not future Testing Engine
-tables or implementation details. Do not design assessment history in TASK O1.
+CandidateProfile is the only current source of truth. Candidate Assessment Engine
+owns and writes these canonical fields and maintains their consistency; Matching
+only reads them and never modifies any of the three. Employer API cannot modify
+them either. Matching owns its read layer/provider integration, not assessment
+persistence. Do not create a second assessment table or duplicate source of truth.
+Do not design Testing Engine internals or assessment history/attempts in TASK O1.
 
 A missing candidate entry or normalized_assessment_score = null fails eligibility
 before scoring. Present scores must be finite and in 0–100; zero is a valid available
-score. Invalid values fail eligibility, never become a fallback score. Assessment
-timestamps do not add a scoring factor or an additional hard filter.
+score. Invalid values fail eligibility, never become a fallback score.
+assessment_verified_at is exclusively informational: it does not affect eligibility,
+Professional Fit Score, sorting, tie-breakers or any recency bonus.
 
-No public, employer or manual API may write assessment scores, verified_grade or
-assessment_verified_at. Future unit/integration tests may prepare canonical fields
+TASK O1 exposes no public, employer or manual API to write assessment scores,
+verified_grade or assessment_verified_at. Future unit/integration tests may prepare canonical fields
 through fixtures/factories/seed following existing test patterns; this is not a
 production write API. Tests may inject an in-memory read provider. Do not derive
 normalized scores from declared_grade, raw percentages or FSP IDs; raw percentages
 from different assessments must not be compared directly.
+
+### Parallel development and integration
+
+If O1 implementation starts before Candidate Assessment Engine merges, preserve
+CandidateAssessmentProvider as the integration boundary and use a fake/in-memory
+provider for unit tests. Do not add temporary production persistence, migrations
+for assessment fields, or substitute for Candidate Assessment Engine work. The real
+assessment-backed endpoint/demo integration remains dependent on that branch's merge.
+
+After Candidate Assessment Engine merges:
+
+1. Update/rebase feat/employer-needs-matching from the latest main, integrating its
+   canonical CandidateProfile fields and actual Alembic migration chain.
+2. Connect the production CandidateAssessmentProvider implementation to the real
+   canonical CandidateProfile fields, using batch reads.
+3. Keep Matching access read-only; schema ownership and assessment history remain
+   with Candidate Assessment Engine.
 
 ## Need API, validation and lifecycle
 
@@ -179,12 +207,17 @@ never serialize CandidateOut or CandidateProfile.__dict__.
 
 Allow only candidate_id, display_name (first name + surname initial), specialization,
 verified_grade, self-declared skills, years_of_experience, normalized_assessment_score,
-professional_fit_score, breakdown, matched_must_have_skills,
-matched_nice_to_have_skills and missing_nice_to_have_skills.
+optional assessment_verified_at, professional_fit_score, breakdown,
+matched_must_have_skills, matched_nice_to_have_skills and missing_nice_to_have_skills.
+
+assessment_verified_at is permitted in employer preview/detail and is not a
+privacy-sensitive field. It is informational only; for example, UI may show
+«Компетенция подтверждена: 18.09.2026». The date never affects eligibility, score,
+sorting, tie-breakers or recency bonuses. Profile recency also remains outside ranking.
 
 User-approved privacy choice: exclude free-text about, which could contain contacts.
 Also exclude email, phone, Telegram/messenger fields, address, fsp_id,
-personal_data_consent, personal_data_consent_at, assessment_verified_at, user_id,
+personal_data_consent, personal_data_consent_at, user_id,
 full surname, declared_grade and other internal fields. personal_data_consent is
 an internal eligibility field and must never be returned in employer preview responses.
 No separate endpoint reveals full candidate data or contacts.
@@ -226,17 +259,27 @@ Tests precede implementation and exercise behavior:
 - Need creation, roles, anonymous access, ownership on all routes, trusted Origin,
   invalid IDs/skills/duplicates/overlap/missing must-have/salary/experience/extra fields,
   atomic rejected updates, DRAFT editing and lifecycle restrictions.
-- Required backend test: a verified candidate with valid specialization, all required
-  skills and an available assessment, but personal_data_consent = false, is excluded
-  from matching results before scoring.
+- Required backend test: a verified candidate with valid specialization, compatible
+  grade, all must-have skills and an available normalized assessment, but
+  personal_data_consent = false, is excluded from matching results before scoring.
+- Provider-boundary tests: Matching obtains normalized assessment data through
+  CandidateAssessmentProvider and never writes verified_grade,
+  normalized_assessment_score or assessment_verified_at. A fake/in-memory provider
+  supports unit tests before Candidate Assessment Engine merges; real canonical-field
+  integration is verified after its merge, without O1-owned assessment persistence.
 - Every consent/specialization/verified-grade/grade/must-have/score eligibility branch,
   including score zero and invalid/nonfinite provider values.
 - Independent numeric expectations for each contribution, experience cap/missing/zero,
   all optional-factor exclusions and renormalization, score bounds.
 - Unrounded ordering (scores with same displayed decimal), deterministic ties,
   pagination after ranking, grade advantage, declared-grade/FSP/recency independence.
+- Vary assessment_verified_at while keeping eligibility/scoring inputs fixed;
+  eligibility, Professional Fit Score, ordering and tie-breakers must be unchanged.
 - API privacy: assert the exact allowed preview keys recursively and absence of
   sensitive/internal fields, using source profiles populated with identifying values.
+  The response may contain assessment_verified_at, but must not contain
+  personal_data_consent, personal_data_consent_at, email, phone, telegram, fsp_id
+  or other private/internal contact fields. Never return the full CandidateOut.
 - Batched query behavior, migration round-trip/schema consistency and idempotent
   matching-demo seeding; retain the existing auth/candidate suites.
 - Frontend tests cover form payload/validation and safe presentation via the
