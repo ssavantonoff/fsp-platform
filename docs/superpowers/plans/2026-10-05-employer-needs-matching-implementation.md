@@ -92,6 +92,7 @@ Each commit stages only that task's declared files, with explicit paths; never `
 
 **Files**
 - Modify: `backend/app/models.py`, `backend/tests/test_infrastructure.py`.
+- Modify: `backend/tests/test_assessments.py` — approved narrow compatibility correction: preserve the 0001 → 0002 assertions and upgrade to current head immediately before the first `alembic check`.
 - Create: `backend/alembic/versions/<generated_revision>_employer_needs.py` (resolved as described above).
 
 **Interfaces**
@@ -100,14 +101,14 @@ Each commit stages only that task's declared files, with explicit paths; never `
 - Produces: `EmployerNeed`: String(36) ID, employer FK, title String(200), specialization/required_grade enums, nullable Float target experience, Numeric(12,2) salary bounds, Text description/additional requirements, status and existing timestamps.
 - Produces: `EmployerNeedSkill`: composite PK `(need_id, skill_id)`, cascade need FK, catalog skill FK, kind; `EmployerNeed.skill_requirements: list[EmployerNeedSkill]` with selectin loading/cascade delete-orphan and stable skill-ID ordering; each association exposes `skill: Skill` with eager loading.
 
-- [ ] Write `test_need_migration_round_trip_preserves_assessment_state`: upgrade 0002 → new head → 0002 → head, asserting canonical trio and existing profiles/catalog unchanged; new tables present only at O1 head. Extend the existing head-table assertion.
-- [ ] Write `test_need_database_integrity` using savepoints/rollback: negative/reversed salaries, invalid kind/status, negative/nonfinite target, unknown FK and duplicate/cross-kind `(need_id, skill_id)` must raise `IntegrityError`; a valid association persists. Mark backend-specific nonfinite checks explicitly PostgreSQL-only if SQLite cannot represent them.
-- [ ] Run `pytest -q tests/test_infrastructure.py -k need_migration`; expect failure because Need tables/revision are absent, not because the test database is unavailable.
-- [ ] Add the two model classes/enums in `app/models.py` using existing non-native enum/check conventions; add salary nonnegative/order and finite nonnegative target checks, employer/status indexes and FK integrity. Keep all candidate columns unchanged.
-- [ ] Generate and author the new migration from the real head; align constraints/index names with model metadata and implement downgrade removing only O1 tables/indexes.
-- [ ] Run `pytest -q tests/test_infrastructure.py`; expect all infrastructure tests pass and `alembic check` finds no schema drift after head upgrade.
+- [x] Write `test_need_migration_round_trip_preserves_assessment_state`: upgrade 0002 → new head → 0002 → head, asserting canonical trio and existing profiles/catalog unchanged; new tables present only at O1 head. Extend the existing head-table assertion.
+- [x] Write `test_need_database_integrity` using savepoints/rollback: negative/reversed salaries, invalid kind/status, negative/nonfinite target, unknown FK and duplicate/cross-kind `(need_id, skill_id)` must raise `IntegrityError`; a valid association persists. Mark backend-specific nonfinite checks explicitly PostgreSQL-only if SQLite cannot represent them.
+- [x] Run `pytest -q tests/test_infrastructure.py -k need_migration`; expect failure because Need tables/revision are absent, not because the test database is unavailable.
+- [x] Add the two model classes/enums in `app/models.py` using existing non-native enum/check conventions; add salary nonnegative/order and finite nonnegative target checks, employer/status indexes and FK integrity. Keep all candidate columns unchanged.
+- [x] Generate and author the new migration from the real head; align constraints/index names with model metadata and implement downgrade removing only O1 tables/indexes.
+- [x] Run `pytest -q tests/test_infrastructure.py`; expect all infrastructure tests pass and `alembic check` finds no schema drift after head upgrade.
 - [ ] Run the same file with `TEST_DATABASE_URL` pointing to PostgreSQL; expect actual FK/check/round-trip assertions pass.
-- [ ] Commit these files: `feat: add normalized employer need persistence`.
+- [x] Commit these files: `feat: add normalized employer need persistence`.
 
 The database cannot enforce “at least one must-have” with a simple row check; Task 2 enforces it transactionally. Reject infinity/NaN at the input layer as well. Numeric(12,2) provides a concrete storage limit; schema validation in Task 2 must agree with it.
 
