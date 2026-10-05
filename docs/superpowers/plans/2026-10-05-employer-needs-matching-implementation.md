@@ -244,7 +244,7 @@ Numeric fixtures use score80, exact grade, 1/2 nice matches and 2/4 years unless
 | `test_deterministic_ties` | equal total: greater assessment first; equal assessment: candidate ID ASC; permutations give identical IDs |
 | `test_exact_grade_advantage` | score88 Middle exact/all optional full =94.6 outranks score100 Senior overqualified =93.75 |
 
-- [ ] Write the numerical tests through `test_both_optional_factors_absent`, asserting every active/excluded contribution and max.
+- [x] Write the numerical tests through `test_both_optional_factors_absent`, asserting every active/excluded contribution and max.
 
 The primary numerical oracle is literal and independently checkable:
 
@@ -260,15 +260,15 @@ def test_score_contributions():
     assert fit.grade.max == 25.0
 ```
 
-- [ ] Run `pytest -q tests/test_matching_rules.py -k 'score or experience or renormalization or optional'`; expect absent scoring interface failure.
-- [ ] Implement `score_professional_fit`: frozen base weights, omit absent optional factors, normalize effective maxima, calculate factors/contributions once. Do not round intermediates or total; guard only floating-point epsilon at the 0–100 boundary, never hide a substantive calculation error by clamping.
-- [ ] Run the focused numerical tests; expect PASS.
-- [ ] Write bounds/invalid-input/ranking/grade-advantage tests from the remaining rows. Construct ties with different factor tradeoffs and close scores via tiny experience differences, not mocked rounded outputs.
-- [ ] Run `pytest -q tests/test_matching_rules.py -k 'bounds or unrounded or ties or advantage'`; expect missing validation/ranking behavior failure.
-- [ ] Implement `rank_candidates` with key `(-fit.score, -normalized_assessment_score, candidate_id)` and the specified precondition guards; no FSP flag or date input.
-- [ ] Run `pytest -q tests/test_matching_rules.py`; expect PASS.
-- [ ] Run `ruff check app/services/matching_rules.py` and `mypy app`; expect no violations.
-- [ ] Commit declared files: `feat: add frozen professional fit scoring and ranking`.
+- [x] Run `pytest -q tests/test_matching_rules.py -k 'score or experience or renormalization or optional'`; expect absent scoring interface failure.
+- [x] Implement `score_professional_fit`: frozen base weights, omit absent optional factors, normalize effective maxima, calculate factors/contributions once. Do not round intermediates or total; guard only floating-point epsilon at the 0–100 boundary, never hide a substantive calculation error by clamping.
+- [x] Run the focused numerical tests; expect PASS.
+- [x] Write bounds/invalid-input/ranking/grade-advantage tests from the remaining rows. Construct ties with different factor tradeoffs and close scores via tiny experience differences, not mocked rounded outputs.
+- [x] Run `pytest -q tests/test_matching_rules.py -k 'bounds or unrounded or ties or advantage'`; expect missing validation/ranking behavior failure.
+- [x] Implement `rank_candidates` with key `(-fit.score, -normalized_assessment_score, candidate_id)` and the specified precondition guards; no FSP flag or date input.
+- [x] Run `pytest -q tests/test_matching_rules.py`; expect PASS.
+- [x] Run `ruff check app/services/matching_rules.py` and `mypy app`; expect no violations.
+- [x] Commit declared files: `feat: add frozen professional fit scoring and ranking`.
 
 A zero assessment does not mean a zero total: an eligible exact-grade candidate still earns grade contribution. Boundary tests check component endpoints and valid totals; do not invent GradeFit0 to manufacture total0.
 
