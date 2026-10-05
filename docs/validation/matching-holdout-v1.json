@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "status": "DRAFT_FOR_HUMAN_FREEZE",
+  "status": "LOCKED_BEFORE_MATCHING_EVALUATION",
   "created_against_main": "9892400d57b57fe3104d1871fa3513e56e24c4b5",
   "created_at": "2026-10-05T14:32:03Z",
   "purpose": "Blind qualitative holdout до review Matching, только вымышленные данные.",
@@ -1020,7 +1020,7 @@
     "Invalid-provider snapshot с grade без score удалён из end-to-end holdout. Defensive invalid-provider cases остаются обязанностью Matching unit/provider tests; в P1 такие tests не создаются."
   ],
   "freeze_policy": {
-    "current_status": "DRAFT_FOR_HUMAN_FREEZE",
+    "current_status": "LOCKED_BEFORE_MATCHING_EVALUATION",
     "requires_human_approval": true,
     "approved_status": "LOCKED_BEFORE_MATCHING_EVALUATION",
     "locked_parts": [
@@ -1031,7 +1031,8 @@
       "ranking rationales",
       "metric definitions and targets"
     ],
-    "post_evaluation_rule": "Не менять dataset/expectations/metrics и не тюнить ranking coefficients по holdout без отдельного product decision; новый набор требует отдельной версии и независимой процедуры."
+    "post_evaluation_rule": "Не менять dataset/expectations/metrics и не тюнить ranking coefficients по holdout без отдельного product decision; новый набор требует отдельной версии и независимой процедуры.",
+    "human_approval_received": true
   },
   "revised_at": "2026-10-05T18:31:11Z",
   "revision_note": "Draft v2 до freeze: human review исправил grade matrix; невозможный C12 заменён canonical Senior; добавлены C13–C15; H2 ranking составлен заново. Baseline создания сохранён.",
@@ -1041,5 +1042,6 @@
     "H2": "Top-5 составлен заново: все Senior исключены frozen matrix; среди шести eligible C01 остаётся вне Top-5 после close call с C15.",
     "H3": "C12 становится шестым eligible. Вручную оставлен после C03: Django/дополнительный год против сильного Senior assessment и FastAPI. Старый Top-5 сохранён.",
     "H4": "C12 становится шестым eligible. Вручную оставлен после C05: более сильный Senior assessment и стаж ближе к цели против полного SQL/FastAPI stack и достаточного опыта. Старый Top-5 сохранён."
-  }
+  },
+  "frozen_at": "2026-10-05T19:40:16Z"
 }

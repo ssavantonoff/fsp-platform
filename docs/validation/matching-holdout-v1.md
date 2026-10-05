@@ -1,6 +1,8 @@
-# Blind Matching Holdout — draft v2 (имена файлов v1 сохранены)
+# Blind Matching Holdout — frozen v2 (имена файлов v1 сохранены)
 
-**Status: DRAFT_FOR_HUMAN_FREEZE**
+**Status: LOCKED_BEFORE_MATCHING_EVALUATION**
+
+Freeze timestamp (UTC): `2026-10-05T19:40:16Z`. Holdout v2 прошёл human review; approval получен от пользователя.
 
 Baseline origin/main: `9892400d57b57fe3104d1871fa3513e56e24c4b5`. Branch: `docs/matching-holdout-v1`.
 
@@ -272,7 +274,7 @@ C12 становится шестым eligible. Вручную оставлен 
 
 ## Future evaluation
 
-1. Получить human approval и зафиксировать LOCKED_BEFORE_MATCHING_EVALUATION отдельным commit **до** Matching evaluation. При текущем DRAFT результаты не считать locked blind benchmark.
+1. Human approval holdout v2 получен. Статус LOCKED_BEFORE_MATCHING_EVALUATION и UTC-время freeze зафиксированы отдельным commit **до** Matching evaluation.
 2. Зафиксировать dataset commit, SHA реализации Matching, версию окружения и adapter. Применять один набор 15 canonical profiles ко всем четырём Needs в изолированном окружении.
 3. Сохранить все 15 profiles с действующими production constraints через доверенный isolated fixture adapter. Проверить отрицательные случаи, в том числе C11 с canonical null triple. Invalid-provider cases проверяются отдельно Matching unit/provider tests и в этот holdout не входят. При невозможности подготовки fixture явно остановить evaluation, а не засчитать пропущенный case как PASS.
 4. Сохранить полный actual eligible set и его порядок, исключения, actual Top-3/Top-5 и сведения об ошибках отдельно от этих двух файлов. Не заменять actual ranking экспертным и не отбрасывать ошибки без отчёта.
@@ -294,7 +296,7 @@ Targets — предварительные validation ориентиры, не �
 
 ## Freeze policy
 
-**Текущий статус: DRAFT_FOR_HUMAN_FREEZE.** Codex самостоятельно не переводит его в LOCKED.
+**Текущий статус: LOCKED_BEFORE_MATCHING_EVALUATION.** Codex самостоятельно не переводит его в LOCKED.
 
 Human review проверяет реалистичность Need, grade compatibility, профили, спорные Top-5 и отсутствие скрытой подгонки. После approval статус меняется на **LOCKED_BEFORE_MATCHING_EVALUATION** отдельным commit с подтверждением команды и временем freeze.
 
@@ -311,4 +313,4 @@ Push этого draft не является human approval. PR в P1 не соз
 - Eligible count: H1=6, H2=6, H3=6, H4=6; Top-5 не равен всему eligible set у H2/H3.
 - Все Expected Top-5 содержат только ELIGIBLE; новые candidates и cutoff comparisons вручную рассмотрены до output.
 - JSON и Markdown совпадают по данным, датам, eligibility, ordering, rationale и trade-offs; Fit/formula/output не использовались.
-- Только два holdout-файла; production/README/seed/CI/migrations/frontend не изменены. Status — DRAFT_FOR_HUMAN_FREEZE, version=2; freeze не выполнен.
+- Только два holdout-файла; production/README/seed/CI/migrations/frontend не изменены. Status — LOCKED_BEFORE_MATCHING_EVALUATION, version=2; freeze выполнен по human approval.
