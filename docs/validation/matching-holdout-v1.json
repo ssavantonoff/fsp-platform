@@ -1,0 +1,841 @@
+{
+  "version": 1,
+  "status": "DRAFT_FOR_HUMAN_FREEZE",
+  "created_against_main": "9892400d57b57fe3104d1871fa3513e56e24c4b5",
+  "created_at": "2026-10-05T14:32:03Z",
+  "purpose": "Blind qualitative holdout до review Matching, только вымышленные данные.",
+  "independence": {
+    "baseline_contains_matching_implementation": false,
+    "oleg_branch_read": false,
+    "matching_implementation_read": false,
+    "production_ranking_used": false,
+    "professional_fit_calculated": false,
+    "expectations_authoring": "Вручную, по требованиям P1; генерация Markdown только отображает эти заранее заданные ожидания."
+  },
+  "skill_catalog": {
+    "source_path": "backend/app/seed.py",
+    "source_ref": "9892400d57b57fe3104d1871fa3513e56e24c4b5",
+    "names": [
+      "Python",
+      "Django",
+      "FastAPI",
+      "PostgreSQL",
+      "React",
+      "TypeScript",
+      "SQL"
+    ]
+  },
+  "grade_compatibility": {
+    "JUNIOR": [
+      "JUNIOR",
+      "MIDDLE",
+      "SENIOR"
+    ],
+    "MIDDLE": [
+      "MIDDLE",
+      "SENIOR"
+    ],
+    "SENIOR": [
+      "SENIOR"
+    ]
+  },
+  "eligibility_policy": "Нужны consent=true, совпадение specialization, verified_grade из compatible grades, все must-have и непустой assessment score. Nice-to-have и target experience — не hard filters.",
+  "score_interpretation": "Score используется как один качественный сигнал. Scores разных grades не являются психометрически эквивалентной шкалой.",
+  "needs": [
+    {
+      "id": "H1",
+      "position_title": "Middle Backend Developer — API-сервисы",
+      "specialization": "BACKEND",
+      "required_grade": "MIDDLE",
+      "must_have_skills": [
+        "Python",
+        "FastAPI"
+      ],
+      "nice_to_have_skills": [
+        "PostgreSQL",
+        "SQL",
+        "Django"
+      ],
+      "target_experience_years": 3,
+      "rationale": "Нужен разработчик для самостоятельной повседневной работы с Python API. Важны подходящий Middle grade и практический опыт около трёх лет; работа с PostgreSQL/SQL полезна, Django помогает интеграции с соседним сервисом."
+    },
+    {
+      "id": "H2",
+      "position_title": "Junior Python Backend Developer",
+      "specialization": "BACKEND",
+      "required_grade": "JUNIOR",
+      "must_have_skills": [
+        "Python"
+      ],
+      "nice_to_have_skills": [
+        "Django",
+        "SQL"
+      ],
+      "target_experience_years": 1,
+      "rationale": "Базовые backend-задачи под наставничеством. Приоритет — Junior либо близкий по уровню профиль, опыт около года и фундамент Django/SQL. Дополнительные API-framework навыки не обязательны."
+    },
+    {
+      "id": "H3",
+      "position_title": "Senior Backend Developer — платформа данных",
+      "specialization": "BACKEND",
+      "required_grade": "SENIOR",
+      "must_have_skills": [
+        "Python",
+        "PostgreSQL"
+      ],
+      "nice_to_have_skills": [
+        "SQL",
+        "Django",
+        "FastAPI"
+      ],
+      "target_experience_years": 7,
+      "rationale": "Нужен подтверждённый Senior для архитектурно самостоятельной работы с реляционными данными. Явный SQL важен для глубины работы с данными; Django полезен для существующих приложений, FastAPI — для API-интеграций. Опыт около семи лет — ориентир, а не hard minimum. Специфический архитектурный опыт не приписывается кандидату из общего стажа."
+    },
+    {
+      "id": "H4",
+      "position_title": "Middle Django Backend Developer — сервисы обработки данных",
+      "specialization": "BACKEND",
+      "required_grade": "MIDDLE",
+      "must_have_skills": [
+        "Python",
+        "Django",
+        "PostgreSQL"
+      ],
+      "nice_to_have_skills": [
+        "SQL",
+        "FastAPI"
+      ],
+      "target_experience_years": 6,
+      "rationale": "Нужна самостоятельная работа с существующим Django/PostgreSQL backend. Желательны опыт около шести лет и явный SQL; FastAPI помогает смежным интеграциям. Это более опытный и ориентированный на данные профиль, чем H1; target experience остаётся мягким предпочтением."
+    }
+  ],
+  "candidates": [
+    {
+      "candidate_id": "C01",
+      "specialization": "BACKEND",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 85,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 3
+    },
+    {
+      "candidate_id": "C02",
+      "specialization": "BACKEND",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 90,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 7
+    },
+    {
+      "candidate_id": "C03",
+      "specialization": "BACKEND",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 100,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 3
+    },
+    {
+      "candidate_id": "C04",
+      "specialization": "BACKEND",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 95,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 1
+    },
+    {
+      "candidate_id": "C05",
+      "specialization": "BACKEND",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 70,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 12
+    },
+    {
+      "candidate_id": "C06",
+      "specialization": "BACKEND",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 80,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 5
+    },
+    {
+      "candidate_id": "C07",
+      "specialization": "BACKEND",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 85,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "Django",
+        "SQL"
+      ],
+      "years_of_experience": 1
+    },
+    {
+      "candidate_id": "C08",
+      "specialization": "BACKEND",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 85,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 6
+    },
+    {
+      "candidate_id": "C09",
+      "specialization": "FRONTEND",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 90,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 3
+    },
+    {
+      "candidate_id": "C10",
+      "specialization": "BACKEND",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 95,
+      "personal_data_consent": false,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 4
+    },
+    {
+      "candidate_id": "C11",
+      "specialization": "BACKEND",
+      "verified_grade": null,
+      "normalized_assessment_score": null,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 4
+    },
+    {
+      "candidate_id": "C12",
+      "specialization": "BACKEND",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": null,
+      "personal_data_consent": true,
+      "skills": [
+        "Python",
+        "FastAPI",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 8
+    }
+  ],
+  "expectations": {
+    "H1": {
+      "eligible": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06"
+      ],
+      "excluded": {
+        "C07": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR ниже требуемого MIDDLE.",
+            "Отсутствует must-have FastAPI."
+          ]
+        },
+        "C08": {
+          "reason_codes": [
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "Отсутствует must-have FastAPI."
+          ]
+        },
+        "C09": {
+          "reason_codes": [
+            "specialization_mismatch"
+          ],
+          "reasons": [
+            "FRONTEND не совпадает с BACKEND Need."
+          ]
+        },
+        "C10": {
+          "reason_codes": [
+            "consent_false"
+          ],
+          "reasons": [
+            "personal_data_consent=false."
+          ]
+        },
+        "C11": {
+          "reason_codes": [
+            "no_verified_grade",
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "verified_grade=null: нет подтверждённой квалификации.",
+            "normalized_assessment_score=null."
+          ]
+        },
+        "C12": {
+          "reason_codes": [
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+          ]
+        }
+      },
+      "expected_top5": [
+        "C01",
+        "C04",
+        "C02",
+        "C03",
+        "C06"
+      ],
+      "ranking_rationales": [
+        {
+          "position": 1,
+          "candidate_id": "C01",
+          "rationale": "Exact Middle, опыт ровно около целевого и полезные PostgreSQL/Django. Выше C04: дополнительный опыт перевешивает более высокий Middle assessment и SQL у C04; close call."
+        },
+        {
+          "position": 2,
+          "candidate_id": "C04",
+          "rationale": "Exact Middle с полным optional stack и сильным результатом Middle assessment. Выше C02 выбрана точность grade для API-роли; один год опыта против семи у C02 делает сравнение спорным (close call)."
+        },
+        {
+          "position": 3,
+          "candidate_id": "C02",
+          "rationale": "Полный stack и достаточный опыт. Выше C03: SQL/Django и более широкий опыт предпочтены более высокому Senior assessment и стажу ближе к ориентиру у C03; close call."
+        },
+        {
+          "position": 4,
+          "candidate_id": "C03",
+          "rationale": "Высокий результат Senior assessment и три года опыта соответствуют API-контексту. Выше C06: этот сигнал качества предпочтён наличию SQL и большему опыту у C06; close call, Django нет у обоих."
+        },
+        {
+          "position": 5,
+          "candidate_id": "C06",
+          "rationale": "SQL/PostgreSQL и достаточный опыт для API-роли. Выше C05: более сильный результат в том же Senior assessment предпочтён полному optional stack и двенадцати годам опыта C05; отсутствие Django — уступка."
+        }
+      ],
+      "ambiguous_tradeoffs": [
+        {
+          "candidates": [
+            "C01",
+            "C04"
+          ],
+          "preferred_candidate": "C01",
+          "close_call": true,
+          "rationale": "Middle 85, опыт 3, без SQL против Middle 95, опыт 1, полный stack; выбран опыт для самостоятельной API-работы."
+        },
+        {
+          "candidates": [
+            "C04",
+            "C02"
+          ],
+          "preferred_candidate": "C04",
+          "close_call": true,
+          "rationale": "Exact Middle с опытом 1 против полного Senior с опытом 7; зафиксировано предпочтение точности grade."
+        },
+        {
+          "candidates": [
+            "C02",
+            "C03"
+          ],
+          "preferred_candidate": "C02",
+          "close_call": true,
+          "rationale": "Senior 90 и полный optional stack против Senior 100, опыта ближе к цели и отсутствия SQL/Django."
+        }
+      ]
+    },
+    "H2": {
+      "eligible": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08"
+      ],
+      "excluded": {
+        "C09": {
+          "reason_codes": [
+            "specialization_mismatch"
+          ],
+          "reasons": [
+            "FRONTEND не совпадает с BACKEND Need."
+          ]
+        },
+        "C10": {
+          "reason_codes": [
+            "consent_false"
+          ],
+          "reasons": [
+            "personal_data_consent=false."
+          ]
+        },
+        "C11": {
+          "reason_codes": [
+            "no_verified_grade",
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "verified_grade=null: нет подтверждённой квалификации.",
+            "normalized_assessment_score=null."
+          ]
+        },
+        "C12": {
+          "reason_codes": [
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+          ]
+        }
+      },
+      "expected_top5": [
+        "C07",
+        "C04",
+        "C01",
+        "C02",
+        "C08"
+      ],
+      "ranking_rationales": [
+        {
+          "position": 1,
+          "candidate_id": "C07",
+          "rationale": "Exact Junior, один год опыта, оба optional skill Django/SQL. Профиль наиболее точно соответствует базовым задачам под наставничеством."
+        },
+        {
+          "position": 2,
+          "candidate_id": "C04",
+          "rationale": "Совместимый Middle, один год опыта и полный полезный Django/SQL stack. Выше C01: более сильный результат внутри Middle и SQL предпочтены дополнительным двум годам опыта C01."
+        },
+        {
+          "position": 3,
+          "candidate_id": "C01",
+          "rationale": "Middle ближе к требуемому Junior, чем Senior-профили; три года опыта и Django полезны. Выше C02: близость grade/стажа предпочтена SQL и семи годам опыта C02; close call, баллы разных grades напрямую не сравниваются."
+        },
+        {
+          "position": 4,
+          "candidate_id": "C02",
+          "rationale": "Оба optional skill и сильный результат Senior assessment. Выше C08: при одинаковом полезном H2 stack выбран более высокий результат внутри Senior; стаж C08 на год ближе к ориентиру — встречный аргумент."
+        },
+        {
+          "position": 5,
+          "candidate_id": "C08",
+          "rationale": "Оба optional skill Django/SQL. Выше C06: полнота фундаментального stack и более сильный результат в том же Senior assessment предпочтены стажу C06 на год ближе к ориентиру; close call. FastAPI не нужен H2."
+        }
+      ],
+      "ambiguous_tradeoffs": [
+        {
+          "candidates": [
+            "C04",
+            "C01"
+          ],
+          "preferred_candidate": "C04",
+          "close_call": true,
+          "rationale": "Middle 95, Django/SQL и опыт 1 против Middle 85, без SQL и опыта 3; выбран профиль ближе к базовым задачам."
+        },
+        {
+          "candidates": [
+            "C01",
+            "C02"
+          ],
+          "preferred_candidate": "C01",
+          "close_call": true,
+          "rationale": "Более близкий к Junior Middle против более опытного Senior с полным optional stack; scores разных grades не уравниваются."
+        },
+        {
+          "candidates": [
+            "C08",
+            "C06"
+          ],
+          "preferred_candidate": "C08",
+          "close_call": true,
+          "rationale": "Оба optional skill и Senior 85 при опыте 6 против отсутствия Django, Senior 80 и опыта 5; стаж C06 ближе к цели."
+        }
+      ]
+    },
+    "H3": {
+      "eligible": [
+        "C02",
+        "C03",
+        "C05",
+        "C06",
+        "C08"
+      ],
+      "excluded": {
+        "C01": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "MIDDLE ниже требуемого SENIOR."
+          ]
+        },
+        "C04": {
+          "reason_codes": [
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "MIDDLE ниже требуемого SENIOR."
+          ]
+        },
+        "C07": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR ниже требуемого SENIOR.",
+            "Отсутствует must-have PostgreSQL."
+          ]
+        },
+        "C09": {
+          "reason_codes": [
+            "specialization_mismatch",
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "FRONTEND не совпадает с BACKEND Need.",
+            "MIDDLE ниже требуемого SENIOR."
+          ]
+        },
+        "C10": {
+          "reason_codes": [
+            "consent_false",
+            "incompatible_grade"
+          ],
+          "reasons": [
+            "personal_data_consent=false.",
+            "MIDDLE ниже требуемого SENIOR."
+          ]
+        },
+        "C11": {
+          "reason_codes": [
+            "no_verified_grade",
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "verified_grade=null: нет подтверждённой квалификации.",
+            "normalized_assessment_score=null."
+          ]
+        },
+        "C12": {
+          "reason_codes": [
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+          ]
+        }
+      },
+      "expected_top5": [
+        "C02",
+        "C08",
+        "C06",
+        "C05",
+        "C03"
+      ],
+      "ranking_rationales": [
+        {
+          "position": 1,
+          "candidate_id": "C02",
+          "rationale": "Exact Senior, семь лет опыта, полный optional stack. Сбалансированное совпадение с данными, существующими приложениями и API-интеграциями."
+        },
+        {
+          "position": 2,
+          "candidate_id": "C08",
+          "rationale": "SQL/Django и шесть лет опыта подходят data-контексту. Выше C06: Django, более сильный Senior assessment и опыт ближе к ориентиру предпочтены FastAPI у C06; close call."
+        },
+        {
+          "position": 3,
+          "candidate_id": "C06",
+          "rationale": "SQL/FastAPI и пять лет опыта; оценка Senior выше C05. Выше C05: этот результат и опыт ближе к ориентиру предпочтены Django и большему стажу C05; close call, пять лет не являются hard rejection."
+        },
+        {
+          "position": 4,
+          "candidate_id": "C05",
+          "rationale": "Полный optional stack, включая SQL/Django, и большой опыт. Выше C03: data-fit и достаточный опыт предпочтены высокому Senior assessment C03; close call из-за результата 70 против 100 в одном grade."
+        },
+        {
+          "position": 5,
+          "candidate_id": "C03",
+          "rationale": "Exact Senior с высоким результатом своего assessment. Стаж три года и отсутствие SQL/Django ограничивают qualitative data-fit; высокий score сам по себе не заменяет совпадение с Need."
+        }
+      ],
+      "ambiguous_tradeoffs": [
+        {
+          "candidates": [
+            "C08",
+            "C06"
+          ],
+          "preferred_candidate": "C08",
+          "close_call": true,
+          "rationale": "Django против FastAPI при общем SQL; выбран Django/data-fit, хотя отсутствие FastAPI является уступкой."
+        },
+        {
+          "candidates": [
+            "C06",
+            "C05"
+          ],
+          "preferred_candidate": "C06",
+          "close_call": true,
+          "rationale": "Senior 80 и опыт 5 без Django против Senior 70 и опыта 12 с полным stack; более высокий assessment против полноты и опыта."
+        },
+        {
+          "candidates": [
+            "C05",
+            "C03"
+          ],
+          "preferred_candidate": "C05",
+          "close_call": true,
+          "rationale": "Senior 70, опыт 12, полный stack против Senior 100, опыта 3 и отсутствия SQL/Django; высокий assessment против data-fit."
+        }
+      ]
+    },
+    "H4": {
+      "eligible": [
+        "C01",
+        "C02",
+        "C04",
+        "C05",
+        "C08"
+      ],
+      "excluded": {
+        "C03": {
+          "reason_codes": [
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "Отсутствует must-have Django."
+          ]
+        },
+        "C06": {
+          "reason_codes": [
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "Отсутствует must-have Django."
+          ]
+        },
+        "C07": {
+          "reason_codes": [
+            "incompatible_grade",
+            "missing_must_have_skill"
+          ],
+          "reasons": [
+            "JUNIOR ниже требуемого MIDDLE.",
+            "Отсутствует must-have PostgreSQL."
+          ]
+        },
+        "C09": {
+          "reason_codes": [
+            "specialization_mismatch"
+          ],
+          "reasons": [
+            "FRONTEND не совпадает с BACKEND Need."
+          ]
+        },
+        "C10": {
+          "reason_codes": [
+            "consent_false"
+          ],
+          "reasons": [
+            "personal_data_consent=false."
+          ]
+        },
+        "C11": {
+          "reason_codes": [
+            "no_verified_grade",
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "verified_grade=null: нет подтверждённой квалификации.",
+            "normalized_assessment_score=null."
+          ]
+        },
+        "C12": {
+          "reason_codes": [
+            "missing_assessment_score"
+          ],
+          "reasons": [
+            "normalized_assessment_score=null, несмотря на указанный SENIOR grade."
+          ]
+        }
+      },
+      "expected_top5": [
+        "C02",
+        "C08",
+        "C01",
+        "C04",
+        "C05"
+      ],
+      "ranking_rationales": [
+        {
+          "position": 1,
+          "candidate_id": "C02",
+          "rationale": "Полный Django/PostgreSQL/SQL stack и семь лет опыта близки ориентиру шесть. Совместимый Senior здесь предпочтён менее опытным exact Middle."
+        },
+        {
+          "position": 2,
+          "candidate_id": "C08",
+          "rationale": "Шесть лет опыта, Django/PostgreSQL/SQL. Ниже C02: отсутствует FastAPI и результат Senior немного ниже, хотя стаж точнее совпадает. Выше C01: data-fit и опыт предпочтены exact Middle и FastAPI у C01; close call."
+        },
+        {
+          "position": 3,
+          "candidate_id": "C01",
+          "rationale": "Exact Middle, Django/PostgreSQL и три года опыта. Выше C04: больший опыт предпочтён SQL и более сильному результату в том же Middle assessment у C04; close call для data-роли."
+        },
+        {
+          "position": 4,
+          "candidate_id": "C04",
+          "rationale": "Exact Middle с полным optional stack и сильным результатом своего уровня. Выше C05: точность grade и этот сигнал качества предпочтены двенадцати годам опыта C05; close call, Senior 70 не трактуется как психометрически эквивалентный Middle score."
+        },
+        {
+          "position": 5,
+          "candidate_id": "C05",
+          "rationale": "Полный stack и большой опыт обеспечивают допустимость. Профиль поставлен после C04 в спорном сравнении подходящего grade/результата и опыта. Это не утверждение, что меньший стаж всегда лучше."
+        }
+      ],
+      "ambiguous_tradeoffs": [
+        {
+          "candidates": [
+            "C08",
+            "C01"
+          ],
+          "preferred_candidate": "C08",
+          "close_call": true,
+          "rationale": "Senior с SQL и опытом 6 без FastAPI против exact Middle с опытом 3 и FastAPI без SQL; data-fit против grade-fit."
+        },
+        {
+          "candidates": [
+            "C01",
+            "C04"
+          ],
+          "preferred_candidate": "C01",
+          "close_call": true,
+          "rationale": "Middle 85, опыт 3, без SQL против Middle 95, опыта 1 и полного stack; больший опыт против assessment/SQL."
+        },
+        {
+          "candidates": [
+            "C04",
+            "C05"
+          ],
+          "preferred_candidate": "C04",
+          "close_call": true,
+          "rationale": "Exact Middle, сильный результат своего уровня и опыт 1 против Senior с полным stack и опытом 12; спорная точность grade против опыта."
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "hard_filter_violations": {
+      "definition": "Число пар (Need, candidate), заранее EXCLUDED, но возвращённых production как eligible; проверять весь eligible result, не только Top-5.",
+      "target": 0
+    },
+    "mean_top3_set_agreement": {
+      "per_need_definition": "100 * |ActualTop3 intersect ExpectedTop3| / 3",
+      "aggregate": "Среднее арифметическое по H1–H4; ExpectedTop3 — первые три expected_top5.",
+      "empty_slots": "Если actual меньше трёх, недостающие позиции не совпадают; знаменатель остаётся 3.",
+      "target_percent_min": 90
+    },
+    "mean_top5_set_agreement": {
+      "per_need_definition": "100 * |ActualTop5 intersect ExpectedTop5| / 5",
+      "aggregate": "Среднее арифметическое по H1–H4.",
+      "empty_slots": "Если actual меньше пяти, недостающие позиции не совпадают; знаменатель остаётся 5.",
+      "target_percent_min": 90
+    },
+    "mean_rank_error_at5": {
+      "per_candidate_definition": "abs(expected_position - actual_position), позиции начинаются с 1. Если expected Top-5 candidate отсутствует в ActualTop5, actual_position=6, даже если он есть ниже пятого места.",
+      "aggregate": "Среднее по пяти ExpectedTop5 candidates каждой Need, затем среднее по четырём Need.",
+      "target_max": 1.0
+    }
+  },
+  "fixture_limitations": [
+    "C12 — намеренно некорректный snapshot с grade без score. Он не представим в current main БД из-за consistent_verification; будущая проверка должна использовать реальную input/validation boundary без ослабления constraint и без заполнения score.",
+    "C09 — синтетический wrong-specialization snapshot; он не утверждает наличие production Frontend assessment bank.",
+    "Поля являются проекцией для research; контактов, declared_grade, дат, FSP bonus и profile recency нет."
+  ],
+  "freeze_policy": {
+    "current_status": "DRAFT_FOR_HUMAN_FREEZE",
+    "requires_human_approval": true,
+    "approved_status": "LOCKED_BEFORE_MATCHING_EVALUATION",
+    "locked_parts": [
+      "needs",
+      "candidates",
+      "eligibility expectations",
+      "expected_top5",
+      "ranking rationales",
+      "metric definitions and targets"
+    ],
+    "post_evaluation_rule": "Не менять dataset/expectations/metrics и не тюнить ranking coefficients по holdout без отдельного product decision; новый набор требует отдельной версии и независимой процедуры."
+  }
+}
