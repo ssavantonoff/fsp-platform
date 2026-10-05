@@ -107,7 +107,7 @@ Each commit stages only that task's declared files, with explicit paths; never `
 - [x] Add the two model classes/enums in `app/models.py` using existing non-native enum/check conventions; add salary nonnegative/order and finite nonnegative target checks, employer/status indexes and FK integrity. Keep all candidate columns unchanged.
 - [x] Generate and author the new migration from the real head; align constraints/index names with model metadata and implement downgrade removing only O1 tables/indexes.
 - [x] Run `pytest -q tests/test_infrastructure.py`; expect all infrastructure tests pass and `alembic check` finds no schema drift after head upgrade.
-- [ ] Run the same file with `TEST_DATABASE_URL` pointing to PostgreSQL; expect actual FK/check/round-trip assertions pass.
+- [x] Run the same file with `TEST_DATABASE_URL` pointing to PostgreSQL; expect actual FK/check/round-trip assertions pass.
 - [x] Commit these files: `feat: add normalized employer need persistence`.
 
 The database cannot enforce “at least one must-have” with a simple row check; Task 2 enforces it transactionally. Reject infinity/NaN at the input layer as well. Numeric(12,2) provides a concrete storage limit; schema validation in Task 2 must agree with it.
