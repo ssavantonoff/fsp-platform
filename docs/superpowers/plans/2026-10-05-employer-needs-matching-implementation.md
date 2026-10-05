@@ -173,12 +173,12 @@ Transaction boundary is the existing request Session, not a nested replacement f
 - Produces `ProfileAssessmentProvider(db: Session)` implementing that protocol with projected canonical-column queries, de-duplicated IDs and chunks of at most 500. Empty input returns `{}` without SQL; absent profile IDs omitted.
 - Test-local `FakeAssessmentProvider` implements the same interface, returns configured records and records calls. No production fake, cache, snapshot or write endpoint.
 
-- [ ] Write `test_provider_returns_canonical_current_state`, `test_provider_empty_and_missing_ids`, `test_provider_batches_and_deduplicates`, `test_provider_does_not_write_assessment_fields`; assert trio equals persisted values, empty zero queries, 501 unique IDs at most two provider SELECTs, no UPDATE/INSERT/DELETE/commit and trio unchanged in an independent read. Include a dirty Session object to prove a provider SELECT does not auto-flush pending assessment changes.
-- [ ] Run `pytest -q tests/test_candidate_assessments.py`; expect import/implementation failure for the absent provider.
-- [ ] Implement the DTO/protocol/production provider with one projected SELECT per chunk inside `db.no_autoflush`; no writes, assessment attempt/history queries or calls to `synchronize_verification`.
-- [ ] Run `pytest -q tests/test_candidate_assessments.py`; expect PASS.
-- [ ] Run `pytest -q tests/test_assessments.py tests/test_profiles.py`; expect canonical state ownership behavior preserved.
-- [ ] Commit declared files: `feat: add read-only batch assessment provider`.
+- [x] Write `test_provider_returns_canonical_current_state`, `test_provider_empty_and_missing_ids`, `test_provider_batches_and_deduplicates`, `test_provider_does_not_write_assessment_fields`; assert trio equals persisted values, empty zero queries, 501 unique IDs at most two provider SELECTs, no UPDATE/INSERT/DELETE/commit and trio unchanged in an independent read. Include a dirty Session object to prove a provider SELECT does not auto-flush pending assessment changes.
+- [x] Run `pytest -q tests/test_candidate_assessments.py`; expect import/implementation failure for the absent provider.
+- [x] Implement the DTO/protocol/production provider with one projected SELECT per chunk inside `db.no_autoflush`; no writes, assessment attempt/history queries or calls to `synchronize_verification`.
+- [x] Run `pytest -q tests/test_candidate_assessments.py`; expect PASS.
+- [x] Run `pytest -q tests/test_assessments.py tests/test_profiles.py`; expect canonical state ownership behavior preserved.
+- [x] Commit declared files: `feat: add read-only batch assessment provider`.
 
 The provider is an integration abstraction, not a persistence owner. Future Assessment Engine changes remain behind its read adapter; all matching tests can inject the fake without building questions/attempts. Persisted fixtures must set all three canonical fields together; partial states belong only to defensive fake-provider tests.
 
