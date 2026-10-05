@@ -125,3 +125,30 @@ def candidate_data(skill_ids):
 @pytest.fixture
 def employer_data():
     return {"company_name": "Tech", "contact_person_name": "Иван Петров"}
+
+
+@pytest.fixture
+def employer_account(client, account, employer_data):
+    def create(email="employer@example.com"):
+        user = account(role="EMPLOYER", email=email)
+        response = client.post("/employer/profile", json=employer_data)
+        assert response.status_code == 201, response.text
+        return user, response.json()
+
+    return create
+
+
+@pytest.fixture
+def need_data(skill_ids):
+    return {
+        "position_title": "Backend developer",
+        "specialization": "BACKEND",
+        "required_grade": "MIDDLE",
+        "target_experience_years": 3,
+        "salary_from": "100000.00",
+        "salary_to": "200000.00",
+        "description": "Build platform services.",
+        "additional_requirements": None,
+        "must_have_skill_ids": skill_ids[:2],
+        "nice_to_have_skill_ids": skill_ids[2:],
+    }

@@ -145,19 +145,19 @@ Test rows belong to `test_employer_needs.py`; parameterize parallel validation/a
 | `test_active_update_persistence_failure_rolls_back` | injected flush/commit IntegrityError returns conflict envelope; independent Session reads original scalars/relations |
 | `test_need_list_pagination` | `{items,total,limit,offset}`, created_at DESC/id ASC, default20/max100, negative offset/invalid limit422 |
 
-- [ ] Write the first creation/access tests and shared factories; factories preserve canonical assessment consistency and existing fixture behavior.
-- [ ] Run `pytest -q tests/test_employer_needs.py -k 'creates_own_draft or require_employer'`; expect 404 for missing routes before implementation.
-- [ ] Implement NeedWrite/NeedOut/NeedPage in `need_schemas.py`; title length1–200 and nonempty description after trimming, salary Decimal finite/nonnegative/max_digits12/decimal_places2/order, nonnegative finite target, unique/disjoint IDs and nonempty must-have.
-- [ ] Implement service creation/reads/list and `need_out` with stable skill ordering and profile-derived ownership; unknown skills produce `ApiError(422, "unknown_skill", ...)` using the existing error envelope.
-- [ ] Register the router with existing employer/Origin dependencies in `main.py`.
-- [ ] Run the creation/access tests; expect PASS.
-- [ ] Write the remaining validation/lifecycle/atomicity tests from the table.
-- [ ] Run `pytest -q tests/test_employer_needs.py`; expect missing update/transition behavior to fail.
-- [ ] Implement mutations: select the owner-scoped parent using `with_for_update().execution_options(populate_existing=True)`, load relationships after the lock, validate all skill IDs before changing anything, reconcile associations by skill ID (update existing kinds, add new, remove absent), then one commit and refresh. On persistence failure roll back and return `ApiError(409, "need_conflict", ...)`; no partial commits or duplicate-PK insert during kind changes.
-- [ ] Implement invalid lifecycle/CLOSED-update errors as `ApiError(409, "need_state_conflict", ...)`; foreign/missing IDs as `ApiError(404, "need_not_found", ...)`.
-- [ ] Run `pytest -q tests/test_employer_needs.py`; expect PASS.
-- [ ] Run `pytest -q tests/test_auth.py tests/test_profiles.py tests/test_infrastructure.py`; expect existing suites remain green.
-- [ ] Commit declared files: `feat: add employer need management API`.
+- [x] Write the first creation/access tests and shared factories; factories preserve canonical assessment consistency and existing fixture behavior.
+- [x] Run `pytest -q tests/test_employer_needs.py -k 'creates_own_draft or require_employer'`; expect 404 for missing routes before implementation.
+- [x] Implement NeedWrite/NeedOut/NeedPage in `need_schemas.py`; title length1–200 and nonempty description after trimming, salary Decimal finite/nonnegative/max_digits12/decimal_places2/order, nonnegative finite target, unique/disjoint IDs and nonempty must-have.
+- [x] Implement service creation/reads/list and `need_out` with stable skill ordering and profile-derived ownership; unknown skills produce `ApiError(422, "unknown_skill", ...)` using the existing error envelope.
+- [x] Register the router with existing employer/Origin dependencies in `main.py`.
+- [x] Run the creation/access tests; expect PASS.
+- [x] Write the remaining validation/lifecycle/atomicity tests from the table.
+- [x] Run `pytest -q tests/test_employer_needs.py`; expect missing update/transition behavior to fail.
+- [x] Implement mutations: select the owner-scoped parent using `with_for_update().execution_options(populate_existing=True)`, load relationships after the lock, validate all skill IDs before changing anything, reconcile associations by skill ID (update existing kinds, add new, remove absent), then one commit and refresh. On persistence failure roll back and return `ApiError(409, "need_conflict", ...)`; no partial commits or duplicate-PK insert during kind changes.
+- [x] Implement invalid lifecycle/CLOSED-update errors as `ApiError(409, "need_state_conflict", ...)`; foreign/missing IDs as `ApiError(404, "need_not_found", ...)`.
+- [x] Run `pytest -q tests/test_employer_needs.py`; expect PASS.
+- [x] Run `pytest -q tests/test_auth.py tests/test_profiles.py tests/test_infrastructure.py`; expect existing suites remain green.
+- [x] Commit declared files: `feat: add employer need management API`.
 
 Transaction boundary is the existing request Session, not a nested replacement framework: auth/reads may already have started its transaction. Parent lock, scalar changes, association reconciliation/delete-orphan removals and commit occur in that transaction. Set updated_at even for a skills-only edit. Input failures happen before changes; DB failures roll it back. Route input validation must not “save the valid part.”
 
