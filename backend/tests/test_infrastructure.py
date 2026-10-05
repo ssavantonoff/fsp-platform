@@ -22,6 +22,10 @@ def test_migration_upgrade_downgrade_and_schema_matches_models(database):
             "employer_profiles",
             "skills",
             "candidate_skills",
+            "assessment_questions",
+            "assessment_options",
+            "assessment_attempts",
+            "assessment_attempt_questions",
         }
         command.check(config)
         command.downgrade(config, "base")

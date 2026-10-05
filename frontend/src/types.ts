@@ -22,6 +22,8 @@ export interface CandidateProfile {
   specialization: Specialization;
   declared_grade: Grade;
   verified_grade: Grade | null;
+  normalized_assessment_score: number | null;
+  assessment_verified_at: string | null;
   years_of_experience: number | null;
   fsp_id: string | null;
   personal_data_consent: boolean;

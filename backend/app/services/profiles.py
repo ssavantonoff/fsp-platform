@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.models import CandidateProfile, EmployerProfile, Skill, User, utcnow
 from app.schemas import CandidateWrite, EmployerWrite
+from app.services import assessments
 
 
 def candidate_profile(db: Session, user: User) -> CandidateProfile:
@@ -32,6 +33,7 @@ def save_candidate(
         select(CandidateProfile)
         .where(CandidateProfile.user_id == user.id)
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if create and profile is not None:
         raise ApiError(409, "profile_exists", "Профиль уже создан.")
@@ -43,6 +45,15 @@ def save_candidate(
     if profile is None:
         profile = CandidateProfile(user_id=user.id, personal_data_consent=False)
         db.add(profile)
+    if not create and data.specialization != profile.specialization:
+        if assessments.expire_active(db, profile, utcnow()) is not None:
+            raise ApiError(
+                409,
+                "assessment_in_progress",
+                "Завершите активный тест перед сменой специализации.",
+            )
+        profile.specialization = data.specialization
+        assessments.synchronize_verification(db, profile)
     if data.personal_data_consent and not profile.personal_data_consent:
         profile.personal_data_consent_at = utcnow()
     elif not data.personal_data_consent:
