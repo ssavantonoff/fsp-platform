@@ -19,7 +19,8 @@
 - Frozen base weights: Assessment 45%, Grade fit 25%, Nice-to-have 15%, Experience 15%. Optional-factor omission renormalizes remaining weights to 100.
 - Explicit zero experience target gives ExperienceFit 1, including missing candidate experience. Positive target with missing experience gives 0; null target excludes the factor.
 - `DRAFT → ACTIVE → CLOSED`; DRAFT/ACTIVE editable; CLOSED immutable, update 409. Matching only ACTIVE. Scalar fields and skill relationships update atomically.
-- Every matching request uses fresh committed inputs; no persisted MatchScore, ranking snapshot or ranking cache. Retain no-store responses.
+- Every new matching invocation materializes fresh committed Need inputs into an immutable request-scoped NeedCriteria. An invocation already holding its criteria may finish on them after a concurrent update; no persisted MatchScore, ranking snapshot or ranking cache. Retain no-store responses.
+- Matching GET never takes an exclusive Need row lock or uses the mutation-lock path. FOR UPDATE remains for update_need, activate_need and close_need only.
 - Assessment Engine owns `verified_grade`, `normalized_assessment_score`, `assessment_verified_at`, their consistency and history. O1 reads them, never migrates/writes them or calls assessment synchronization/finalization.
 - No real confirmed-FSP achievement source exists at this baseline. No FSP production flag/tie-breaker; neither fsp_id nor profile/assessment recency affects fit or rank.
 - Preview allowlist only; omit about, full surname, contacts, consent and internal fields. `assessment_verified_at` is allowed solely for display.
@@ -34,6 +35,7 @@
 3. Null, zero, nonfinite or out-of-range provider values: null/invalid exclude, zero remains available; no fallback or assessment writes. Tasks 3–4 own provider/eligibility tests.
 4. Scores displaying the same decimal and pagination cutting the pool: unrounded ordering precedes pagination; exact ties use normalized assessment then stable ID. Tasks 5–6 own numeric/ranking/pagination tests.
 5. A source profile containing contacts or changed dates/FSP/declared grade: exact preview allowlist, informational assessment date and invariant fit/rank. Tasks 6 and 10 own API/presentation tests; Task 7 retains candidate-flow regression.
+6. Read-only matching takes an exclusive writer lock or rereads mutable Need criteria midway through ranking: concurrent GETs must not serialize on the Need row; started matching may finish on its immutable criteria, while subsequent matching sees a successful commit. Task 6 `test_matching_loads_criteria_without_mutation_lock` / `test_need_criteria_is_immutable`; Task 7 `test_concurrent_matching_reads_do_not_serialize` / `test_matching_snapshot_survives_concurrent_active_update` own this risk.
 
 ## Repository patterns and file map
 
@@ -47,7 +49,7 @@ Paths below are repository-relative. Backend does **not** have schemas/services 
 | `backend/app/services/employer_needs.py` | Create: ownership, validation, transactions, lifecycle and need serialization | 2 |
 | `backend/app/services/candidate_assessments.py` | Create: batch read contract, canonical profile adapter | 3 |
 | `backend/app/services/matching_rules.py` | Create: pure eligibility, fit and deterministic ranking types/functions | 4–5 |
-| `backend/app/services/matching.py` | Create: fresh ORM inputs, provider, orchestration and safe output construction | 6 |
+| `backend/app/services/matching.py` | Create: coherent read-only NeedCriteria loader, provider, orchestration and safe output construction | 6 |
 | `backend/app/routes/employer_needs.py` | Create: seven thin routes, permission/Origin/query validation/provider dependency | 2, 6 |
 | `backend/app/main.py` | Modify: include the employer-needs router | 2 |
 | `backend/app/seed.py` | Modify: explicit local matching demo; preserve existing modes/accounts | 8 |
@@ -120,6 +122,7 @@ The database cannot enforce “at least one must-have” with a simple row check
 - Produces: `NeedWrite(InputModel)` with position_title, specialization, required_grade, nullable target_experience_years, salary_from/to, description, nullable additional_requirements, `must_have_skill_ids: list[str]`, `nice_to_have_skill_ids: list[str]` (default empty). No owner/status/calculated/assessment input fields.
 - Produces: `NeedOut`, `NeedPage(items: list[NeedOut], total: int, limit: int, offset: int)`. NeedOut contains own need scalars/timestamps and `must_have_skills`/`nice_to_have_skills: list[SkillOut]`.
 - Produces service functions: `create_need(db: Session, user: User, data: NeedWrite) -> EmployerNeed`; `get_need(db: Session, user: User, need_id: str, *, for_update: bool = False) -> EmployerNeed`; `list_needs(db: Session, user: User, *, limit: int, offset: int) -> NeedPage`; `update_need(db: Session, user: User, need_id: str, data: NeedWrite) -> EmployerNeed`; `activate_need(db: Session, user: User, need_id: str) -> EmployerNeed`; `close_need(db: Session, user: User, need_id: str) -> EmployerNeed`; `need_out(need: EmployerNeed) -> NeedOut`.
+- `get_need` defaults to a nonlocking management read; its `for_update=True` path is reserved for update_need/activate_need/close_need. Matching uses Task 6 `load_need_criteria` instead and never invokes this mutation path.
 - Produces six thin routes: GET/POST `/employer/needs`, GET/PUT `/{need_id}`, POST `/{need_id}/activate`, POST `/{need_id}/close`. POST create 201; reads/updates/transitions 200. Task 6 adds the seventh route.
 
 Test rows belong to `test_employer_needs.py`; parameterize parallel validation/access cases rather than duplicating setup.
@@ -185,7 +188,7 @@ The provider is an integration abstraction, not a persistence owner. Future Asse
 
 **Interfaces**
 - Consumes: Task 3 `CandidateAssessment` DTO, existing Grade/Specialization enums only; no Session or ORM access in rules.
-- Produces frozen `NeedCriteria(specialization: Specialization, required_grade: Grade, must_have_skill_ids: frozenset[str], nice_to_have_skill_ids: frozenset[str], target_experience_years: float | None)`.
+- Produces frozen `NeedCriteria(need_id: str, employer_id: str, specialization: Specialization, required_grade: Grade, must_have_skill_ids: frozenset[str], nice_to_have_skill_ids: frozenset[str], target_experience_years: float | None)`. It is the immutable in-memory input snapshot of one matching invocation, not a database snapshot/table. IDs identify its owned source; pure rules use only the approved criteria. No title, salary, description, ORM relationships or mutable collections are needed by scoring.
 - Produces frozen `CandidateMatchInput(candidate_id: str, specialization: Specialization, personal_data_consent: bool, skill_ids: frozenset[str], years_of_experience: float | None)`; no declared grade, FSP or recency fields.
 - Produces frozen `EligibleCandidate(candidate: CandidateMatchInput, verified_grade: Grade, normalized_assessment_score: int, assessment_verified_at: datetime | None, grade_fit: float)`; construct it only after validating the provider DTO, so downstream grade/score types are nonnullable.
 - Produces `grade_fit(required_grade: Grade, verified_grade: Grade) -> float | None` and `eligible_candidate(need: NeedCriteria, candidate: CandidateMatchInput, assessment: CandidateAssessment | None) -> EligibleCandidate | None`.
@@ -275,7 +278,8 @@ A zero assessment does not mean a zero total: an eligible exact-grade candidate 
 - Modify: `backend/app/need_schemas.py`, `backend/app/routes/employer_needs.py`, `backend/tests/conftest.py`.
 
 **Interfaces**
-- Consumes: Task 2 `get_need`, Task 3 provider, Task 4 eligibility and Task 5 score/rank functions.
+- Consumes: Task 2 ownership/error conventions and existing `employer_profile(db, user)`, Task 1 Need/association models, Task 3 provider, Task 4 NeedCriteria/eligibility and Task 5 score/rank functions. Matching does not consume the locked `get_need` mutation path.
+- Produces `load_need_criteria(db: Session, user: User, need_id: str) -> NeedCriteria` in `app/services/matching.py`: resolve authenticated employer profile, then one owner-scoped SELECT projecting Need ID/owner/status/scalar criteria and LEFT OUTER JOINed requirement skill IDs/kinds. Missing/foreign404 and non-ACTIVE409 remain distinguishable. All criteria and association rows come from this single read statement, without FOR UPDATE or a separate selectin criteria query; materialize frozen NeedCriteria before candidate loading/ranking.
 - Produces `FactorBreakdown(score: float, max: float, active: bool)`; `GradeBreakdown` additionally exact_match; `NiceToHaveBreakdown` additionally matched/total; `MatchBreakdown` has assessment/grade/nice_to_have/experience.
 - Produces `EmployerCandidatePreview` with exactly candidate_id, display_name, specialization, verified_grade, skills, years_of_experience, normalized_assessment_score, assessment_verified_at, professional_fit_score, breakdown, matched_must_have_skills, matched_nice_to_have_skills, missing_nice_to_have_skills. Skill arrays use SkillOut with stable ordering. UTC-date handling follows the existing CandidateOut validator convention without using CandidateOut itself.
 - Produces `MatchesPage(items: list[EmployerCandidatePreview], total: int, limit: int, offset: int)` and `match_need(db: Session, user: User, need_id: str, provider: CandidateAssessmentProvider, *, limit: int, offset: int) -> MatchesPage`.
@@ -285,7 +289,8 @@ A zero assessment does not mean a zero total: an eligible exact-grade candidate 
 - [ ] Write `test_matching_permissions_and_status`: anonymous401, Candidate403, foreign/missing404, DRAFT/CLOSED409, ACTIVE200 and standard error envelopes.
 - [ ] Run `pytest -q tests/test_matching.py -k permissions_and_status`; expect missing endpoint404 in the ACTIVE case.
 - [ ] Implement explicit response schemas and provider dependency in the declared files.
-- [ ] Implement `match_need`: owner/state check, fresh parent/skill inputs, batched pool query with selectin candidate skills, one provider call for all pool IDs, eligibility, single pure scoring function, full deterministic rank, then pagination and explicit DTO construction. Preserve unrounded score in service/API; UI formats it later.
+- [ ] Implement `load_need_criteria` using the owner-scoped joined/projected read above; verify ACTIVE in its returned rows, copy scalar criteria and frozenset skill IDs, then discard ORM Need as a criteria source. No writer lock or intermediate GET commit.
+- [ ] Implement `match_need`: authorize through existing EmployerUser/ownership conventions, obtain immutable criteria through load_need_criteria, load candidate pool with selectin candidate skills, call the provider once for all pool IDs, apply eligibility, single pure scoring function, full deterministic rank, then pagination and explicit DTO construction. Preserve unrounded score in service/API; UI formats it later. Resolve catalog display metadata for criteria IDs in one batch if needed, without rereading Need requirements.
 - [ ] Add the seventh thin route using these interfaces and existing no-store behavior.
 - [ ] Run the permission/status test; expect PASS.
 - [ ] Write the focused tests in the table below.
@@ -306,10 +311,14 @@ A zero assessment does not mean a zero total: an eligible exact-grade candidate 
 | `test_matching_ranks_before_pagination` | first/second pages equal slices of full ranking; total equals eligible pool, not page size; top candidate can occur last in DB input |
 | `test_matching_batches_queries` | SQL event counts for 5 and 50 candidates remain bounded, provider SELECTs follow ceil(n/500), no single-candidate SELECT loop or lazy per-skill loads |
 | `test_matching_is_read_only` | GET issues no data mutation, no attempt/history query or synchronization/finalization; canonical trio unchanged |
+| `test_matching_loads_criteria_without_mutation_lock` | ACTIVE GET uses load_need_criteria; a spy rejecting the get_need mutation-lock path is never triggered; owner/status/scalars/both requirement kinds are materialized from one Need read statement |
+| `test_need_criteria_is_immutable` | frozen scalar assignment raises FrozenInstanceError; skill collections are frozensets; changing a separately loaded ORM Need/associations after capture leaves the captured criteria and pure results unchanged |
 
 For privacy fixtures populate User.email, candidate fsp_id, consent timestamp and about containing phone/Telegram markers; assert forbidden key names and marker values never appear. Since phone/telegram columns do not exist at this baseline, assert their absence without inventing them. Keep consent inside CandidateMatchInput and away from all response types.
 
-Use the existing parent row lock for a coherent Need scalar/association read when matching overlaps editing: `get_need(..., for_update=True)` loads owner-scoped committed state before associated skills, and the request Session releases the lock on close. Do not commit inside GET or cache the loaded ORM entity across requests. The provider batch reads canonical state, not CandidateOut verification copied earlier; SQL filters are optimizations, with pure eligibility still authoritative.
+Matching GET uses the ordinary read-oriented Session pattern without an exclusive row lock: the single joined/projected Need SELECT sees one committed statement view, so scalar criteria and requirement rows cannot be mixed across separate Need reads. It copies inputs to NeedCriteria; all subsequent eligibility/scoring/ranking uses that value object, never mutable EmployerNeed. Do not commit inside GET, retain ORM Need as criteria, or cache criteria/results across requests. The provider batch reads canonical state, not CandidateOut verification copied earlier; SQL filters are optimizations, with pure eligibility still authoritative.
+
+Read snapshot semantics are request-scoped, not a stronger global snapshot promise for all candidate/assessment reads. Once matching A has captured criteria, a concurrent ACTIVE update can commit without waiting for A's ranking and A may finish using the original criteria. Matching B capturing criteria after that successful commit uses the new inputs. A rollback leaves the previous committed criteria visible to the next invocation. Concurrent matching GETs do not serialize through a writer-style Need lock. NeedCriteria is only an in-memory value object; no snapshot is persisted and no ranking/criteria cache is introduced. Mutation services retain their own row locks.
 
 ### Task 7: ACTIVE-edit live recalculation and integrated regressions
 
@@ -318,7 +327,8 @@ Use the existing parent row lock for a coherent Need scalar/association read whe
 
 **Interfaces**
 - Consumes: existing POST/PUT/lifecycle/matches contracts; new TestClient requests after every successful/failed update, independent Session readback.
-- Produces: regression proof of fresh committed inputs and parent-lock ordering; no new product API/type.
+- Consumes additionally: Task 6 load_need_criteria and Task 4 frozen NeedCriteria for controlled read-snapshot checkpoints.
+- Produces: regression proof of committed-input visibility, immutable request snapshots and concurrent nonlocking reads; close/update retains mutation-lock ordering. No new product API/type.
 
 - [ ] Write `test_active_must_have_edit_changes_eligibility`: initial candidate present, successful PUT adds PostgreSQL absent from that candidate, next GET excludes it.
 - [ ] Run that test; expect it to detect stale inputs if present. If already PASS, record that fact and do not claim an artificial RED.
@@ -326,10 +336,13 @@ Use the existing parent row lock for a coherent Need scalar/association read whe
 - [ ] Write `test_active_grade_edit_changes_eligibility_and_fit`: Middle need includes Middle/Senior; editing to Junior excludes Senior and makes Middle GradeFit0.75; expected grade contribution reflects renormalization.
 - [ ] Write `test_active_experience_edit_changes_score`: positive target changes factor/contribution on the next GET; null and zero edits exercise omit/full behavior.
 - [ ] Write parameterized `test_failed_active_edit_preserves_matching`: invalid salary/unknown skill/overlap/empty must-have request attempts title and skill changes; independent readback AND fresh matches exactly retain original inputs/contributions/order.
+- [ ] Write PostgreSQL-only `test_matching_snapshot_survives_concurrent_active_update`: A loads old NeedCriteria and pauses at its provider/candidate phase; an independent Session successfully commits an ACTIVE scalar/skill update while A is still paused; release A and assert its results use only old criteria, then start B and assert new eligibility/contributions from committed criteria. Use explicit Events/barriers and bounded future timeouts, not timing-only sleeps; always release paused workers in finally.
+- [ ] Write PostgreSQL-only `test_concurrent_matching_reads_do_not_serialize`: A reaches a barrier after criteria capture while its request Session remains open; B independently reaches the same post-capture point before A is released, proving it was not blocked by an exclusive Need lock. Both results are correct; each invocation uses a separate Session/connection. Exercise the matching GET/service read flow, not only the pure rule functions; an invocation hitting the mutation-lock path fails the test.
+- [ ] Write PostgreSQL-only `test_failed_active_transaction_keeps_committed_snapshot`: A captures original criteria, a concurrent invalid/persistence-failing ACTIVE update rolls back, then fresh B captures identical committed scalar/skill inputs and returns the same results; no uncommitted inputs become criteria. Retain the existing validation-failure cases above.
 - [ ] Write PostgreSQL-only `test_close_racing_update_preserves_closed_state`: two independent Sessions/connections, updating Session first preloads ACTIVE, controlled lock acquisition and bounded waits; close wins lock and commits, blocked update refreshes its cached state, raises ApiError with status409 and cannot reopen/change CLOSED. Avoid timing-only sleeps as proof.
 - [ ] Run `pytest -q tests/test_matching.py tests/test_employer_needs.py`; expect PASS, with PostgreSQL-only test explicitly skipped on SQLite.
 - [ ] Correct a demonstrated service regression, if any, through the existing transaction/locking interfaces; do not add a cache or alternate score path.
-- [ ] Run the two test files with `TEST_DATABASE_URL`; expect actual concurrency/rollback tests pass, not skip.
+- [ ] Run the two test files with `TEST_DATABASE_URL`; expect actual concurrent-read, snapshot/update, rollback and close-vs-update tests pass, not skip. A and B reaching the controlled checkpoints and the update committing while A is paused are the behavior proof; SQL text inspection alone is insufficient.
 - [ ] Run `pytest -q`; expect entire candidate/auth/assessment flow preserved, including canonical reset/restoration after specialization changes.
 - [ ] Commit the explicit changed files: `test: cover atomic active edits and live matching`.
 
@@ -471,6 +484,7 @@ The original implementation delivery scope eventually includes pushing the branc
 | Foundation/auth/error/catalog reuse; normalized Need persistence | 1–2, existing auth/profile regression |
 | Ownership, validation, lifecycle, ACTIVE editable, CLOSED409 | 2, parameterized API tests |
 | Atomic updates and lifecycle races | 2 rollback tests; 7 independent readback/PostgreSQL lock test |
+| Nonlocking coherent Need reads, immutable invocation snapshot, concurrent GETs/update visibility | 4 frozen NeedCriteria; 6 joined read loader/no mutation path; 7 PostgreSQL snapshot/update/concurrent-read tests |
 | Canonical assessment ownership, read-only batch boundary, no snapshots | 1 migration preservation; 3 provider SQL/write tests; 6 boundary/read-only API tests |
 | Consent/spec/verified grade/compatibility/must-have/score hard filters | 4 unit matrix; 6 adversarial API; 8 demo |
 | Frozen formula, cap/missing/zero experience, renormalization | 5 literal numeric oracles; 6 breakdown API |
@@ -493,5 +507,6 @@ Self-review decisions recorded while preparing this plan:
 - Separate existing Node SSR/helper proof from browser event/navigation proof; no additional test stack.
 - Scan function/DTO names across tasks: all consumes reference the producing interfaces above; validated eligibility fields are nonnullable, Header modifications target the real `auth.tsx`, and presentational editor tests do not require unavailable router/browser mocks. No undeclared repository, snapshot, scoring copy or assessment writer is introduced.
 - Each task has named tests/oracles, a focused command, expected RED/GREEN behavior and a scoped future commit; regression-only tests honestly allow existing PASS instead of inventing failures.
+- Concurrency review correction: matching GET has no FOR UPDATE/get_need mutation-lock call; a single joined read materializes immutable NeedCriteria. Existing update/activate/close locks and close-vs-update test remain; started matching may finish with old criteria, successful commits affect subsequent invocations, and rollbacks preserve old inputs. Concurrent GET checkpoint tests prove absence of writer-style serialization. This request-local in-memory snapshot is not persisted ranking/cache.
 
 This file contains implementation instructions, not implementation bodies. The approved spec is unchanged. After committing/pushing this plan, stop and await team review; do not invoke an execution skill or start TASK O1 production implementation.
