@@ -2,16 +2,17 @@
 
 ## Status and intent
 
-Architecture initially approved by the user on 2026-10-05, with subsequent
-team-agreed corrections recorded below. This written specification is NOT approved;
-it requires review before the implementation plan and product implementation.
+This written specification is NOT finally approved. It describes the current
+architecture and team-agreed review corrections; final review is required before
+the implementation plan and product implementation.
 
 Deliver Employer Profile → Create Need → Publish Need → Eligibility → Matching
 → Ranking → Explainability → Candidate Preview. Preserve the existing platform
 foundation. Correctness, privacy, reproducibility and tests take priority over
 visual design. No production deployment or PR merge.
 
-Baseline: `origin/main`, commit `e47509b6055674b8872e49fdbb15a507bbb85895`.
+Baseline: `origin/main`, commit `9892400d57b57fe3104d1871fa3513e56e24c4b5`.
+Candidate Assessment Engine is merged in this baseline.
 Implementation branch: `feat/employer-needs-matching`.
 
 ## Existing architecture and reuse
@@ -51,23 +52,29 @@ Add one normalized association object EmployerNeedSkill:
 - Eager/batched relationship loading; deterministic skill ordering.
 
 CandidateProfile is the sole source of truth for current verification/assessment
-state: verified_grade, nullable normalized_assessment_score (finite 0–100 when
-present), and nullable assessment_verified_at. Candidate Assessment Engine owns
+state: nullable verified_grade, nullable normalized_assessment_score (Integer,
+0–100 when present), and nullable assessment_verified_at (timezone-aware DateTime).
+All three already exist in backend/app/models.py. The valid_assessment_score
+constraint bounds the score; consistent_verification requires the three fields to
+be either all NULL or all non-NULL. Candidate Assessment Engine owns
 persistence/schema evolution of the assessment fields and their consistency with
-verified_grade. The last two fields are absent from the inspected baseline; their
-addition belongs to Candidate Assessment Engine, not TASK O1. Matching consumes
-canonical current state read-only; it is not an assessment source of truth.
+verified_grade. TASK O1 does not create, migrate or modify these fields. Matching
+consumes canonical current state read-only; it is not an assessment source of truth.
 Assessment history also belongs to Candidate Assessment Engine and is outside O1.
 
-Future TASK O1 Alembic migrations may create only the EmployerNeed and
+The actual Alembic chain is revision 0001 → revision 0002, with 0002 implemented
+in backend/alembic/versions/0002_assessment_engine.py (down_revision = 0001).
+TASK O1 adds only the next own migration continuing this chain after 0002, if its
+implementation requires schema changes. Do not invent its revision ID now.
+TASK O1 Alembic migrations may create only the EmployerNeed and
 EmployerNeedSkill tables and their required indexes/checks. Matching must not
 create assessment columns, temporary assessment storage, or assessment-field
 migrations. Candidate Assessment Engine owns normalized_assessment_score and
-assessment_verified_at schema changes. Select the O1 revision and down_revision
-against the actual migration head after integrating current main; do not reserve
-`0002` independently of parallel development. Do not create a migration at this
-specification-review stage, rewrite `0001`, or use create_all(). O1 downgrade removes
-only O1-owned need tables/indexes/checks and preserves CandidateProfile assessment
+assessment_verified_at schema changes. Continue the actual current migration head;
+do not modify assessment verification persistence or either existing migration.
+Do not create a migration at this specification-review stage, rewrite `0001`,
+or use create_all(). O1 downgrade removes only O1-owned need tables/indexes/checks
+and preserves CandidateProfile assessment
 fields. Verify upgrade/downgrade/upgrade against the integrated migration chain,
 baseline/assessment data preservation, and Alembic schema consistency on PostgreSQL.
 
@@ -82,8 +89,8 @@ Assessment Engine. Select the concrete interface during implementation to fit th
 existing synchronous Session/service patterns; this specification does not prescribe
 a method signature or add a repository layer.
 
-CandidateProfile is the only current source of truth. Candidate Assessment Engine
-owns and writes these canonical fields and maintains their consistency; Matching
+CandidateProfile is the only current source of truth. The merged Candidate
+Assessment Engine owns and writes these canonical fields and maintains their consistency; Matching
 only reads them and never modifies any of the three. Employer API cannot modify
 them either. Matching owns its read layer/provider integration, not assessment
 persistence. Do not create a second assessment table or duplicate source of truth.
@@ -96,28 +103,27 @@ assessment_verified_at is exclusively informational: it does not affect eligibil
 Professional Fit Score, sorting, tie-breakers or any recency bonus.
 
 TASK O1 exposes no public, employer or manual API to write assessment scores,
-verified_grade or assessment_verified_at. Future unit/integration tests may prepare canonical fields
-through fixtures/factories/seed following existing test patterns; this is not a
+verified_grade or assessment_verified_at. Unit/integration tests may prepare canonical
+fields through fixtures/factories/seed following existing test patterns; this is not a
 production write API. Tests may inject an in-memory read provider. Do not derive
 normalized scores from declared_grade, raw percentages or FSP IDs; raw percentages
 from different assessments must not be compared directly.
 
-### Parallel development and integration
+### Production integration with the merged Assessment Engine
 
-If O1 implementation starts before Candidate Assessment Engine merges, preserve
-CandidateAssessmentProvider as the integration boundary and use a fake/in-memory
-provider for unit tests. Do not add temporary production persistence, migrations
-for assessment fields, or substitute for Candidate Assessment Engine work. The real
-assessment-backed endpoint/demo integration remains dependent on that branch's merge.
+Matching Service → CandidateAssessmentProvider → canonical CandidateProfile state.
+The production provider immediately reads the existing CandidateProfile fields using
+batch queries in the existing synchronous Session/service architecture, without
+per-candidate queries or N+1 loading. Fake/in-memory providers are test doubles for
+unit tests, not a temporary production data source. API integration tests and demo
+matching use the real canonical fields, respecting consistent_verification.
 
-After Candidate Assessment Engine merges:
-
-1. Update/rebase feat/employer-needs-matching from the latest main, integrating its
-   canonical CandidateProfile fields and actual Alembic migration chain.
-2. Connect the production CandidateAssessmentProvider implementation to the real
-   canonical CandidateProfile fields, using batch reads.
-3. Keep Matching access read-only; schema ownership and assessment history remain
-   with Candidate Assessment Engine.
+The existing assessments.synchronize_verification service maintains canonical state
+for the candidate's current specialization. The candidate profile service invokes
+that Assessment Engine behavior when specialization changes. Matching reads the
+resulting committed state; it must not call synchronization, finalize assessments,
+query attempt history for an alternative score, or repeat Assessment Engine selection
+logic. No changes to Assessment Engine internals/history are part of O1.
 
 ## Need API, validation and lifecycle
 
@@ -128,7 +134,7 @@ Seven endpoints under `/employer/needs`:
 | GET | /employer/needs | Own needs, limit/offset |
 | POST | /employer/needs | Create own DRAFT, 201 |
 | GET | /employer/needs/{id} | Own need |
-| PUT | /employer/needs/{id} | Replace fields/skills of own DRAFT |
+| PUT | /employer/needs/{id} | Replace fields/skills of own DRAFT or ACTIVE |
 | POST | /employer/needs/{id}/activate | DRAFT → ACTIVE |
 | POST | /employer/needs/{id}/close | ACTIVE → CLOSED |
 | GET | /employer/needs/{id}/matches | Own ACTIVE need, limit/offset |
@@ -147,10 +153,38 @@ fields, including employer_id, status, calculated scores, grade fit and eligibil
 Validate title, description, >= 1 must-have, duplicates, overlap, existing skill IDs,
 salary bounds/order, and nonnegative finite experience. Validate before mutation so
 rejected updates leave the original need intact. Protect edits/transitions against
-concurrent lifecycle changes with the existing row-locking ORM pattern.
+concurrent lifecycle changes with the existing row-locking ORM pattern, including
+refreshing locked state with populate_existing where needed.
 
-Only DRAFT is editable. Invalid transitions and matching on DRAFT/CLOSED return 409.
-CLOSED is terminal. No delete, reopen or invitation behavior.
+Lifecycle remains DRAFT → ACTIVE → CLOSED. DRAFT and ACTIVE are editable; CLOSED
+is immutable and terminal. PUT on CLOSED returns 409 Conflict in the existing
+ApiError/error-envelope format and must not change the need. Invalid transitions
+and matching on DRAFT/CLOSED also return 409. No delete, reopen or invitation behavior.
+
+### Atomic updates and live matching
+
+Validate all inputs and skill IDs before applying changes. Save scalar fields and
+all skill associations together in one transaction, with one successful commit and
+rollback on persistence failure, following the existing Session/services pattern.
+No intermediate or partial commit is permitted. Validation failures on ACTIVE
+updates (salary order, unknown/overlapping skills, missing must-have or other
+violations) leave the previous committed fields and skill relations intact.
+
+GET /employer/needs/{id}/matches recalculates eligibility, scores and ordering on
+every request from the current committed ACTIVE Need and current canonical
+candidate state. It must load fresh inputs rather than reuse an earlier result;
+no persisted MatchScore/ranking results or ranking cache are part of TASK O1.
+Retain the existing no-store HTTP response behavior.
+
+After a successful ACTIVE update commits, the next matching request uses its new
+must-have/nice-to-have skills, required_grade, target_experience_years and any other
+matching inputs. For example, adding PostgreSQL to Python/FastAPI must-haves excludes
+a previously eligible candidate lacking PostgreSQL. After a failed update, the next
+matching request instead uses the previous committed ranking inputs.
+
+ACTIVE edits change subsequent matching results. They do not define the behavior of
+already-sent invitation snapshots: Invitations and their snapshot semantics remain
+outside TASK O1 and are a separate future task.
 
 ## Eligibility, scoring and deterministic ranking
 
@@ -237,6 +271,7 @@ Link needs from the employer profile/navigation.
 - List position, specialization, required grade, status badge, salary and actions.
 - Create/edit all required need fields and normalized skill selections. Enforce
   duplicate/overlap, salary order and numeric constraints, with disabled submit.
+- Expose editing for DRAFT and ACTIVE needs; CLOSED has no editable form/actions.
 - Show matching action only for ACTIVE needs; backend independently checks status.
 - Cards show masked name, verified grade, Professional fit to one decimal,
   assessment, must-have/nice skills and candidate experience.
@@ -253,20 +288,38 @@ verified grade with ideal skills, Junior/Middle/Senior grades, optional skill ga
 missing experience and an exact Middle outranking a slightly higher-scoring Senior.
 Populate a demo ACTIVE need and DRAFT/CLOSED examples without overwriting edits.
 Do not manufacture 36 users or tune weights using calibration/holdout datasets.
+Fixtures/factories/demo seeding must keep the three canonical assessment fields
+consistent with the actual database constraint. Unverified persisted candidates
+have all three fields NULL; fake-provider unit tests may independently exercise
+missing/invalid score defenses without introducing invalid production persistence.
 
 Tests precede implementation and exercise behavior:
 
 - Need creation, roles, anonymous access, ownership on all routes, trusted Origin,
   invalid IDs/skills/duplicates/overlap/missing must-have/salary/experience/extra fields,
-  atomic rejected updates, DRAFT editing and lifecycle restrictions.
+  atomic rejected updates, DRAFT/ACTIVE editing and lifecycle restrictions.
+- ACTIVE update succeeds: activate a valid need, replace allowed fields/skills,
+  expect HTTP 200 and the committed values/relations to be updated.
+- Focused live-matching tests after successful ACTIVE edits: adding a missing
+  must-have excludes a previously eligible candidate; nice-to-have changes preserve
+  eligibility but change Professional Fit/ordering in a suitable fixture; changing
+  required_grade changes eligibility/GradeFit; changing target_experience_years
+  changes ExperienceFit. Each test issues a fresh matches request after commit.
+- Invalid ACTIVE update is atomic: cover invalid salary order, unknown skill,
+  overlapping must-have/nice-to-have and empty must-have. Assert rejected request,
+  unchanged persisted scalar fields and skills, and the same previous matching
+  inputs/results on the next request. Include attempted scalar and skill changes
+  together to detect partial updates.
+- CLOSED update is rejected with 409 and leaves persisted fields/skills unchanged.
 - Required backend test: a verified candidate with valid specialization, compatible
   grade, all must-have skills and an available normalized assessment, but
   personal_data_consent = false, is excluded from matching results before scoring.
 - Provider-boundary tests: Matching obtains normalized assessment data through
   CandidateAssessmentProvider and never writes verified_grade,
-  normalized_assessment_score or assessment_verified_at. A fake/in-memory provider
-  supports unit tests before Candidate Assessment Engine merges; real canonical-field
-  integration is verified after its merge, without O1-owned assessment persistence.
+  normalized_assessment_score or assessment_verified_at. Fake/in-memory providers
+  support isolated unit tests; integration tests exercise the production batch
+  provider against existing canonical CandidateProfile fields, without O1-owned
+  assessment persistence.
 - Every consent/specialization/verified-grade/grade/must-have/score eligibility branch,
   including score zero and invalid/nonfinite provider values.
 - Independent numeric expectations for each contribution, experience cap/missing/zero,
@@ -300,11 +353,10 @@ Record real results and remaining environment limitations; never claim unrun che
 Commit implementation, push the feature branch, create/attach PR to main, and stop
 without merge. Use the user's requested final report section structure.
 
-## Current environment observations
+## Implementation verification prerequisites
 
-Repository cloned and main pulled successfully. Working tree was clean before
-branch creation. Node v24.1.0 is available. Python is not on shell PATH; the bundled
-interpreter is Python 3.12.14, below the project's required Python 3.13+.
-`docker version` finds the Docker client, but no docker_engine named pipe;
-Docker Compose runtime verification needs a working engine. No product dependencies
-have been installed and no product checks have been run at this specification stage.
+Use Python 3.13+ and a Node version satisfying the actual package/CI requirements.
+Docker Compose verification requires a running Docker Engine. Verify runtime
+availability at implementation time rather than treating historical machine
+observations as current evidence. At this stage only the design is under review;
+no O1 product implementation or implementation plan is authorized.
