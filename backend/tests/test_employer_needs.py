@@ -1,7 +1,14 @@
-import pytest
-from sqlalchemy import select
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event
+from time import monotonic
 
-from app.models import EmployerNeed, NeedStatus
+import pytest
+from sqlalchemy import select, text
+
+from app.errors import ApiError
+from app.models import EmployerNeed, NeedStatus, User
+from app.need_schemas import NeedWrite
+from app.services import employer_needs
 
 BASE = "/employer/needs"
 ROUTES = [
@@ -426,3 +433,138 @@ def test_need_list_pagination(client, employer_account, need_data, db_factory):
         {"offset": -1},
     ):
         assert client.get(BASE, params=params).status_code == 422
+
+
+def test_close_racing_update_preserves_closed_state(
+    database, db_factory, client, employer_account, need_data, monkeypatch
+):
+    if database.dialect.name != "postgresql":
+        pytest.skip("Requires PostgreSQL row locks and pg_blocking_pids")
+    user, _ = employer_account()
+    response = client.post(BASE, json=need_data)
+    assert response.status_code == 201, response.text
+    need_id = response.json()["id"]
+    assert client.post(f"{BASE}/{need_id}/activate").status_code == 200
+    original = persisted(db_factory, need_id)
+    preloaded, close_locked, update_attempted, release_close = (
+        Event(),
+        Event(),
+        Event(),
+        Event(),
+    )
+    timeout = 15
+    pids = {}
+    original_get_need = employer_needs.get_need
+
+    def finish(future, stage):
+        try:
+            return future.result(timeout)
+        except TimeoutError:
+            pytest.fail(f"Timed out after {timeout}s waiting for {stage}")
+
+    def controlled_get_need(db, owner, target, *, for_update=False):
+        need = original_get_need(db, owner, target, for_update=for_update)
+        if db.info.get("closer") and for_update:
+            close_locked.set()
+            assert release_close.wait(timeout), "Controller did not release close lock"
+        return need
+
+    monkeypatch.setattr(employer_needs, "get_need", controlled_get_need)
+
+    def update():
+        with database.connect() as connection, db_factory(bind=connection) as db:
+            connection.detach()
+            db.execute(text("SET LOCAL lock_timeout = '10s'"))
+            db.execute(text("SET LOCAL statement_timeout = '12s'"))
+            pids["update"] = db.scalar(text("SELECT pg_backend_pid()"))
+            owner = db.get(User, user["id"])
+            # Retain this strong reference across the blocking lock acquisition.
+            cached = db.get(EmployerNeed, need_id)
+            assert cached.status == NeedStatus.ACTIVE
+            preloaded.set()
+            assert close_locked.wait(timeout), "Close worker did not acquire row lock"
+            update_attempted.set()
+            with pytest.raises(ApiError) as error:
+                employer_needs.update_need(
+                    db,
+                    owner,
+                    need_id,
+                    NeedWrite(
+                        **{
+                            **need_data,
+                            "position_title": "Must not reopen or change CLOSED",
+                            "description": "Rejected concurrent description",
+                            "required_grade": "JUNIOR",
+                            "target_experience_years": 99,
+                            "must_have_skill_ids": need_data["nice_to_have_skill_ids"],
+                            "nice_to_have_skill_ids": need_data["must_have_skill_ids"],
+                        }
+                    ),
+                )
+            assert (error.value.status, error.value.code) == (
+                409,
+                "need_state_conflict",
+            )
+            assert db.get(EmployerNeed, need_id) is cached
+            assert cached.status == NeedStatus.CLOSED
+            assert cached.position_title == need_data["position_title"]
+            return pids["update"]
+
+    def close():
+        with database.connect() as connection, db_factory(bind=connection) as db:
+            connection.detach()
+            db.execute(text("SET LOCAL lock_timeout = '10s'"))
+            db.execute(text("SET LOCAL statement_timeout = '12s'"))
+            pids["close"] = db.scalar(text("SELECT pg_backend_pid()"))
+            db.info["closer"] = True
+            owner = db.get(User, user["id"])
+            assert preloaded.wait(timeout), "Update worker did not preload ACTIVE"
+            need = employer_needs.close_need(db, owner, need_id)
+            assert need.status == NeedStatus.CLOSED
+            return pids["close"]
+
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        updating = workers.submit(update)
+        closing = workers.submit(close)
+        try:
+            assert close_locked.wait(timeout), "Close did not get real row lock first"
+            assert update_attempted.wait(timeout), "Update did not attempt its row lock"
+            with database.connect() as connection, db_factory(bind=connection) as db:
+                connection.detach()
+                db.execute(text("SET LOCAL statement_timeout = '12s'"))
+                observer_pid = db.scalar(text("SELECT pg_backend_pid()"))
+                deadline = monotonic() + 5
+                blockers = []
+                while monotonic() < deadline:
+                    blockers = db.scalar(
+                        text("SELECT pg_blocking_pids(:pid)"), {"pid": pids["update"]}
+                    )
+                    if pids["close"] in blockers:
+                        break
+                assert pids["close"] in blockers, (
+                    f"Update PID {pids['update']} never blocked on close PID "
+                    f"{pids['close']}; last blockers={blockers}"
+                )
+            assert len({pids["update"], pids["close"], observer_pid}) == 3
+            assert not updating.done() and not closing.done()
+            release_close.set()
+            assert finish(closing, "winning close commit") == pids["close"]
+            assert finish(updating, "blocked update CLOSED rejection") == pids["update"]
+        finally:
+            release_close.set()
+            # Also unblock an updater if close failed before its checkpoint.
+            close_locked.set()
+            preloaded.set()
+    after = persisted(db_factory, need_id)
+    columns = list(EmployerNeed.__table__.columns.keys())
+    assert after[0][columns.index("status")] == NeedStatus.CLOSED
+    assert after[1] == original[1]
+    assert {
+        key: value
+        for key, value in zip(columns, after[0], strict=True)
+        if key not in {"status", "updated_at"}
+    } == {
+        key: value
+        for key, value in zip(columns, original[0], strict=True)
+        if key not in {"status", "updated_at"}
+    }

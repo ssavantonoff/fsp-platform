@@ -1,12 +1,17 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime
+from threading import Event
 
 import pytest
-from sqlalchemy import event, select
+from sqlalchemy import event, select, text
+from sqlalchemy.exc import IntegrityError
 
+from app.errors import ApiError
 from app.models import CandidateProfile, EmployerNeed, Grade, Specialization, User
+from app.need_schemas import NeedWrite
 from app.routes.employer_needs import get_assessment_provider
 from app.services import assessments, employer_needs, matching
 from app.services.candidate_assessments import (
@@ -606,3 +611,538 @@ def test_matching_pagination_validation(client, active_need, params):
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_error"
     assert response.headers["Cache-Control"] == "no-store"
+
+
+def test_active_must_have_edit_changes_eligibility(
+    client, active_need, matching_candidate, need_data, skill_ids
+):
+    candidate_id = matching_candidate(skill_ids=skill_ids[:2])
+    before = matches(client, active_need)
+    assert [item["candidate_id"] for item in before["items"]] == [candidate_id]
+    response = client.put(
+        f"{BASE}/{active_need[1]}",
+        json={
+            **need_data,
+            "must_have_skill_ids": skill_ids,
+            "nice_to_have_skill_ids": [],
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "ACTIVE"
+    assert matches(client, active_need) == {
+        "items": [],
+        "total": 0,
+        "limit": 20,
+        "offset": 0,
+    }
+
+
+def test_active_nice_to_have_edit_changes_score_and_order(
+    client, active_need, matching_candidate, need_data, skill_ids
+):
+    django = matching_candidate(skill_ids=skill_ids[:2])
+    postgres = matching_candidate(skill_ids=[skill_ids[0], skill_ids[2]])
+    payload = {
+        **need_data,
+        "must_have_skill_ids": skill_ids[:1],
+        "nice_to_have_skill_ids": skill_ids[1:2],
+        "target_experience_years": None,
+    }
+    assert client.put(f"{BASE}/{active_need[1]}", json=payload).status_code == 200
+    before = matches(client, active_need)
+    assert [item["candidate_id"] for item in before["items"]] == [django, postgres]
+    payload["nice_to_have_skill_ids"] = skill_ids[2:]
+    response = client.put(f"{BASE}/{active_need[1]}", json=payload)
+    assert response.status_code == 200, response.text
+    after = matches(client, active_need)
+    assert [item["candidate_id"] for item in after["items"]] == [postgres, django]
+    assert before["total"] == after["total"] == 2
+    for page, optional in ((before, skill_ids[1]), (after, skill_ids[2])):
+        assert [i["professional_fit_score"] for i in page["items"]] == pytest.approx(
+            [1520 / 17, 1220 / 17]
+        )
+        for index, item in enumerate(page["items"]):
+            assert item["breakdown"]["assessment"]["score"] == pytest.approx(720 / 17)
+            assert item["breakdown"]["grade"]["score"] == pytest.approx(500 / 17)
+            nice = item["breakdown"]["nice_to_have"]
+            assert nice["active"] is True
+            assert nice["total"] == 1
+            assert nice["matched"] == 1 - index
+            assert nice["score"] == pytest.approx(300 / 17 if index == 0 else 0)
+            assert nice["max"] == pytest.approx(300 / 17)
+            assert [s["id"] for s in item["matched_nice_to_have_skills"]] == (
+                [optional] if index == 0 else []
+            )
+
+
+def test_active_grade_edit_changes_eligibility_and_fit(
+    client, active_need, matching_candidate, need_data
+):
+    middle = matching_candidate()
+    senior = matching_candidate(verified_grade=Grade.SENIOR)
+    payload = {
+        **need_data,
+        "nice_to_have_skill_ids": [],
+        "target_experience_years": None,
+    }
+    assert client.put(f"{BASE}/{active_need[1]}", json=payload).status_code == 200
+    before = matches(client, active_need)
+    assert [item["candidate_id"] for item in before["items"]] == [middle, senior]
+    assert [i["professional_fit_score"] for i in before["items"]] == pytest.approx(
+        [610 / 7, 547.5 / 7]
+    )
+    response = client.put(
+        f"{BASE}/{active_need[1]}", json={**payload, "required_grade": "JUNIOR"}
+    )
+    assert response.status_code == 200, response.text
+    after = matches(client, active_need)
+    assert after["total"] == 1
+    assert [item["candidate_id"] for item in after["items"]] == [middle]
+    item = after["items"][0]
+    assert item["professional_fit_score"] == pytest.approx(547.5 / 7)
+    assert item["breakdown"]["grade"] == {
+        "active": True,
+        "max": pytest.approx(250 / 7),
+        "score": pytest.approx(187.5 / 7),
+        "exact_match": False,
+    }
+    assert item["breakdown"]["assessment"]["score"] == pytest.approx(360 / 7)
+    for key in ("nice_to_have", "experience"):
+        assert item["breakdown"][key]["active"] is False
+        assert item["breakdown"][key]["max"] == 0
+
+
+def test_active_experience_edit_changes_score(
+    client, active_need, matching_candidate, need_data
+):
+    experienced = matching_candidate(years_of_experience=2)
+    missing = matching_candidate(years_of_experience=None)
+    before = {i["candidate_id"]: i for i in matches(client, active_need)["items"]}
+    assert before[experienced]["professional_fit_score"] == pytest.approx(86)
+    assert before[experienced]["breakdown"]["experience"]["score"] == 10
+    assert before[missing]["professional_fit_score"] == 76
+    for target, maxima, scores, totals in (
+        (4, 15, (7.5, 0), (83.5, 76)),
+        (None, 0, (0, 0), (1520 / 17, 1520 / 17)),
+        (0, 15, (15, 15), (91, 91)),
+    ):
+        response = client.put(
+            f"{BASE}/{active_need[1]}",
+            json={**need_data, "target_experience_years": target},
+        )
+        assert response.status_code == 200, response.text
+        page = matches(client, active_need)
+        assert page["total"] == 2
+        by_id = {item["candidate_id"]: item for item in page["items"]}
+        for candidate_id, contribution, total in zip(
+            (experienced, missing), scores, totals, strict=True
+        ):
+            item = by_id[candidate_id]
+            assert item["professional_fit_score"] == pytest.approx(total)
+            assert item["breakdown"]["experience"] == {
+                "active": target is not None,
+                "max": maxima,
+                "score": contribution,
+            }
+            assert item["breakdown"]["assessment"]["max"] == pytest.approx(
+                900 / 17 if target is None else 45
+            )
+            assert item["breakdown"]["grade"]["max"] == pytest.approx(
+                500 / 17 if target is None else 25
+            )
+            assert item["breakdown"]["nice_to_have"]["max"] == pytest.approx(
+                300 / 17 if target is None else 15
+            )
+
+
+def persisted_need(db_factory, need_id):
+    with db_factory() as db:
+        need = db.get(EmployerNeed, need_id)
+        return (
+            tuple(getattr(need, c.name) for c in EmployerNeed.__table__.columns),
+            sorted((link.skill_id, link.kind) for link in need.skill_requirements),
+        )
+
+
+@pytest.mark.parametrize(
+    "invalid",
+    ["salary_order", "negative_from", "negative_to", "unknown", "overlap", "empty"],
+)
+def test_failed_active_edit_preserves_matching(
+    client, active_need, matching_candidate, need_data, skill_ids, db_factory, invalid
+):
+    top = matching_candidate()
+    lower = matching_candidate(skill_ids=skill_ids[:2], years_of_experience=1)
+    before = matches(client, active_need)
+    assert [item["candidate_id"] for item in before["items"]] == [top, lower]
+    original = persisted_need(db_factory, active_need[1])
+    payload = {
+        **need_data,
+        "position_title": "Rejected title",
+        "description": "Rejected description",
+        "additional_requirements": "Rejected requirements",
+        "required_grade": "JUNIOR",
+        "target_experience_years": 10,
+        "must_have_skill_ids": skill_ids[2:],
+        "nice_to_have_skill_ids": skill_ids[:1],
+    }
+    if invalid == "salary_order":
+        payload["salary_from"] = "300000"
+    elif invalid == "negative_from":
+        payload["salary_from"] = "-1"
+    elif invalid == "negative_to":
+        payload["salary_to"] = "-1"
+    elif invalid == "unknown":
+        payload["must_have_skill_ids"] = ["unknown"]
+    elif invalid == "overlap":
+        payload["nice_to_have_skill_ids"] = skill_ids[2:]
+    else:
+        payload["must_have_skill_ids"] = []
+    response = client.put(f"{BASE}/{active_need[1]}", json=payload)
+    assert response.status_code == 422, response.text
+    assert response.json()["error"]["code"] == (
+        "unknown_skill" if invalid == "unknown" else "validation_error"
+    )
+    assert persisted_need(db_factory, active_need[1]) == original
+    assert matches(client, active_need) == before
+
+
+CONCURRENT_TIMEOUT = 15
+
+
+def worker_result(future, stage):
+    try:
+        return future.result(CONCURRENT_TIMEOUT)
+    except TimeoutError:
+        pytest.fail(f"Timed out after {CONCURRENT_TIMEOUT}s waiting for {stage}")
+
+
+@contextmanager
+def postgres_session(database, db_factory):
+    # Pin the physical connection across commits, without an external transaction.
+    with database.connect() as connection, db_factory(bind=connection) as db:
+        # Closing a detached connection closes it physically: later workers cannot
+        # accidentally reuse its PID and masquerade as an independent invocation.
+        connection.detach()
+        db.execute(text("SET LOCAL lock_timeout = '10s'"))
+        db.execute(text("SET LOCAL statement_timeout = '12s'"))
+        pid = db.scalar(text("SELECT pg_backend_pid()"))
+        yield db, pid
+
+
+def install_criteria_checkpoint(monkeypatch):
+    original = matching.load_need_criteria
+
+    def capture(db, user, need_id):
+        criteria = original(db, user, need_id)
+        db.info["captured_criteria"] = criteria
+        if "captured" in db.info and db.info["pause_stage"] == "criteria":
+            db.info["captured"].set()
+            assert db.info["release"].wait(CONCURRENT_TIMEOUT), (
+                "Matching criteria captured but controller did not release the reader"
+            )
+        return criteria
+
+    monkeypatch.setattr(matching, "load_need_criteria", capture)
+
+
+def matching_worker(
+    database,
+    db_factory,
+    active_need,
+    captured=None,
+    release=None,
+    pause_stage="criteria",
+):
+    with postgres_session(database, db_factory) as (db, pid):
+        if captured is not None:
+            db.info.update(captured=captured, release=release, pause_stage=pause_stage)
+        user = db.get(User, active_need[0])
+        provider = ProfileAssessmentProvider(db)
+        if captured is not None and pause_stage == "provider":
+            original_get_assessments = provider.get_assessments
+
+            def pause_provider(candidate_ids):
+                captured.set()
+                assert release.wait(CONCURRENT_TIMEOUT), (
+                    "Provider phase reached but controller did not release reader A"
+                )
+                return original_get_assessments(candidate_ids)
+
+            provider.get_assessments = pause_provider
+        page = matching.match_need(
+            db, user, active_need[1], provider, limit=20, offset=0
+        )
+        return pid, db.info["captured_criteria"], page.model_dump(mode="json")
+
+
+def concurrent_update_payload(need_data, skill_ids):
+    return {
+        **need_data,
+        "position_title": "Committed concurrent edit",
+        "required_grade": "JUNIOR",
+        "target_experience_years": 4,
+        "must_have_skill_ids": [skill_ids[0], skill_ids[2]],
+        "nice_to_have_skill_ids": skill_ids[1:2],
+    }
+
+
+def test_matching_snapshot_survives_concurrent_active_update(
+    database,
+    db_factory,
+    active_need,
+    matching_candidate,
+    skill_ids,
+    need_data,
+    monkeypatch,
+    client,
+):
+    if database.dialect.name != "postgresql":
+        pytest.skip("Requires PostgreSQL independent concurrent connections")
+    middle = matching_candidate()
+    senior = matching_candidate(verified_grade=Grade.SENIOR)
+    no_postgres = matching_candidate(skill_ids=skill_ids[:2])
+    old_page = matches(client, active_need)
+    assert [i["candidate_id"] for i in old_page["items"]] == [
+        middle,
+        senior,
+        no_postgres,
+    ]
+    install_criteria_checkpoint(monkeypatch)
+    captured, release = Event(), Event()
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        reader = workers.submit(
+            matching_worker,
+            database,
+            db_factory,
+            active_need,
+            captured,
+            release,
+            "provider",
+        )
+        try:
+            assert captured.wait(CONCURRENT_TIMEOUT), (
+                "Reader A did not capture criteria"
+            )
+
+            def update():
+                with postgres_session(database, db_factory) as (db, pid):
+                    user = db.get(User, active_need[0])
+                    need = employer_needs.update_need(
+                        db,
+                        user,
+                        active_need[1],
+                        NeedWrite(**concurrent_update_payload(need_data, skill_ids)),
+                    )
+                    return pid, need.position_title
+
+            writer_pid, title = worker_result(
+                workers.submit(update), "ACTIVE writer commit while reader A is paused"
+            )
+            assert title == "Committed concurrent edit"
+            assert not release.is_set() and not reader.done(), (
+                "Update must commit while A is still paused with old criteria"
+            )
+            with db_factory() as db:
+                assert db.get(EmployerNeed, active_need[1]).position_title == title
+            release.set()
+            reader_pid, old, result = worker_result(
+                reader, "reader A old-snapshot result"
+            )
+        finally:
+            release.set()
+    assert reader_pid != writer_pid
+    assert old.required_grade == Grade.MIDDLE
+    assert old.target_experience_years == 3
+    assert old.must_have_skill_ids == frozenset(skill_ids[:2])
+    assert old.nice_to_have_skill_ids == frozenset(skill_ids[2:])
+    assert result == old_page
+    fresh_pid, fresh, page = matching_worker(database, db_factory, active_need)
+    assert fresh_pid != reader_pid
+    assert fresh.required_grade == Grade.JUNIOR
+    assert fresh.target_experience_years == 4
+    assert fresh.must_have_skill_ids == frozenset([skill_ids[0], skill_ids[2]])
+    assert fresh.nice_to_have_skill_ids == frozenset(skill_ids[1:2])
+    assert [i["candidate_id"] for i in page["items"]] == [middle]
+    assert page["total"] == 1
+    assert page["items"][0]["professional_fit_score"] == pytest.approx(77.25)
+    breakdown = page["items"][0]["breakdown"]
+    assert [
+        breakdown[k]["score"]
+        for k in ("assessment", "grade", "nice_to_have", "experience")
+    ] == [36, 18.75, 15, 7.5]
+    assert [s["id"] for s in page["items"][0]["matched_nice_to_have_skills"]] == (
+        skill_ids[1:2]
+    )
+
+
+def test_concurrent_matching_reads_do_not_serialize(
+    database, db_factory, active_need, matching_candidate, monkeypatch, client
+):
+    if database.dialect.name != "postgresql":
+        pytest.skip("Requires PostgreSQL independent concurrent connections")
+    matching_candidate()
+    expected = matches(client, active_need)
+    install_criteria_checkpoint(monkeypatch)
+
+    def reject(*args, **kwargs):
+        pytest.fail("Concurrent matching must never use mutation get_need/FOR UPDATE")
+
+    def reject_lock(connection, cursor, statement, parameters, context, executemany):
+        if "for update" in statement.lower():
+            reject()
+
+    monkeypatch.setattr(employer_needs, "get_need", reject)
+    captured_a, captured_b, release = Event(), Event(), Event()
+    event.listen(database, "before_cursor_execute", reject_lock)
+    try:
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            a = workers.submit(
+                matching_worker, database, db_factory, active_need, captured_a, release
+            )
+            try:
+                assert captured_a.wait(CONCURRENT_TIMEOUT), "Reader A capture timed out"
+                b = workers.submit(
+                    matching_worker,
+                    database,
+                    db_factory,
+                    active_need,
+                    captured_b,
+                    release,
+                )
+                assert captured_b.wait(CONCURRENT_TIMEOUT), (
+                    "Reader B could not capture criteria while reader A was open"
+                )
+                assert not a.done() and not b.done() and not release.is_set()
+                release.set()
+                pid_a, criteria_a, page_a = worker_result(
+                    a, "concurrent reader A result"
+                )
+                pid_b, criteria_b, page_b = worker_result(
+                    b, "concurrent reader B result"
+                )
+            finally:
+                release.set()
+    finally:
+        event.remove(database, "before_cursor_execute", reject_lock)
+    assert pid_a != pid_b
+    assert criteria_a == criteria_b
+    assert page_a == page_b == expected
+
+
+def test_failed_active_transaction_keeps_committed_snapshot(
+    database,
+    db_factory,
+    active_need,
+    matching_candidate,
+    need_data,
+    skill_ids,
+    monkeypatch,
+    client,
+):
+    if database.dialect.name != "postgresql":
+        pytest.skip("Requires PostgreSQL independent concurrent connections")
+    matching_candidate()
+    matching_candidate(skill_ids=skill_ids[:2])
+    expected = matches(client, active_need)
+    original = persisted_need(db_factory, active_need[1])
+    install_criteria_checkpoint(monkeypatch)
+    captured, release, rollback_done, writer_release = (
+        Event(),
+        Event(),
+        Event(),
+        Event(),
+    )
+    writer_state = {}
+    with ThreadPoolExecutor(max_workers=3) as workers:
+        reader = workers.submit(
+            matching_worker, database, db_factory, active_need, captured, release
+        )
+        try:
+            assert captured.wait(CONCURRENT_TIMEOUT), "Reader A capture timed out"
+
+            def failed_update():
+                with postgres_session(database, db_factory) as (db, pid):
+                    user = db.get(User, active_need[0])
+                    attempted = []
+
+                    def fail_commit():
+                        db.flush()
+                        need = db.get(EmployerNeed, active_need[1])
+                        attempted.append(
+                            (
+                                need.position_title,
+                                need.required_grade,
+                                need.target_experience_years,
+                                sorted(
+                                    (link.skill_id, link.kind)
+                                    for link in (need.skill_requirements)
+                                ),
+                            )
+                        )
+                        raise IntegrityError(
+                            "injected persistence failure", {}, Exception("constraint")
+                        )
+
+                    # Same deterministic post-flush failure mechanism as Task 2.
+                    monkeypatch.setattr(db, "commit", fail_commit)
+                    with pytest.raises(ApiError) as error:
+                        employer_needs.update_need(
+                            db,
+                            user,
+                            active_need[1],
+                            NeedWrite(
+                                **concurrent_update_payload(need_data, skill_ids)
+                            ),
+                        )
+                    assert (error.value.status, error.value.code) == (
+                        409,
+                        "need_conflict",
+                    )
+                    assert not db.in_transaction(), "Service did not roll back"
+                    assert len(attempted) == 1
+                    assert attempted[0][:3] == (
+                        "Committed concurrent edit",
+                        Grade.JUNIOR,
+                        4,
+                    )
+                    assert dict(attempted[0][3]) == {
+                        skill_ids[0]: "MUST_HAVE",
+                        skill_ids[2]: "MUST_HAVE",
+                        skill_ids[1]: "NICE_TO_HAVE",
+                    }
+                    writer_state["pid"] = pid
+                    rollback_done.set()
+                    assert writer_release.wait(CONCURRENT_TIMEOUT), (
+                        "Rolled-back writer was not released by controller"
+                    )
+                    return pid
+
+            failed_writer = workers.submit(failed_update)
+            assert rollback_done.wait(CONCURRENT_TIMEOUT), (
+                "Writer did not complete the real post-flush rollback"
+            )
+            assert not reader.done() and not release.is_set()
+            fresh_pid, fresh_criteria, fresh_page = worker_result(
+                workers.submit(matching_worker, database, db_factory, active_need),
+                "fresh reader B2 result after rollback",
+            )
+            assert fresh_page == expected
+            assert persisted_need(db_factory, active_need[1]) == original
+            release.set()
+            reader_pid, old_criteria, old_page = worker_result(
+                reader, "reader A unchanged result after rollback"
+            )
+            writer_release.set()
+            writer_pid = worker_result(failed_writer, "rolled-back writer cleanup")
+            assert writer_pid == writer_state["pid"]
+        finally:
+            release.set()
+            writer_release.set()
+    assert len({reader_pid, writer_pid, fresh_pid}) == 3
+    assert fresh_criteria == old_criteria
+    assert old_criteria.required_grade == Grade.MIDDLE
+    assert old_criteria.target_experience_years == 3
+    assert old_criteria.must_have_skill_ids == frozenset(skill_ids[:2])
+    assert old_criteria.nice_to_have_skill_ids == frozenset(skill_ids[2:])
+    assert old_page == expected
