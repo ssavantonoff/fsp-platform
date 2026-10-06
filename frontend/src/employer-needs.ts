@@ -37,6 +37,40 @@ export interface Page<T> {
   limit: number;
   offset: number;
 }
+export interface FactorBreakdown {
+  score: number;
+  max: number;
+  active: boolean;
+}
+export interface GradeBreakdown extends FactorBreakdown {
+  exact_match: boolean;
+}
+export interface NiceToHaveBreakdown extends FactorBreakdown {
+  matched: number;
+  total: number;
+}
+export interface MatchBreakdown {
+  assessment: FactorBreakdown;
+  grade: GradeBreakdown;
+  nice_to_have: NiceToHaveBreakdown;
+  experience: FactorBreakdown;
+}
+export interface EmployerCandidatePreview {
+  candidate_id: string;
+  display_name: string;
+  specialization: Specialization;
+  verified_grade: Grade;
+  skills: Skill[];
+  years_of_experience: number | null;
+  normalized_assessment_score: number;
+  assessment_verified_at: string | null;
+  professional_fit_score: number;
+  breakdown: MatchBreakdown;
+  matched_must_have_skills: Skill[];
+  matched_nice_to_have_skills: Skill[];
+  missing_nice_to_have_skills: Skill[];
+}
+export type MatchesPage = Page<EmployerCandidatePreview>;
 export interface NeedFormValues extends Omit<NeedWrite, "target_experience_years" | "additional_requirements"> {
   target_experience_years: string;
   additional_requirements: string;
@@ -123,6 +157,9 @@ export function listNeeds(limit = 20, offset = 0): Promise<Page<EmployerNeed>> {
 }
 export function getNeed(id: string): Promise<EmployerNeed> {
   return api<EmployerNeed>(needPath(id));
+}
+export function getMatches(id: string, limit = 20, offset = 0): Promise<MatchesPage> {
+  return api<MatchesPage>(`${needPath(id)}/matches?limit=${limit}&offset=${offset}`);
 }
 export function createNeed(data: NeedWrite): Promise<EmployerNeed> {
   return api<EmployerNeed>(base, { method: "POST", body: JSON.stringify(data) });

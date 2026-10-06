@@ -340,3 +340,36 @@ dd {
   color: #9a2020;
   margin: 0;
 }
+.match-list {
+  display: grid;
+  gap: 1rem;
+}
+.match-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.matching-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.matching-header h2,
+.match-score {
+  margin: 0;
+}
+.match-score {
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+.match-breakdown summary {
+  cursor: pointer;
+  line-height: 1.5;
+}
+.match-breakdown .hint {
+  margin-top: 0.5rem;
+}
+.match-pagination {
+  margin-bottom: 1rem;
+}

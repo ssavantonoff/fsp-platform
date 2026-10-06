@@ -441,18 +441,18 @@ Tests use real presentational components/validation helpers, not a new mocked UI
 - Produces `getMatches(id: string, limit?: number, offset?: number): Promise<MatchesPage>`; `EmployerMatchesScreen({needId: string})`; exported `MatchingView({need, result, loading, error, onRetry})`, with need EmployerNeed|null, result MatchesPage|null, loading boolean, error unknown and retry `() => void`; `MatchCard({candidate: EmployerCandidatePreview})`. Exported views have no router/auth hooks.
 - UI renders server scores to one decimal, server normalized assessment out of100, skill matches/gaps, experience/null, permitted verification date in Russian and expandable `<details>` contributions with actual max/active flags. It never scores or sorts locally.
 
-- [ ] Write named tests: `matching renders loading`, `matching renders empty pool`, `matching renders API error with retry`, `matching preserves ranked candidate order`, `matching renders effective breakdown and excluded factors`, `matching renders assessment verification date`, `matching preview renders masked name and no contacts`, `matching blocks non ACTIVE need`, `matching API forwards limit offset and errors`.
+- [x] Write named tests: `matching renders loading`, `matching renders empty pool`, `matching renders API error with retry`, `matching preserves ranked candidate order`, `matching renders effective breakdown and excluded factors`, `matching renders assessment verification date`, `matching preview renders masked name and no contacts`, `matching blocks non ACTIVE need`, `matching API forwards limit offset and errors`.
 
 Pin SSR oracles: role=status while loading, empty explanatory text for `{items: [], total: 0}`, role=alert and retry on ApiError, rendered name positions preserve input order, server76 displays `76.0`, renormalized maxima display server values, excluded factors are marked excluded, and verification timestamp `2026-09-18T12:00:00Z` displays `18.09.2026`. Private sentinel values and contact actions must be absent; do not add a private field to the typed preview merely to test rendering. Use an exact API fixture allowlist and a separate serialized unknown-property injection test if testing defensive rendering.
 
-- [ ] Run `node --import tsx --test tests/employer-matches.test.ts`; expect missing preview/view/interface failure.
-- [ ] Add the feature preview types and getMatches helper in `employer-needs.ts`; do not import full candidate response types.
-- [ ] Implement MatchCard and MatchingView with «Соответствие», assessment, self-declared skill lists, missing optional markers, candidate experience and «Компетенция подтверждена: …». Omitted factors show exclusion rather than full contribution; dates never feed any ordering.
-- [ ] Implement RoleGate/loading/retry and ACTIVE-only matching orchestration, plus thin async-params keyed page. Provide previous/next server pagination, respect total and preserve server order; refresh GET after returning from edits, no persistent client ranking cache.
-- [ ] Add responsive card/details rules and README manual steps for create/edit/activate/live matching/close/forbidden access; do not add charts, animations, contact or invitation actions.
-- [ ] Run `node --import tsx --test tests/employer-matches.test.ts`; expect PASS.
-- [ ] Run `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`; expect PASS including existing candidate assessment pages.
-- [ ] Commit declared files: `feat: render explainable employer matching results`.
+- [x] Run `node --import tsx --test tests/employer-matches.test.ts`; expect missing preview/view/interface failure.
+- [x] Add the feature preview types and getMatches helper in `employer-needs.ts`; do not import full candidate response types.
+- [x] Implement MatchCard and MatchingView with «Соответствие», assessment, self-declared skill lists, missing optional markers, candidate experience and «Компетенция подтверждена: …». Omitted factors show exclusion rather than full contribution; dates never feed any ordering.
+- [x] Implement RoleGate/loading/retry and ACTIVE-only matching orchestration, plus thin async-params keyed page. Provide previous/next server pagination, respect total and preserve server order; refresh GET after returning from edits, no persistent client ranking cache.
+- [x] Add responsive card/details rules and README manual steps for create/edit/activate/live matching/close/forbidden access; do not add charts, animations, contact or invitation actions.
+- [x] Run `node --import tsx --test tests/employer-matches.test.ts`; expect PASS.
+- [x] Run `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`; expect PASS including existing candidate assessment pages.
+- [x] Commit declared files: `feat: render explainable employer matching results`.
 
 ## Final verification gate (after all implementation tasks, not authorized now)
 
