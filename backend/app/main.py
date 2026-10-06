@@ -7,7 +7,7 @@ from app.config import get_settings
 from app.dependencies import Db
 from app.errors import install_error_handlers
 from app.mail import create_mailer
-from app.routes import assessments, auth, profiles, skills
+from app.routes import assessments, auth, employer_needs, profiles, skills
 from app.schemas import ErrorOut
 
 
@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(assessments.router)
     app.include_router(profiles.candidate)
     app.include_router(profiles.employer)
+    app.include_router(employer_needs.router)
     app.include_router(skills.router)
 
     @app.get("/health", tags=["health"])

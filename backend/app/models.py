@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from enum import StrEnum
 from uuid import uuid4
 
@@ -15,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Table,
     Text,
@@ -66,6 +68,17 @@ class AssessmentStatus(StrEnum):
 class CompletionReason(StrEnum):
     SUBMITTED = "SUBMITTED"
     TIMEOUT = "TIMEOUT"
+
+
+class NeedStatus(StrEnum):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    CLOSED = "CLOSED"
+
+
+class NeedSkillKind(StrEnum):
+    MUST_HAVE = "MUST_HAVE"
+    NICE_TO_HAVE = "NICE_TO_HAVE"
 
 
 class TimestampMixin:
@@ -204,6 +217,60 @@ class EmployerProfile(TimestampMixin, Base):
     company_description: Mapped[str | None] = mapped_column(Text)
     website: Mapped[str | None] = mapped_column(String(2048))
     contact_person_name: Mapped[str] = mapped_column(String(200))
+
+
+class EmployerNeed(TimestampMixin, Base):
+    __tablename__ = "employer_needs"
+    __table_args__ = (
+        CheckConstraint("salary_from >= 0", name="nonnegative_salary_from"),
+        CheckConstraint("salary_to >= 0", name="nonnegative_salary_to"),
+        CheckConstraint("salary_from <= salary_to", name="ordered_salary_range"),
+        CheckConstraint(
+            "target_experience_years IS NULL OR "
+            "target_experience_years BETWEEN 0 AND 1.7976931348623157e308",
+            name="valid_target_experience",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    employer_id: Mapped[str] = mapped_column(
+        ForeignKey("employer_profiles.id"), index=True
+    )
+    position_title: Mapped[str] = mapped_column(String(200))
+    specialization: Mapped[Specialization] = mapped_column(
+        Enum(Specialization, native_enum=False, create_constraint=True)
+    )
+    required_grade: Mapped[Grade] = mapped_column(
+        Enum(Grade, native_enum=False, create_constraint=True, name="required_grade")
+    )
+    target_experience_years: Mapped[float | None] = mapped_column(Float)
+    salary_from: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    salary_to: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    description: Mapped[str] = mapped_column(Text)
+    additional_requirements: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[NeedStatus] = mapped_column(
+        Enum(NeedStatus, native_enum=False, create_constraint=True),
+        default=NeedStatus.DRAFT,
+        index=True,
+    )
+    skill_requirements: Mapped[list[EmployerNeedSkill]] = relationship(
+        lazy="selectin",
+        cascade="all, delete-orphan",
+        order_by="EmployerNeedSkill.skill_id",
+    )
+
+
+class EmployerNeedSkill(Base):
+    __tablename__ = "employer_need_skills"
+
+    need_id: Mapped[str] = mapped_column(
+        ForeignKey("employer_needs.id", ondelete="CASCADE"), primary_key=True
+    )
+    skill_id: Mapped[str] = mapped_column(ForeignKey("skills.id"), primary_key=True)
+    kind: Mapped[NeedSkillKind] = mapped_column(
+        Enum(NeedSkillKind, native_enum=False, create_constraint=True)
+    )
+    skill: Mapped[Skill] = relationship(lazy="joined")
 
 
 class AssessmentQuestion(Base):

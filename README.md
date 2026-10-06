@@ -398,3 +398,210 @@ Downgrade удаляет assessment-таблицы и новые поля; ис�
     expires_at на прошедшее: GET/PUT/submit финализируют сохранённые ответы,
     последующие ответы запрещены. Смена specialization очищает/восстанавливает
     verification согласно истории.
+
+## Employer Needs & Matching
+
+Backend API для собственных потребностей работодателя и текущего подбора кандидатов.
+Employer UI доступен в `/employer/needs`; Invitations пока не реализованы.
+Используются существующие session cookies и справочник `/skills`; отдельного auth
+или skill catalog нет.
+
+### Endpoints, права и контракт
+
+| Метод | Endpoint | Результат |
+|---|---|---|
+| GET | `/employer/needs` | Свои Needs, `{items, total, limit, offset}` |
+| POST | `/employer/needs` | Создать DRAFT, HTTP 201 |
+| GET | `/employer/needs/{need_id}` | Свой Need, HTTP 200 |
+| PUT | `/employer/needs/{need_id}` | Полностью заменить editable fields, HTTP 200 |
+| POST | `/employer/needs/{need_id}/activate` | DRAFT → ACTIVE, HTTP 200 |
+| POST | `/employer/needs/{need_id}/close` | ACTIVE → CLOSED, HTTP 200 |
+| GET | `/employer/needs/{need_id}/matches` | Текущий matching, `{items, total, limit, offset}` |
+
+Все семь endpoints требуют роль EMPLOYER. Без session — 401, Candidate — 403.
+Работодатель работает только со своими Needs: чужой и отсутствующий ID одинаково
+возвращают `404 need_not_found`; без employer profile — `404 profile_not_found`.
+Четыре mutation endpoints (create, PUT, activate, close) требуют trusted Origin
+через существующую cookie-auth CSRF protection. GET endpoints read-only; matching
+не меняет БД и не финализирует assessment attempts. Ответы имеют `Cache-Control: no-store`.
+
+Create/PUT принимают `position_title`, `specialization`, `required_grade`,
+`target_experience_years` (nullable), `salary_from`, `salary_to`, `description`,
+`additional_requirements` (nullable), `must_have_skill_ids`, `nice_to_have_skill_ids`.
+Owner и status определяются сервером; передавать их или calculated fields нельзя.
+Заголовок/описание непустые; salary — конечные неотрицательные Decimal с максимум
+12 цифрами и 2 знаками после точки, from ≤ to. В JSON ответа salary — строки.
+Target experience конечный и неотрицательный либо null. Требуется хотя бы один
+must-have; IDs из существующего каталога, без duplicates и пересечения must/nice.
+PUT заменяет и scalar fields, и обе skill lists атомарно.
+
+NeedOut содержит `id`, `employer_id`, scalar fields, `status`, `created_at`,
+`updated_at`, `must_have_skills` и `nice_to_have_skills` в формате `{id, name}`.
+Неизвестный skill — `422 unknown_skill`, неверный input/query — `422 validation_error`,
+недопустимое состояние — `409 need_state_conflict`, ошибка сохранения — `409 need_conflict`.
+Ошибки используют существующий `{error: {code, message, fields}}` envelope.
+Для list/matches: limit по умолчанию 20, диапазон 1–100, offset ≥0.
+List сортируется по created_at DESC, затем id ASC; total не равен размеру страницы.
+
+### Lifecycle и live recalculation
+
+| Status | Edit | Activate | Close | Matching |
+|---|---|---|---|---|
+| DRAFT | Да | Да | Нет | Недоступен, 409 |
+| ACTIVE | Да | Нет | Да | Доступен |
+| CLOSED | Нет, 409 | Нет | Нет | Недоступен, 409 |
+
+Единственная цепочка: DRAFT → ACTIVE → CLOSED. Reopen нет; повтор неподходящего
+transition возвращает 409. После закрытия сохраняются прежние поля и связи.
+
+ACTIVE Need можно редактировать. Следующий GET `/employer/needs/{need_id}/matches`
+после успешного commit читает актуальные committed criteria и заново вычисляет
+eligibility, score и ranking. Ranking не сохраняется в таблице или cache.
+Каждый invocation захватывает immutable criteria одним согласованным чтением;
+matching A, уже захвативший criteria, может завершиться по прежним значениям,
+пока update успешно коммитится. Следующий invocation видит новые criteria;
+rollback сохраняет прежние. Это in-memory input одной операции, не persisted snapshot.
+Matching GET не берёт mutation row lock; update/activate/close сохраняют свои locks.
+
+### Hard filters и grade matrix
+
+Перед scoring обязательны consent=true, exact specialization, canonical verified
+grade, совместимость grade, все must-have skills и валидный normalized assessment
+score (integer 0–100). Высокий score не компенсирует отказ hard filter.
+Declared grade, FSP и recency verification date не участвуют в eligibility или rank.
+
+| Required grade | Verified JUNIOR | Verified MIDDLE | Verified SENIOR |
+|---|---|---|---|
+| JUNIOR | GradeFit 1.0 | GradeFit 0.75 | Excluded |
+| MIDDLE | Excluded | GradeFit 1.0 | GradeFit 0.75 |
+| SENIOR | Excluded | Excluded | GradeFit 1.0 |
+
+### Professional Fit
+
+«Соответствие / Professional Fit» — детерминированный score 0–100 с объяснимыми
+вкладами, не probability или шанс найма. Frozen base weights:
+
+| Factor | Weight | Fit |
+|---|---|---|
+| Assessment | 45% | normalized_assessment_score / 100 |
+| Grade | 25% | 1.0 exact, 0.75 allowed overqualified |
+| Nice-to-have | 15% | matched nice / total nice |
+| Experience | 15% | min(candidate experience / target, 1) для positive target |
+
+Если nice list пуст, Nice factor исключается. Если target experience=null,
+Experience factor исключается. Оставшиеся active weights пропорционально
+renormalized до 100%; breakdown возвращает фактические `score`, `max`, `active`.
+Target=0 даёт ExperienceFit=1 даже при candidate experience=null. При positive
+target и отсутствующем опыте factor **активен**, Fit=0 и contribution=0.
+
+Сортировка серверная: unrounded Professional Fit DESC, normalized assessment score
+DESC, stable candidate_id ASC. Pagination применяется после полного ranking.
+Frontend должен сохранять серверный порядок; округление для отображения не меняет rank.
+
+### Privacy-safe preview
+
+Matching отдаёт только dedicated preview: `candidate_id`, masked `display_name`
+(имя и инициал фамилии), specialization, verified grade, **self-declared skills**
+(навыки, указанные кандидатом), years of experience, normalized assessment score,
+assessment verification date, Professional Fit, factor breakdown и списки
+matched must-have, matched nice-to-have, missing nice-to-have. Skills не объявляются
+verified. Grade breakdown также содержит `exact_match`, Nice — `matched` и `total`.
+
+Preview не раскрывает email, phone, Telegram, полную фамилию, user_id, personal
+consent fields, FSP ID, city/address, about, declared grade, assessment history
+или контакты. Verification date только отображается, не влияет на score/rank.
+Контакты в O1 не разблокируются; будущий accepted Invitation не реализован здесь.
+
+### Explicit matching demo
+
+```sh
+docker compose exec backend python -m app.seed --matching-demo
+```
+
+Команда включает base identities `candidate@example.com` / `employer@example.com`,
+три Needs с фиксированными IDs и девять synthetic Matching candidates. Используется
+тот же `DEMO_PASSWORD` (10–128 символов); оба demo modes запрещены в production
+до открытия seed session. Обычный `--demo` по-прежнему создаёт только base identities
+и сохраняет base candidate unverified; он не создаёт Needs или Matching candidates.
+Комбинация `--demo --matching-demo` также допустима.
+
+Matching demo **create-if-absent**: повторные запуски не сбрасывают existing users,
+password hashes, verification, profiles, skills или Need edits/status/relations.
+Identity key кандидата — фиксированный email, Need — фиксированный ID. Несовместимая
+роль existing matching user вызывает fixture conflict вместо смены роли.
+Для полного локального reset удаляют DB volume отдельной командой, описанной выше;
+matching seed не является reset command.
+
+Matching candidates — synthetic fixtures. Их canonical verification trio заполнено
+напрямую для проверки Matching boundary с фиксированной датой `2026-10-05T12:00:00Z`.
+Они не созданы из AssessmentAttempt history; seed не создаёт и не меняет attempts.
+Полный production question bank сейчас только Backend. Frontend fixture существует
+только как negative specialization case; она не проходила настоящий Frontend assessment.
+
+| Fixed Need ID | Setup | Status |
+|---|---|---|
+| demo-need-backend-middle-active | Backend/Middle, must Python + FastAPI, nice PostgreSQL + Django, target 3 | ACTIVE |
+| demo-need-backend-junior-draft | Backend/Junior, must Python, nice FastAPI + PostgreSQL, target 1 | DRAFT |
+| demo-need-backend-senior-closed | Backend/Senior, must Python + PostgreSQL, nice FastAPI + Django, target 7 | CLOSED |
+
+На чистом demo ACTIVE Need имеет ровно четыре eligible candidates:
+
+| Case | Assessment | Outcome / Professional Fit |
+|---|---:|---|
+| Exact Middle, оба nice, experience 3 | 90 | #1, **95.5** |
+| Overqualified Senior, оба nice, experience 3 | 100 | #2, **93.75** |
+| Middle, без Django, experience 1.5 | 90 | Eligible, 80.5 |
+| Middle, оба nice, experience=null | 90 | Eligible, 80.5; Experience contribution=0 |
+| Junior для Middle Need | 100 | Excluded: grade |
+| Middle без FastAPI | 100 | Excluded: must-have |
+| Unverified, canonical trio all-null | — | Excluded: verification/score |
+| Middle без consent | 100 | Excluded: consent |
+| Frontend Middle | 100 | Excluded: specialization |
+
+Exact Middle/90 выше Senior/100 из-за соответствия requested grade; высокий
+assessment score сам по себе не гарантирует первое место. Два результата 80.5
+упорядочиваются по candidate_id, их взаимный порядок не является demo oracle.
+Base candidate также исключён. После пользовательских edits результаты могут
+измениться; повторный seed сохраняет эти edits.
+
+
+### Employer UI manual flow
+
+1. В запущенной локальной среде выполните
+   `docker compose exec backend python -m app.seed --matching-demo`.
+   Повторный seed сохраняет существующие edits и статусы.
+2. Войдите как `employer@example.com` с настроенным `DEMO_PASSWORD` и откройте
+   `/employer/needs`. При отсутствии профиля сначала заполните `/employer/edit`.
+3. У ACTIVE «Backend Python Engineer» нажмите «Подбор кандидатов».
+   В чистом demo total равен 4: первая Мария С. (Middle, оценка 90, соответствие
+   95.5), второй Алексей В. (Senior, оценка 100, точный backend score 93.75,
+   в UI **93.8**). Два оставшихся результата имеют 80.5; их взаимный порядок
+   не является продуктовым oracle. Пагинация использует серверные limit/offset.
+4. Раскройте «Почему такой результат». Для Марии отображаются 40.5 / 45.0,
+   25.0 / 25.0, 15.0 / 15.0, 15.0 / 15.0. Проверьте дату подтверждения,
+   совпавшие обязательные/желательные навыки и отсутствующий Django у кандидата
+   с неполным nice-набором. Неактивные факторы исключены; активный нулевой
+   вклад опыта отображается как 0.0 / 15.0.
+5. Для проверки создания/редактирования используйте отдельную временную
+   потребность: «Новая потребность», заполните обязательные поля и навыки,
+   сохраните DRAFT, отредактируйте и активируйте в списке. Откройте подбор,
+   запомните результаты, перейдите в «Редактировать потребность», измените
+   желательные навыки или целевой опыт и сохраните ACTIVE. Вернитесь через
+   список к подбору: новый GET отражает сохранённые требования.
+6. Закрывайте только временную потребность: CLOSED нельзя редактировать,
+   а прямые `/employer/needs/{id}/matches` для DRAFT/CLOSED показывают блокировку.
+   Не закрывайте canonical ACTIVE demo: seed его не переоткроет.
+7. На ширине 375px проверьте перенос заголовков/навыков и раскрытый breakdown
+   без горизонтальной прокрутки. При ошибке отображается «Повторить», повторная
+   загрузка проверяет актуальный Need. Для пустого pool показывается отдельное
+   сообщение; переходы страниц не показывают старый ranking как текущий.
+8. Без авторизации страница перенаправляет на `/login`, Candidate — на
+   `/candidate`. В карточках и `/matches` response нет контактов, полной фамилии,
+   FSP ID и invitation actions: используются только разрешённые preview fields.
+
+Frontend не вычисляет и не переупорядочивает matching: Professional Fit —
+серверный детерминированный показатель соответствия требованиям, не вероятность
+найма. Округление до одной цифры применяется только при отображении. Навыки и
+опыт указаны кандидатом; дата подтверждения компетенции носит информационный
+характер. Контакты в O1 не раскрываются. Ranking хранится только в состоянии
+страницы и заново запрашивается при возвращении после редактирования.

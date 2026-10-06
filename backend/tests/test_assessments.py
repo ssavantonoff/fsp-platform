@@ -587,6 +587,7 @@ def test_migration_0001_0002_preserves_profiles_and_resets_legacy_grade(database
         assert profile["verified_grade"] is None
         assert profile["normalized_assessment_score"] is None
         assert profile["assessment_verified_at"] is None
+        command.upgrade(config, "head")
         command.check(config)
         command.downgrade(config, "0001")
         assert "normalized_assessment_score" not in {

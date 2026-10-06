@@ -302,3 +302,74 @@ dd {
     padding: 0.8rem;
   }
 }
+.need-list {
+  display: grid;
+  gap: 1rem;
+}
+.need-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.need-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.need-card-header h1,
+.need-card-header h2 {
+  margin: 0;
+}
+.need-status {
+  border: 1px solid #dae0e8;
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+}
+.need-pagination {
+  margin-top: 1rem;
+}
+.need-form-section .hint {
+  margin-top: 0.5rem;
+}
+.need-form-section .checkbox {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.field-error {
+  color: #9a2020;
+  margin: 0;
+}
+.match-list {
+  display: grid;
+  gap: 1rem;
+}
+.match-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.matching-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.matching-header h2,
+.match-score {
+  margin: 0;
+}
+.match-score {
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+.match-breakdown summary {
+  cursor: pointer;
+  line-height: 1.5;
+}
+.match-breakdown .hint {
+  margin-top: 0.5rem;
+}
+.match-pagination {
+  margin-bottom: 1rem;
+}

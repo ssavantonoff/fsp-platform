@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { api, ApiError, errorMessage } from "@/api";
+import { needsNavigationVisible } from "@/employer-needs";
 import type { Role, User } from "@/types";
 
 interface AuthState {
@@ -91,6 +92,9 @@ export function Header() {
                 >
                   Мой профиль
                 </Link>
+                {needsNavigationVisible(user.role) && (
+                  <Link href="/employer/needs">Потребности</Link>
+                )}
                 <button className="secondary" disabled={busy} onClick={logout}>
                   {busy ? "Выходим…" : "Выйти"}
                 </button>

@@ -1,6 +1,15 @@
 import { ApiError, errorMessage } from "@/api";
 
 const labels: Record<string, string> = {
+  position_title: "Позиция",
+  required_grade: "Требуемый уровень",
+  target_experience_years: "Целевой опыт",
+  salary_from: "Зарплата от",
+  salary_to: "Зарплата до",
+  description: "Описание",
+  additional_requirements: "Дополнительные требования",
+  must_have_skill_ids: "Обязательные навыки",
+  nice_to_have_skill_ids: "Желательные навыки",
   email: "Email",
   password: "Пароль",
   role: "Роль",
