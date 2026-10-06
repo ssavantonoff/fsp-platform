@@ -362,7 +362,7 @@ Use the existing Python/Django/FastAPI/PostgreSQL/React/TypeScript/SQL catalog. 
 
 | Case | Profile setup | Outcome |
 | --- | --- | --- |
-| exact | Middle, score88, both nice, experience3 | 94.6, ahead of senior |
+| exact | Middle, score90, both nice, experience3 | 95.5, ahead of senior |
 | overqualified | Senior, score100, both nice, experience3 | 93.75 |
 | optional gap | Middle, score90, one nice, experience1.5 | eligible, lower contribution |
 | no experience | Middle, score90, all nice, experienceNone | eligible, ExperienceFit0 |
@@ -374,14 +374,14 @@ Use the existing Python/Django/FastAPI/PostgreSQL/React/TypeScript/SQL catalog. 
 
 Verified local fixtures set the canonical trio together with a fixed UTC verification date, as permitted by the spec. This is explicit demo preparation, not a write API or a claim that O1 implements assessment history. Original demo candidate remains unverified. Explain demo provenance in README.
 
-- [ ] Write `test_matching_demo_is_explicit_and_preserves_base_demo`, `test_matching_demo_is_idempotent_and_preserves_edits`, `test_matching_demo_ranking_and_adversarial_cases`, `test_matching_demo_rejected_in_production`; assert ordinary demo user/catalog counts unchanged and trio constraints hold.
-- [ ] Run `pytest -q tests/test_matching_seed.py`; expect missing matching_demo option failure.
-- [ ] Add the opt-in CLI/function behavior inside the existing seed transaction without modifying Assessment Engine history/questions or existing users.
-- [ ] Run `pytest -q tests/test_matching_seed.py tests/test_infrastructure.py`; expect PASS.
-- [ ] Document all seven endpoints, own/role/Origin protections, error/page shapes, lifecycle/editing/live recalculation, frozen formula/renormalization, privacy and demo cases in README.
-- [ ] Extend the existing Compose CI seed smoke to run `python -m app.seed --matching-demo` twice after its ordinary demo check; use existing password environment, never commit credentials. Backend/frontend jobs already discover new test files through their existing commands.
-- [ ] Run the matching seed tests with PostgreSQL; expect idempotency and integrity PASS.
-- [ ] Commit declared files: `feat: add explicit employer matching demo fixtures`.
+- [x] Write `test_matching_demo_is_explicit_and_preserves_base_demo`, `test_matching_demo_is_idempotent_and_preserves_edits`, `test_matching_demo_ranking_and_adversarial_cases`, `test_matching_demo_rejected_in_production`; assert ordinary demo user/catalog counts unchanged and trio constraints hold.
+- [x] Run `pytest -q tests/test_matching_seed.py`; expect missing matching_demo option failure.
+- [x] Add the opt-in CLI/function behavior inside the existing seed transaction without modifying Assessment Engine history/questions or existing users.
+- [x] Run `pytest -q tests/test_matching_seed.py tests/test_infrastructure.py`; expect PASS.
+- [x] Document all seven endpoints, own/role/Origin protections, error/page shapes, lifecycle/editing/live recalculation, frozen formula/renormalization, privacy and demo cases in README.
+- [x] Extend the existing Compose CI seed smoke to run `python -m app.seed --matching-demo` twice after its ordinary demo check; use existing password environment, never commit credentials. Backend/frontend jobs already discover new test files through their existing commands.
+- [x] Run the matching seed tests with PostgreSQL; expect idempotency and integrity PASS.
+- [x] Commit declared files: `feat: add explicit employer matching demo fixtures`.
 
 ### Task 9: Employer Needs frontend management
 
@@ -470,7 +470,7 @@ This gate checks completed behavior; it is not another product implementation ta
 - [ ] Run `docker compose exec backend python -m app.seed --demo` twice; expect original two-account behavior preserved.
 - [ ] Run `docker compose exec backend python -m app.seed --matching-demo` twice; expect no duplicates or overwrites and the documented demo ranking.
 - [ ] Check `/health` and the frontend `/api/skills` proxy using the actual configured ports from `compose.yaml`; expect healthy backend and catalog JSON.
-- [ ] Perform browser smoke as employer: fill profile, create with must/nice skills, edit DRAFT, activate, see94.6 exact Middle ahead of93.75 Senior, details/date, edit ACTIVE and see changed next matching, reject invalid edit, close and confirm edit/matches blocked. Verify 375px layout, busy submit, empty/error/retry states and page navigation.
+- [ ] Perform browser smoke as employer: fill profile, create with must/nice skills, edit DRAFT, activate, see95.5 exact Middle ahead of93.75 Senior, details/date, edit ACTIVE and see changed next matching, reject invalid edit, close and confirm edit/matches blocked. Verify 375px layout, busy submit, empty/error/retry states and page navigation.
 - [ ] Perform browser smoke as candidate/anonymous: employer screens redirect through RoleGate; direct API access401/403; existing profile/auth/assessment flow still works.
 - [ ] Read the actual CI workflow: backend PostgreSQL migration/check/pytest/Ruff/mypy, frontend lint/typecheck/test/build, Docker health/seed/proxy smoke must execute these new tests; record CI run evidence separately from local checks.
 - [ ] Review privacy responses in API/browser network output: exactly allowlisted preview fields and verification date, no consent/contact fields. Confirm no probability copy and no frontend scoring code.
