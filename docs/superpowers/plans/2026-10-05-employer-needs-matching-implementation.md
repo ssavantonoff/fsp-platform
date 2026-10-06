@@ -401,7 +401,7 @@ Verified local fixtures set the canonical trio together with a fixed UTC verific
 - Produces exported `NeedEditorView({need, loading, error, form, onRetry})`, with need `EmployerNeed | null`, loading boolean, error unknown, form `NeedFormProps`, retry `() => void`; this view renders the CLOSED block without router/auth hooks and is directly SSR-testable. `EmployerNeedEditor` owns fetch/navigation, not the presentational view.
 - Produces `needsNavigationVisible(role: Role | null): boolean`, used by existing Header and tested for Employer/Candidate/anonymous visibility.
 
-- [ ] Write named Node tests: `need form rejects empty title and must-have`, `need form rejects salary order and nonfinite negative experience`, `need form rejects duplicate and overlapping skills`, `need payload excludes ownership and calculated fields`, `need API uses cookie transport and correct methods`, `need statuses expose correct actions`, `needs navigation is employer only`, `ACTIVE editor remains editable`, `CLOSED editor is blocked`, `need list renders loading empty and API error states`, `need form disables invalid or busy submit`. Render exported views/forms, not auth/router orchestration components.
+- [x] Write named Node tests: `need form rejects empty title and must-have`, `need form rejects salary order and nonfinite negative experience`, `need form rejects duplicate and overlapping skills`, `need payload excludes ownership and calculated fields`, `need API uses cookie transport and correct methods`, `need statuses expose correct actions`, `needs navigation is employer only`, `ACTIVE editor remains editable`, `CLOSED editor is blocked`, `need list renders loading empty and API error states`, `need form disables invalid or busy submit`. Render exported views/forms, not auth/router orchestration components.
 
 Pin action/role oracles in `employer-needs.test.ts`:
 
@@ -416,16 +416,16 @@ assert.equal(needsNavigationVisible(null), false);
 
 Other test assertions: invalid field key is present in validateNeedForm errors; valid data errors equal `{}`; empty target payload is null and zero is0; payload keys exactly match NeedWrite; busy/invalid form markup has disabled submit; CLOSED editor markup contains no form; ACTIVE contains one; state markup has role=status/alert and retry button where applicable. Fetch mocks assert exact URL/method/body and restore global fetch in finally.
 
-- [ ] Run `node --import tsx --test tests/employer-needs.test.ts`; expect missing module/component behavior failure.
-- [ ] Implement DTO/helper/API functions in `employer-needs.ts`; validate numeric strings before Number conversion (empty target → null; "0" → 0), send scalar strings for Decimal salary, derive no owner/status/calculated fields.
-- [ ] Run focused helper/API tests; expect PASS.
-- [ ] Implement the controlled form for every NeedWrite field with disjoint skill checkboxes, validation/Feedback, fieldset disabled while saving and disabled invalid submit. Do not initialize edit controls with create defaults before GET finishes.
-- [ ] Implement list/editor orchestration and exported views with GET loading/empty/error-retry, own results, simple previous/next pagination, save success/navigation, DRAFT/ACTIVE edit and CLOSED block. A `profile_not_found` response links to existing `/employer/edit` rather than leaving a retry-only dead end. Mutation failure preserves current form/committed display; backend remains authoritative on stale CLOSED status.
-- [ ] Add the three thin pages; dynamic edit awaits params and keys the editor by id, following existing assessment dynamic page convention.
-- [ ] Add employer-only navigation in the existing Header in `auth.tsx` and minimal responsive status/action styles; no Candidate links/actions to these screens.
-- [ ] Run `node --import tsx --test tests/employer-needs.test.ts`; expect PASS.
-- [ ] Run `npm test`, `npm run lint`, `npm run typecheck`; expect existing assessment/proxy tests preserved and no TS/ESLint errors.
-- [ ] Commit explicit declared frontend files: `feat: add employer need management screens`.
+- [x] Run `node --import tsx --test tests/employer-needs.test.ts`; expect missing module/component behavior failure.
+- [x] Implement DTO/helper/API functions in `employer-needs.ts`; validate numeric strings before Number conversion (empty target → null; "0" → 0), send scalar strings for Decimal salary, derive no owner/status/calculated fields.
+- [x] Run focused helper/API tests; expect PASS.
+- [x] Implement the controlled form for every NeedWrite field with disjoint skill checkboxes, validation/Feedback, fieldset disabled while saving and disabled invalid submit. Do not initialize edit controls with create defaults before GET finishes.
+- [x] Implement list/editor orchestration and exported views with GET loading/empty/error-retry, own results, simple previous/next pagination, save success/navigation, DRAFT/ACTIVE edit and CLOSED block. A `profile_not_found` response links to existing `/employer/edit` rather than leaving a retry-only dead end. Mutation failure preserves current form/committed display; backend remains authoritative on stale CLOSED status.
+- [x] Add the three thin pages; dynamic edit awaits params and keys the editor by id, following existing assessment dynamic page convention.
+- [x] Add employer-only navigation in the existing Header in `auth.tsx` and minimal responsive status/action styles; no Candidate links/actions to these screens.
+- [x] Run `node --import tsx --test tests/employer-needs.test.ts`; expect PASS.
+- [x] Run `npm test`, `npm run lint`, `npm run typecheck`; expect existing assessment/proxy tests preserved and no TS/ESLint errors.
+- [x] Commit explicit declared frontend files: `feat: add employer need management screens`.
 
 Tests use real presentational components/validation helpers, not a new mocked UI framework. RoleGate itself is reused rather than reimplemented; test action visibility through the exported view and verify actual role redirects at the browser gate.
 
