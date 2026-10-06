@@ -180,6 +180,7 @@ function NeedEditorContent({ needId }: { needId?: string }) {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const saving = useRef(false);
+  const createdNeedId = useRef<string | null>(null);
   const generation = useRef(0);
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState("");
@@ -227,21 +228,29 @@ function NeedEditorContent({ needId }: { needId?: string }) {
   }
   async function submit() {
     if (saving.current || !ready || need?.status === "CLOSED" || Object.keys(validateNeedForm(values)).length) return;
+    const targetId = needId ?? createdNeedId.current;
     saving.current = true;
     setBusy(true);
     setError(null);
     setSuccess("");
     try {
       const payload = needPayload(values);
-      const saved = needId ? await updateNeed(needId, payload) : await createNeed(payload);
+      let saved: EmployerNeed;
+      if (targetId) {
+        saved = await updateNeed(targetId, payload);
+      } else {
+        saved = await createNeed(payload);
+        // Navigation can leave this create component mounted after the response.
+        createdNeedId.current = saved.id;
+      }
       setNeed(saved);
       setValues(needFormValues(saved));
-      if (!needId) router.push(`/employer/needs/${encodeURIComponent(saved.id)}/edit`);
+      if (!targetId) router.push(`/employer/needs/${encodeURIComponent(saved.id)}/edit`);
       else setSuccess("Потребность сохранена.");
     } catch (err) {
       setError(err);
-      if (needId && err instanceof ApiError && err.code === "need_state_conflict") {
-        try { setNeed(await getNeed(needId)); }
+      if (targetId && err instanceof ApiError && err.code === "need_state_conflict") {
+        try { setNeed(await getNeed(targetId)); }
         catch { /* Keep the original conflict and user input available for retry. */ }
       }
     } finally {

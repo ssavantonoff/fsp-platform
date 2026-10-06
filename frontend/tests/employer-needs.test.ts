@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import ts from "typescript";
 import { test } from "node:test";
 import { ApiError } from "../src/api";
 import { createElement } from "react";
@@ -267,4 +270,115 @@ test("invalid or busy form handler does not submit", () => {
   }
   assert.equal(prevented, 3);
   assert.equal(submitted, 1);
+});
+
+// Exercise the real submit body without mounting router/auth/hooks or copying its logic.
+// router.push deliberately leaves the create component mounted with needId undefined.
+function navigationSubmit() {
+  const source = readFileSync("src/components/employer-needs-screen.tsx", "utf8");
+  const ast = ts.createSourceFile("screen.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const editor = ast.statements.find((node): node is ts.FunctionDeclaration =>
+    ts.isFunctionDeclaration(node) && node.name?.text === "NeedEditorContent");
+  const submit = editor?.body?.statements.find((node): node is ts.FunctionDeclaration =>
+    ts.isFunctionDeclaration(node) && node.name?.text === "submit");
+  assert.ok(submit);
+  const createdNeedId = { current: null as string | null };
+  const pushes: { path: string; rememberedId: string | null }[] = [];
+  const errors: unknown[] = [];
+  const busy: boolean[] = [];
+  const successes: string[] = [];
+  const scope = {
+    needId: undefined as string | undefined,
+    createdNeedId,
+    saving: { current: false },
+    ready: true,
+    need: null as EmployerNeed | null,
+    values,
+    validateNeedForm, needPayload, needFormValues,
+    createNeed, updateNeed, getNeed, ApiError,
+    setBusy: (value: boolean) => { busy.push(value); },
+    setError: (error: unknown) => { if (error != null) errors.push(error); },
+    setSuccess: (message: string) => { successes.push(message); },
+    setNeed: (saved: EmployerNeed) => { scope.need = saved; },
+    setValues: (saved: NeedFormValues) => { scope.values = saved; },
+    router: { push: (path: string) => { pushes.push({ path, rememberedId: createdNeedId.current }); } },
+  };
+  const code = ts.transpileModule(`${submit.getText(ast)}\nsubmit;`, {
+    compilerOptions: { target: ts.ScriptTarget.ES2020 },
+  }).outputText;
+  const run = runInNewContext(code, scope) as () => Promise<void>;
+  return { run, scope, pushes, errors, busy, successes };
+}
+test("create followed by save during pending navigation sends POST then PUT for the same Need", async () => {
+  const original = globalThis.fetch;
+  const calls: { path: string; method: string }[] = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ path: String(url), method: init?.method ?? "GET" });
+    return Response.json({ ...need, id: "created-id" });
+  };
+  try {
+    const editor = navigationSubmit();
+    await editor.run();
+    await editor.run();
+    assert.deepEqual(calls, [
+      { path: "/api/employer/needs", method: "POST" },
+      { path: "/api/employer/needs/created-id", method: "PUT" },
+    ]);
+    assert.deepEqual(editor.pushes, [{ path: "/employer/needs/created-id/edit", rememberedId: "created-id" }]);
+    assert.equal(editor.scope.needId, undefined);
+    assert.equal(editor.scope.createdNeedId.current, "created-id");
+    assert.equal(editor.scope.saving.current, false);
+    assert.deepEqual(editor.busy, [true, false, true, false]);
+    assert.deepEqual(editor.errors, []);
+    assert.equal(editor.successes.at(-1), "Потребность сохранена.");
+  } finally { globalThis.fetch = original; }
+});
+test("failed create can retry and a fresh editor can create a different Need", async () => {
+  const original = globalThis.fetch;
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    return requests === 1
+      ? Response.json({ error: { code: "need_conflict", message: "Не сохранено", fields: [] } }, { status: 409 })
+      : Response.json({ ...need, id: `created-${requests}` });
+  };
+  try {
+    const editor = navigationSubmit();
+    await editor.run();
+    assert.equal(editor.scope.createdNeedId.current, null);
+    assert.equal(editor.scope.saving.current, false);
+    assert.equal(editor.scope.need, null);
+    assert.equal(editor.errors.length, 1);
+    await editor.run();
+    assert.equal(editor.scope.createdNeedId.current, "created-2");
+    const fresh = navigationSubmit();
+    await fresh.run();
+    assert.equal(fresh.scope.createdNeedId.current, "created-3");
+  } finally { globalThis.fetch = original; }
+});
+
+test("pending navigation update conflict reloads the created Need and blocks CLOSED submit", async () => {
+  const original = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = async (url, init) => {
+    const method = init?.method ?? "GET";
+    calls.push(`${method} ${url}`);
+    if (method === "PUT") return Response.json({ error: { code: "need_state_conflict", message: "Закрыта", fields: [] } }, { status: 409 });
+    return Response.json({ ...need, id: "created-id", status: method === "GET" ? "CLOSED" : "DRAFT" });
+  };
+  try {
+    const editor = navigationSubmit();
+    await editor.run();
+    await editor.run();
+    await editor.run();
+    assert.deepEqual(calls, [
+      "POST /api/employer/needs",
+      "PUT /api/employer/needs/created-id",
+      "GET /api/employer/needs/created-id",
+    ]);
+    assert.equal(editor.scope.need?.status, "CLOSED");
+    assert.equal(editor.scope.createdNeedId.current, "created-id");
+    assert.equal(editor.errors.length, 1);
+    assert.ok(editor.errors[0] instanceof ApiError);
+  } finally { globalThis.fetch = original; }
 });
