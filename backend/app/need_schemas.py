@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Annotated, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models import Grade, NeedStatus, Specialization
 from app.schemas import InputModel, SkillOut
@@ -61,6 +61,56 @@ class NeedOut(BaseModel):
 
 class NeedPage(BaseModel):
     items: list[NeedOut]
+    total: int
+    limit: int
+    offset: int
+
+
+class FactorBreakdown(BaseModel):
+    score: float
+    max: float
+    active: bool
+
+
+class GradeBreakdown(FactorBreakdown):
+    exact_match: bool
+
+
+class NiceToHaveBreakdown(FactorBreakdown):
+    matched: int
+    total: int
+
+
+class MatchBreakdown(BaseModel):
+    assessment: FactorBreakdown
+    grade: GradeBreakdown
+    nice_to_have: NiceToHaveBreakdown
+    experience: FactorBreakdown
+
+
+class EmployerCandidatePreview(BaseModel):
+    candidate_id: str
+    display_name: str
+    specialization: Specialization
+    verified_grade: Grade
+    skills: list[SkillOut]
+    years_of_experience: float | None
+    normalized_assessment_score: int
+    assessment_verified_at: datetime | None
+    professional_fit_score: float
+    breakdown: MatchBreakdown
+    matched_must_have_skills: list[SkillOut]
+    matched_nice_to_have_skills: list[SkillOut]
+    missing_nice_to_have_skills: list[SkillOut]
+
+    @field_validator("assessment_verified_at")
+    @classmethod
+    def utc_dates(cls, value: datetime | None) -> datetime | None:
+        return value.replace(tzinfo=UTC) if value and value.tzinfo is None else value
+
+
+class MatchesPage(BaseModel):
+    items: list[EmployerCandidatePreview]
     total: int
     limit: int
     offset: int

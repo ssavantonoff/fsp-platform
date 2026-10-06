@@ -287,19 +287,19 @@ A zero assessment does not mean a zero total: an eligible exact-grade candidate 
 - Produces route dependency `get_assessment_provider(db: Db) -> CandidateAssessmentProvider` returning `ProfileAssessmentProvider(db)`; override this dependency in boundary tests.
 - Produces GET `/employer/needs/{need_id}/matches`, default limit20/max100/offset0, EmployerUser required, ACTIVE-only409, foreign/missing404.
 
-- [ ] Write `test_matching_permissions_and_status`: anonymous401, Candidate403, foreign/missing404, DRAFT/CLOSED409, ACTIVE200 and standard error envelopes.
-- [ ] Run `pytest -q tests/test_matching.py -k permissions_and_status`; expect missing endpoint404 in the ACTIVE case.
-- [ ] Implement explicit response schemas and provider dependency in the declared files.
-- [ ] Implement `load_need_criteria` using the owner-scoped joined/projected read above; verify ACTIVE in its returned rows, copy scalar criteria and frozenset skill IDs, then discard ORM Need as a criteria source. No writer lock or intermediate GET commit.
-- [ ] Implement `match_need`: authorize through existing EmployerUser/ownership conventions, obtain immutable criteria through load_need_criteria, load candidate pool with selectin candidate skills, call the provider once for all pool IDs, apply eligibility, single pure scoring function, full deterministic rank, then pagination and explicit DTO construction. Preserve unrounded score in service/API; UI formats it later. Resolve catalog display metadata for criteria IDs in one batch if needed, without rereading Need requirements.
-- [ ] Add the seventh thin route using these interfaces and existing no-store behavior.
-- [ ] Run the permission/status test; expect PASS.
-- [ ] Write the focused tests in the table below.
-- [ ] Run `pytest -q tests/test_matching.py`; expect uncovered batching/privacy/breakdown cases fail before refinements.
-- [ ] Complete only the missing orchestration/serialization behavior; serialize allowlisted attributes manually, never ORM dictionaries or CandidateOut.
-- [ ] Run `pytest -q tests/test_matching.py tests/test_matching_rules.py tests/test_candidate_assessments.py tests/test_employer_needs.py`; expect PASS.
-- [ ] Run existing auth/profile/assessment tests; expect unchanged behavior.
-- [ ] Commit declared files: `feat: expose privacy-safe explainable need matching`.
+- [x] Write `test_matching_permissions_and_status`: anonymous401, Candidate403, foreign/missing404, DRAFT/CLOSED409, ACTIVE200 and standard error envelopes.
+- [x] Run `pytest -q tests/test_matching.py -k permissions_and_status`; expect missing endpoint404 in the ACTIVE case.
+- [x] Implement explicit response schemas and provider dependency in the declared files.
+- [x] Implement `load_need_criteria` using the owner-scoped joined/projected read above; verify ACTIVE in its returned rows, copy scalar criteria and frozenset skill IDs, then discard ORM Need as a criteria source. No writer lock or intermediate GET commit.
+- [x] Implement `match_need`: authorize through existing EmployerUser/ownership conventions, obtain immutable criteria through load_need_criteria, load candidate pool with selectin candidate skills, call the provider once for all pool IDs, apply eligibility, single pure scoring function, full deterministic rank, then pagination and explicit DTO construction. Preserve unrounded score in service/API; UI formats it later. Resolve catalog display metadata for criteria IDs in one batch if needed, without rereading Need requirements.
+- [x] Add the seventh thin route using these interfaces and existing no-store behavior.
+- [x] Run the permission/status test; expect PASS.
+- [x] Write the focused tests in the table below.
+- [x] Run `pytest -q tests/test_matching.py`; expect uncovered batching/privacy/breakdown cases fail before refinements.
+- [x] Complete only the missing orchestration/serialization behavior; serialize allowlisted attributes manually, never ORM dictionaries or CandidateOut.
+- [x] Run `pytest -q tests/test_matching.py tests/test_matching_rules.py tests/test_candidate_assessments.py tests/test_employer_needs.py`; expect PASS.
+- [x] Run existing auth/profile/assessment tests; expect unchanged behavior.
+- [x] Commit declared files: `feat: expose privacy-safe explainable need matching`.
 
 | `test_matching.py` test name | Assertions |
 | --- | --- |

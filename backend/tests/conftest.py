@@ -1,18 +1,19 @@
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event, select, text
 from sqlalchemy.orm import sessionmaker
 
 from alembic import command
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.main import create_app
-from app.models import Skill
+from app.models import CandidateProfile, Grade, Role, Skill, Specialization, User
 
 ORIGIN = "http://localhost:3000"
 PASSWORD = "valid-test-password"
@@ -152,3 +153,50 @@ def need_data(skill_ids):
         "must_have_skill_ids": skill_ids[:2],
         "nice_to_have_skill_ids": skill_ids[2:],
     }
+
+
+@pytest.fixture
+def matching_candidate(db_factory, skill_ids):
+    def create(**changes):
+        with db_factory() as db:
+            user = User(
+                email=f"private-{uuid4().hex}@example.com",
+                password_hash="unused-fixture-hash",
+                role=Role.CANDIDATE,
+            )
+            db.add(user)
+            db.flush()
+            verified = changes.pop("verified", True)
+            consent = changes.pop("personal_data_consent", True)
+            selected_skills = changes.pop("skill_ids", skill_ids)
+            profile = CandidateProfile(
+                user_id=user.id,
+                **{
+                    "first_name": "Анна",
+                    "last_name": "Иванова",
+                    "city": "PRIVATE_CITY_ADDRESS",
+                    "about": "PRIVATE_PHONE_+79991234567 PRIVATE_TELEGRAM_@anna",
+                    "fsp_id": "PRIVATE_FSP",
+                    "specialization": Specialization.BACKEND,
+                    "declared_grade": Grade.JUNIOR,
+                    "years_of_experience": 2,
+                    "personal_data_consent": consent,
+                    "personal_data_consent_at": datetime(2026, 9, 1, tzinfo=UTC)
+                    if consent
+                    else None,
+                    "verified_grade": Grade.MIDDLE if verified else None,
+                    "normalized_assessment_score": 80 if verified else None,
+                    "assessment_verified_at": datetime(2026, 9, 18, tzinfo=UTC)
+                    if verified
+                    else None,
+                    **changes,
+                },
+            )
+            profile.skills = list(
+                db.scalars(select(Skill).where(Skill.id.in_(selected_skills)))
+            )
+            db.add(profile)
+            db.commit()
+            return profile.id
+
+    return create
