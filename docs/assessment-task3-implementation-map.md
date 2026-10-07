@@ -3,9 +3,9 @@
 Branch: `feat/assessment-validation-qualification`. Production base: `671ad354658ec9c092b00e6811e6a5a73f66f5af`.
 Task 8 evidence snapshot: `ecc29e9b700149485612d2fd707e4634f6c1327e`, 2026-10-07.
 
-**FINAL FULL GATE: PENDING**
+**FINAL FULL GATE: PASS**
 
-Tasks 1–7 completed; this section records actual implementation and checks already run. PostgreSQL full suite, final migrations, Docker, browser desktop/375px and final-head PR CI are not yet claimed. Task 9 actual results will replace the final-gate status only after every mandatory local gate passes. Original P2 provenance and historical gap map are preserved below and describe the old audit baseline, not open implementation gaps at this feature snapshot.
+Tasks 1–8 completed; every mandatory local Task 9 gate passed on tested feature SHA `a2fd4c2cbd507b9460f3eab37909a5fd03423762`. Final local evidence is recorded below. PR creation and final-head PR CI follow this documentation-only evidence commit and are not claimed here. Original P2 provenance and historical gap map are preserved below and describe the old audit baseline, not open implementation gaps at this feature snapshot.
 
 ## Completed tasks and commits
 
@@ -72,7 +72,62 @@ Scoring, thresholds, question/option selection, cooldown, canonical synchronizat
 
 ## Final full gate evidence
 
-PENDING — record actual Task 9 PostgreSQL, SQLite, static/Alembic, frontend, Docker/seed, browser desktop/375px, privacy and full feature-integrity evidence here after execution. PR is not yet created; CI is not yet claimed.
+Verified on 2026-10-07. Tested feature SHA: `a2fd4c2cbd507b9460f3eab37909a5fd03423762` (Task 8 commit `docs: finalize assessment validation evidence`). Fixed production base: `671ad354658ec9c092b00e6811e6a5a73f66f5af`. This final evidence update changes documentation only; production source and tests remain exactly those verified.
+
+### Automated and runtime checks
+
+| Gate / command | Actual result |
+|---|---|
+| Isolated PostgreSQL | PostgreSQL **17.11**, Compose project `fsp-task3-verification`, dedicated database/volume and port 55439. Existing per-test `fsp_test_*` schema infrastructure used. |
+| `TEST_DATABASE_URL=<isolated URL> APP_ENV=test python -m pytest -q` | **516 passed, 0 failed, 0 skipped, 1 warning**, 65.44s. All seven PostgreSQL-only cases executed: assessment locking, concurrent email verification, Need locking, NaN constraint and three Matching concurrency cases. |
+| `env -u TEST_DATABASE_URL python -m pytest -q -ra` | **509 passed, 0 failed, 7 skipped, 5 warnings**, 49.62s. The seven skips are the PostgreSQL-only cases listed above. |
+| `python -m ruff check .` | PASS. |
+| `python -m ruff format --check .` | PASS; 45 files already formatted. |
+| `python -m mypy app` | PASS; 29 source files. |
+| Isolated `python -m alembic upgrade head`, `current`, `heads`, `check` | PASS. Exactly one existing head: `fbce7259afda`; current is that head. No new upgrade operations detected; no new migration. |
+| `npm ci` | PASS; 349 packages installed. Package/lock files unchanged. Existing dependency audit reported five high-severity vulnerabilities; no remediation or dependency change is included. |
+| `npm test` | **93 passed, 0 failed, 0 skipped**. |
+| `npm run lint`, `npm run typecheck`, `npm run build` | All PASS; production build generated existing routes successfully. |
+| `docker compose -p fsp-task3-verification --env-file <temporary isolated env> up --build -d --wait --wait-timeout 180` | PASS. Backend Python 3.13 / frontend Node 22 images built; postgres/backend/frontend healthy. |
+| `curl --fail http://localhost:8000/health` / `http://localhost:3000/api/skills` | PASS; health returned `{"status":"ok"}`; skills endpoint returned valid JSON. |
+| Existing base seed ×2 | PASS. Full public-table row snapshot hashes identical after repeat; 75 source question rows, 300 options, 7 skills. |
+| Existing `seed --demo` ×2 | PASS. Full row snapshots identical after repeat; 2 users, 1 candidate, 1 employer; question inventory unchanged. |
+| Existing `seed --matching-demo` ×2 | PASS. Full row snapshots identical after repeat; 11 users, 10 candidate profiles, 3 Needs, 11 Need-skill rows. No new seed mode or Matching modification. |
+| Entire feature `git diff --check` | PASS. |
+
+The first PostgreSQL invocation was invalidated by verification setup: starting the full Compose stack recreated the postgres container during that invocation, causing `AdminShutdown` (514 passed, 1 failed, 2 errors). The full suite was rerun after stack startup, without any code/test change or weakened assertion; the valid final result is 516 passed above. Existing final warnings are Starlette/httpx deprecation and, on SQLite only, the Python sqlite datetime adapter deprecation. Local tools used Python 3.14.6 and Node 26.5.1; Docker exercised the repository's Python 3.13 / Node 22 runtime versions.
+
+### Real browser acceptance
+
+Used the isolated production Docker application through real localhost pages, login and assessment APIs. Disposable accounts were created through the existing API. Test-only DB answer/deadline arrangement followed the existing backend fixture pattern; no question source or production business logic was changed. Successful historical Middle attempts and their canonical dates were arranged at T1=`2026-10-06T09:10:00Z` after actual API scoring; later Senior results were finalized by the production API.
+
+Every required scenario was inspected on desktop (825px initial viewport, then 1280px) and **375px**. Screenshots and live accessibility/DOM observations were used; these are browser observations, not static-render substitutes.
+
+| Scenario | Concrete observed evidence |
+|---|---|
+| A: Dashboard | Separate headings for declared Senior and current Backend / Middle /80 /T1; lower-grade and cooldown buttons disabled as expected. |
+| B/E: higher-grade G3 failure | Senior `FAILED`, **65**, blocks **75/75/75/50/50**, completion T2=`2026-10-07T10:50:34.563520Z`; distinct current section remains Backend / Middle /80 /T1. Overall label not fulfilled; competency label fulfilled. Submit/profile/availability/detail and DB canonical state also checked. |
+| C: coherent PASS | Middle `PASSED`, **100**, five **100** blocks; both condition labels fulfilled. Attempt completion and current verification have their separately named fields. |
+| D: G2 block failure | Middle `FAILED`, **80**, blocks **100/100/25/100/75**. Overall fulfilled, competency condition not fulfilled; weak Database block named. |
+| F: unverified | G2 candidate's canonical triple remains null. Dashboard and result explicitly say `Подтверждённой квалификации пока нет.` and show em dashes, never the failed 80 as current qualification. |
+| G: history | Empty copy and explanatory sentence visible. PASSED and FAILED rows retain their own grades/scores/dates/blocks. A test started through mobile UI appeared as `IN_PROGRESS · В процессе · Оценка: —`, with no completion date; `Продолжить` opened the active attempt. Finished result/history links worked. History contains no current qualification block. |
+| H: old successful detail | Old Middle `PASSED`100 /T1 displayed while current profile is Senior80 /`2026-10-07T10:50:34.933702Z`; historical and current scores/grades/dates remain distinct. |
+| I: TIMEOUT | Senior `FAILED`65 with explicit timeout notice. Completion equals arranged server deadline `2026-10-07T10:49:35.064811Z`, distinct from retained Middle80 verification at T1; history says `Время вышло`. |
+| J: date semantics | All inspected dates explicitly UTC. Result says `Следующая попытка на этом уровне — не ранее`; FAIL boundary 14.10.2026 and PASS boundary 04/05.01.2027 retain their own dates. |
+| K: privacy | All eight finished API fixture results had `questions=[]`; no option/key/solution fields. Finished browser pages contain aggregate fields only, no radio controls, options or answer/solution review. No new endpoint or qualification storage. |
+| L: responsive / controls | At 375px important headings, status, threshold labels, dates and current qualification wrap readably; links/login/start/continue/retry controls usable. Measured page `scrollWidth=375`, viewport375 on result/dashboard/history/empty/error/missing-profile views; no horizontal overflow. |
+| Existing loading/error/retry flows | History query deliberately held by a temporary lock in the isolated DB: `Загрузка истории…` visible at both widths, then list restored after release. Stopped only test backend: history and dashboard showed safe unavailable-server error and Retry at both widths. Retry showed loading and recovered actual data after backend restoration; a retry during continuing outage kept the error. Dashboard loading also observed. |
+| Existing missing-profile flow | Separate account without a profile showed `Сначала заполните профиль кандидата.` at both widths; `Создать профиль` opened the existing editor. No default qualification or test selection was fabricated. |
+
+Browser evidence images were saved outside the Git repository in the workspace verification output directory. Viewport override was reset and the temporary browser tab closed. Controlled setup scripts remain outside the repository and are not production assets.
+
+### Full feature integrity
+
+Fixed-base review: **14 changed files**, exactly the nine implementation/test files, three evidence docs and two approved design/plan docs listed above. `git diff --name-status`, `--stat`, `--check` inspected. All **103 other tracked files from the baseline are byte-identical**, including question JSON, assessment/profile services, models, all schemas/routes, migrations, Matching/Need production and tests, seed, workflows, README, globals.css, assessment-attempt, frozen holdout data and dependencies.
+
+Question JSON SHA-256 remains `7d2c7f2db8a7986d3027e250ac47786e700e4babf0c80e7c46ce6fce34442096`. Human audit remains **75 reviewed / 0 BLOCKER / 27 IMPORTANT / 6 MINOR / 42 without findings**, **NOT_READY**. The 27 IMPORTANT findings are not remediated. No psychometric, certification or cross-grade equivalence claim is added.
+
+**Final local gate PASS.** PR creation/final-head pull_request CI are subsequent gates and not yet claimed by this evidence commit.
 
 ---
 
