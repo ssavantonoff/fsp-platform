@@ -22,7 +22,10 @@ from app.need_schemas import (
     NiceToHaveBreakdown,
 )
 from app.schemas import SkillOut
-from app.services.candidate_assessments import CandidateAssessmentProvider
+from app.services.candidate_assessments import (
+    CandidateAssessment,
+    CandidateAssessmentProvider,
+)
 from app.services.matching_rules import (
     CandidateMatchInput,
     FactorContribution,
@@ -124,24 +127,12 @@ def match_need(
                 skill_ids=frozenset(skill.id for skill in profile.skills),
                 years_of_experience=profile.years_of_experience,
             )
-            eligible = eligible_candidate(
+            evaluation = evaluate_candidate(
                 criteria, candidate, assessments.get(profile.id)
             )
-            if eligible is None:
+            if evaluation is None:
                 continue
-            fit = score_professional_fit(
-                ScoringInput(
-                    normalized_assessment_score=eligible.normalized_assessment_score,
-                    grade_fit=eligible.grade_fit,
-                    matched_nice_to_have=len(
-                        candidate.skill_ids & criteria.nice_to_have_skill_ids
-                    ),
-                    total_nice_to_have=len(criteria.nice_to_have_skill_ids),
-                    years_of_experience=candidate.years_of_experience,
-                    target_experience_years=criteria.target_experience_years,
-                )
-            )
-            ranked.append(RankedCandidate(eligible=eligible, fit=fit))
+            ranked.append(evaluation)
             profiles[profile.id] = (profile, surname_initial)
         ordered = rank_candidates(ranked)
         return MatchesPage(
@@ -158,6 +149,55 @@ def match_need(
             limit=limit,
             offset=offset,
         )
+
+
+def evaluate_candidate(
+    criteria: NeedCriteria,
+    candidate: CandidateMatchInput,
+    assessment: CandidateAssessment | None,
+) -> RankedCandidate | None:
+    eligible = eligible_candidate(criteria, candidate, assessment)
+    if eligible is None:
+        return None
+    fit = score_professional_fit(
+        ScoringInput(
+            normalized_assessment_score=eligible.normalized_assessment_score,
+            grade_fit=eligible.grade_fit,
+            matched_nice_to_have=len(
+                candidate.skill_ids & criteria.nice_to_have_skill_ids
+            ),
+            total_nice_to_have=len(criteria.nice_to_have_skill_ids),
+            years_of_experience=candidate.years_of_experience,
+            target_experience_years=criteria.target_experience_years,
+        )
+    )
+    return RankedCandidate(eligible=eligible, fit=fit)
+
+
+def masked_display_name(first_name: str, surname_initial: str) -> str:
+    return f"{first_name} {surname_initial}."
+
+
+def match_breakdown(item: RankedCandidate, criteria: NeedCriteria) -> MatchBreakdown:
+    fit = item.fit
+    matched_nice = item.eligible.candidate.skill_ids & criteria.nice_to_have_skill_ids
+    return MatchBreakdown(
+        assessment=_factor(fit.assessment),
+        grade=GradeBreakdown(
+            score=fit.grade.score,
+            max=fit.grade.max,
+            active=fit.grade.active,
+            exact_match=item.eligible.verified_grade == criteria.required_grade,
+        ),
+        nice_to_have=NiceToHaveBreakdown(
+            score=fit.nice_to_have.score,
+            max=fit.nice_to_have.max,
+            active=fit.nice_to_have.active,
+            matched=len(matched_nice),
+            total=len(criteria.nice_to_have_skill_ids),
+        ),
+        experience=_factor(fit.experience),
+    )
 
 
 def _skills(ids: Iterable[str], catalog: dict[str, SkillOut]) -> list[SkillOut]:
@@ -184,7 +224,7 @@ def _preview(
     matched_nice = candidate.skill_ids & criteria.nice_to_have_skill_ids
     return EmployerCandidatePreview(
         candidate_id=candidate.candidate_id,
-        display_name=f"{profile.first_name} {surname_initial}.",
+        display_name=masked_display_name(profile.first_name, surname_initial),
         specialization=candidate.specialization,
         verified_grade=eligible.verified_grade,
         skills=sorted(
@@ -195,23 +235,7 @@ def _preview(
         normalized_assessment_score=eligible.normalized_assessment_score,
         assessment_verified_at=eligible.assessment_verified_at,
         professional_fit_score=fit.score,
-        breakdown=MatchBreakdown(
-            assessment=_factor(fit.assessment),
-            grade=GradeBreakdown(
-                score=fit.grade.score,
-                max=fit.grade.max,
-                active=fit.grade.active,
-                exact_match=eligible.verified_grade == criteria.required_grade,
-            ),
-            nice_to_have=NiceToHaveBreakdown(
-                score=fit.nice_to_have.score,
-                max=fit.nice_to_have.max,
-                active=fit.nice_to_have.active,
-                matched=len(matched_nice),
-                total=len(criteria.nice_to_have_skill_ids),
-            ),
-            experience=_factor(fit.experience),
-        ),
+        breakdown=match_breakdown(item, criteria),
         matched_must_have_skills=_skills(
             criteria.must_have_skill_ids & candidate.skill_ids, catalog
         ),

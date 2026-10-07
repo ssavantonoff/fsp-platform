@@ -95,6 +95,7 @@ export function Header() {
                 {needsNavigationVisible(user.role) && (
                   <Link href="/employer/needs">Потребности</Link>
                 )}
+                {user.role === "CANDIDATE" && <Link href="/candidate/invitations">Приглашения от работодателей</Link>}
                 <button className="secondary" disabled={busy} onClick={logout}>
                   {busy ? "Выходим…" : "Выйти"}
                 </button>

@@ -112,6 +112,7 @@ function CandidateContent({ edit }: { edit: boolean }) {
         <dd>{profile.personal_data_consent ? "Дано" : "Не дано"}</dd>
       </dl>
       <div className="actions">
+        <Link className="button secondary" href="/candidate/invitations">Приглашения от работодателей</Link>
         <Link className="button" href="/candidate/edit">
           Редактировать профиль
         </Link>

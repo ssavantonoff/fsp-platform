@@ -32,6 +32,7 @@ def test_migration_upgrade_downgrade_and_schema_matches_models(database):
             "assessment_attempt_questions",
             "employer_needs",
             "employer_need_skills",
+            "invitations",
         }
         command.check(config)
         command.downgrade(config, "base")
@@ -73,7 +74,7 @@ def test_need_migration_round_trip_preserves_assessment_state(database, db_facto
             else:
                 command.downgrade(config, revision)
             expected_tables = original_tables | (
-                {"employer_needs", "employer_need_skills"}
+                {"employer_needs", "employer_need_skills", "invitations"}
                 if revision == "head"
                 else set()
             )

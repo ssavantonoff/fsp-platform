@@ -54,6 +54,7 @@ export function NeedsListView({ items, loading, error, onRetry, onAction, busyId
           <div className="need-card-header"><h2>{need.position_title}</h2><span className="need-status">{statusLabels[need.status]}</span></div>
           <NeedSummary need={need} />
           <div className="actions need-actions">
+            <Link href={`${path}/invitations`}>Приглашения</Link>
             {actions.edit && (busy ? <span>Редактировать</span> : <Link href={`${path}/edit`}>Редактировать</Link>)}
             {actions.matches && (busy ? <span>Подбор кандидатов</span> : <Link href={`${path}/matches`}>Подбор кандидатов</Link>)}
             {actions.activate && <button disabled={busy} onClick={() => onAction(need.id, "activate")}>{busy ? "Активируем…" : "Активировать"}</button>}
@@ -166,6 +167,7 @@ export function NeedEditorView({ need, loading, error, form, onRetry, ready = tr
       <EmployerNeedForm {...form} submitLabel={need ? "Сохранить" : "Создать потребность"} />
     </>}
     <p><Link href="/employer/needs">К списку потребностей</Link></p>
+    {need && <p><Link href={`/employer/needs/${encodeURIComponent(need.id)}/invitations`}>Приглашения</Link></p>}
   </section>;
 }
 export function EmployerNeedEditor({ needId }: { needId?: string }) {
