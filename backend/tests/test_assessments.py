@@ -1,6 +1,6 @@
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Barrier
 
@@ -333,32 +333,193 @@ def test_foreign_attempt_privacy(client, ready, account, candidate_data):
 
 
 @pytest.mark.parametrize(
-    "counts,score,status",
+    "counts,score,status,expected_scores",
     [
-        ((4, 4, 4, 4, 4), 100, "PASSED"),
-        ((3, 3, 3, 3, 2), 70, "PASSED"),
-        ((3, 3, 3, 2, 2), 65, "FAILED"),
-        ((4, 4, 1, 4, 3), 80, "FAILED"),
-        ((0, 0, 0, 0, 0), 0, "FAILED"),
+        pytest.param(
+            (3, 3, 3, 3, 2),
+            70,
+            "PASSED",
+            {
+                "PROGRAMMING": 75,
+                "HTTP_API": 75,
+                "DATABASES": 75,
+                "ARCHITECTURE": 75,
+                "TESTING_SECURITY_DEBUGGING": 50,
+            },
+            id="G1_boundary_pass",
+        ),
+        pytest.param(
+            (4, 4, 1, 4, 3),
+            80,
+            "FAILED",
+            {
+                "PROGRAMMING": 100,
+                "HTTP_API": 100,
+                "DATABASES": 25,
+                "ARCHITECTURE": 100,
+                "TESTING_SECURITY_DEBUGGING": 75,
+            },
+            id="G2_weak_competency",
+        ),
+        pytest.param(
+            (3, 3, 3, 2, 2),
+            65,
+            "FAILED",
+            {
+                "PROGRAMMING": 75,
+                "HTTP_API": 75,
+                "DATABASES": 75,
+                "ARCHITECTURE": 50,
+                "TESTING_SECURITY_DEBUGGING": 50,
+            },
+            id="G3_overall_below_threshold",
+        ),
+        pytest.param(
+            (4, 4, 4, 4, 4),
+            100,
+            "PASSED",
+            {
+                "PROGRAMMING": 100,
+                "HTTP_API": 100,
+                "DATABASES": 100,
+                "ARCHITECTURE": 100,
+                "TESTING_SECURITY_DEBUGGING": 100,
+            },
+            id="G4_full_score",
+        ),
+        pytest.param(
+            (0, 0, 0, 0, 0),
+            0,
+            "FAILED",
+            {
+                "PROGRAMMING": 0,
+                "HTTP_API": 0,
+                "DATABASES": 0,
+                "ARCHITECTURE": 0,
+                "TESTING_SECURITY_DEBUGGING": 0,
+            },
+            id="G5_zero_score",
+        ),
     ],
 )
 def test_scoring_and_initial_verification(
-    client, ready, db_factory, counts, score, status
+    client, ready, db_factory, counts, score, status, expected_scores
 ):
     attempt = start(client)
     answer_counts(db_factory, attempt, counts)
     result = finish(client, attempt)
     assert result["normalized_assessment_score"] == score
     assert result["status"] == status
-    assert list(result["competency_scores"].values()) == [
-        count * 25 for count in counts
-    ]
+    assert result["competency_scores"] == expected_scores
+    assert set(result["competency_scores"]) == {
+        "PROGRAMMING",
+        "HTTP_API",
+        "DATABASES",
+        "ARCHITECTURE",
+        "TESTING_SECURITY_DEBUGGING",
+    }
+    assert set(result["competency_scores"].values()) <= {0, 25, 50, 75, 100}
     profile = client.get("/candidate/profile").json()
     assert profile["verified_grade"] == ("MIDDLE" if status == "PASSED" else None)
     assert profile["normalized_assessment_score"] == (
         score if status == "PASSED" else None
     )
     assert bool(profile["assessment_verified_at"]) == (status == "PASSED")
+
+
+@pytest.mark.parametrize(
+    "scenario,unanswered",
+    [
+        ("all_unanswered", 20),
+        ("all_wrong", 0),
+        ("mixed_wrong_and_unanswered", 18),
+        ("correct_to_wrong", 19),
+    ],
+)
+def test_wrong_and_unanswered_score_zero(
+    client, ready, db_factory, scenario, unanswered
+):
+    attempt = start(client)
+    questions = attempt["questions"]
+    if scenario == "all_unanswered":
+        questions = []
+    elif scenario == "mixed_wrong_and_unanswered":
+        questions = questions[:2]
+    elif scenario == "correct_to_wrong":
+        questions = questions[:1]
+
+    with db_factory() as db:
+        for item in questions:
+            source = db.get(AssessmentQuestion, item["question_id"])
+            wrong = next(
+                option.id for option in source.options if not option.is_correct
+            )
+            path = f"{BASE}/{attempt['id']}/answers/{item['attempt_question_id']}"
+            if scenario == "correct_to_wrong":
+                correct = next(
+                    option.id for option in source.options if option.is_correct
+                )
+                response = client.put(path, json={"selected_option_id": correct})
+                assert response.status_code == 200
+                saved = next(
+                    q
+                    for q in response.json()["questions"]
+                    if q["attempt_question_id"] == item["attempt_question_id"]
+                )
+                assert saved["selected_option_id"] == correct
+            response = client.put(path, json={"selected_option_id": wrong})
+            assert response.status_code == 200
+            saved = next(
+                q
+                for q in response.json()["questions"]
+                if q["attempt_question_id"] == item["attempt_question_id"]
+            )
+            assert saved["selected_option_id"] == wrong
+
+    persisted = client.get(f"{BASE}/{attempt['id']}").json()
+    assert (
+        sum(q["selected_option_id"] is None for q in persisted["questions"])
+        == unanswered
+    )
+    result = finish(client, attempt)
+    assert result["normalized_assessment_score"] == 0
+    assert result["status"] == "FAILED"
+    assert result["competency_scores"] == {
+        "PROGRAMMING": 0,
+        "HTTP_API": 0,
+        "DATABASES": 0,
+        "ARCHITECTURE": 0,
+        "TESTING_SECURITY_DEBUGGING": 0,
+    }
+
+
+@pytest.mark.parametrize("declared_grade", ["JUNIOR", "MIDDLE", "SENIOR"])
+def test_declared_grade_does_not_affect_result(
+    client, ready, candidate_data, db_factory, declared_grade
+):
+    response = client.put(
+        "/candidate/profile", json={**candidate_data, "declared_grade": declared_grade}
+    )
+    assert response.status_code == 200
+    assert response.json()["declared_grade"] == declared_grade
+    assert response.json()["specialization"] == "BACKEND"
+    attempt = start(client, "MIDDLE")
+    assert attempt["target_grade"] == "MIDDLE"
+    assert attempt["specialization"] == "BACKEND"
+    answer_counts(db_factory, attempt, (3, 3, 3, 3, 2))
+    result = finish(client, attempt)
+    assert result["target_grade"] == "MIDDLE"
+    assert result["specialization"] == "BACKEND"
+    assert result["normalized_assessment_score"] == 70
+    assert result["status"] == "PASSED"
+    assert result["competency_scores"] == {
+        "PROGRAMMING": 75,
+        "HTTP_API": 75,
+        "DATABASES": 75,
+        "ARCHITECTURE": 75,
+        "TESTING_SECURITY_DEBUGGING": 50,
+    }
+    assert client.get("/candidate/profile").json()["declared_grade"] == declared_grade
 
 
 @pytest.mark.parametrize(
@@ -423,30 +584,130 @@ def test_cooldown_boundaries_and_independent_grade(
     start(client)
 
 
+def test_failed_higher_grade_preserves_current_qualification(
+    client, ready, db_factory, monkeypatch
+):
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC)
+    monkeypatch.setattr(assessments, "utcnow", lambda: now)
+    middle = start(client, "MIDDLE")
+    answer_counts(db_factory, middle, (4, 3, 3, 3, 3))
+    t1 = now = datetime(2026, 10, 7, 9, 10, tzinfo=UTC)
+    middle_result = finish(client, middle)
+    assert middle_result["status"] == "PASSED"
+    assert middle_result["normalized_assessment_score"] == 80
+    assert middle_result["competency_scores"] == {
+        "PROGRAMMING": 100,
+        "HTTP_API": 75,
+        "DATABASES": 75,
+        "ARCHITECTURE": 75,
+        "TESTING_SECURITY_DEBUGGING": 75,
+    }
+    expected = {
+        "specialization": "BACKEND",
+        "verified_grade": "MIDDLE",
+        "normalized_assessment_score": 80,
+        "assessment_verified_at": "2026-10-07T09:10:00Z",
+    }
+    assert {key: middle_result["verification"][key] for key in expected} == expected
+    now = datetime(2026, 10, 7, 9, 20, tzinfo=UTC)
+    senior = start(client, "SENIOR")
+    answer_counts(db_factory, senior, (3, 3, 3, 2, 2))
+    now = datetime(2026, 10, 7, 9, 25, tzinfo=UTC)
+    senior_result = finish(client, senior)
+    senior_scores = {
+        "PROGRAMMING": 75,
+        "HTTP_API": 75,
+        "DATABASES": 75,
+        "ARCHITECTURE": 50,
+        "TESTING_SECURITY_DEBUGGING": 50,
+    }
+    assert senior_result["specialization"] == "BACKEND"
+    assert senior_result["target_grade"] == "SENIOR"
+    assert senior_result["status"] == "FAILED"
+    assert senior_result["normalized_assessment_score"] == 65
+    assert senior_result["competency_scores"] == senior_scores
+    assert senior_result["finished_at"] == "2026-10-07T09:25:00Z"
+    assert senior_result["completion_reason"] == "SUBMITTED"
+    detail = client.get(f"{BASE}/{senior['id']}").json()
+    snapshots = {
+        "submit": senior_result["verification"],
+        "profile": client.get("/candidate/profile").json(),
+        "availability": client.get(BASE + "/availability").json()["verification"],
+        "detail": detail["verification"],
+        "repeated_submit": finish(client, senior)["verification"],
+    }
+    for boundary, profile in snapshots.items():
+        assert {key: profile[key] for key in expected} == expected, boundary
+    assert detail["normalized_assessment_score"] == 65
+    assert detail["finished_at"] == "2026-10-07T09:25:00Z"
+    assert detail["questions"] == []
+    with db_factory() as db:
+        profile = db.get(CandidateProfile, ready["id"])
+        assert (
+            profile.specialization,
+            profile.verified_grade,
+            profile.normalized_assessment_score,
+            assessments.aware(profile.assessment_verified_at),
+        ) == ("BACKEND", "MIDDLE", 80, t1)
+    history = client.get(BASE + "/history").json()
+    assert len(history) == 2
+    assert all("verification" not in item for item in history)
+    by_id = {item["id"]: item for item in history}
+    assert by_id[middle["id"]]["status"] == "PASSED"
+    assert by_id[middle["id"]]["normalized_assessment_score"] == 80
+    assert by_id[middle["id"]]["finished_at"] == "2026-10-07T09:10:00Z"
+    assert by_id[senior["id"]]["target_grade"] == "SENIOR"
+    assert by_id[senior["id"]]["status"] == "FAILED"
+    assert by_id[senior["id"]]["normalized_assessment_score"] == 65
+    assert by_id[senior["id"]]["competency_scores"] == senior_scores
+    assert by_id[senior["id"]]["finished_at"] == "2026-10-07T09:25:00Z"
+    assert by_id[senior["id"]]["completion_reason"] == "SUBMITTED"
+
+
 def test_grade_upgrade_fail_preservation_same_grade_and_specialization(
     client, ready, db_factory, candidate_data, monkeypatch
 ):
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC)
+    monkeypatch.setattr(assessments, "utcnow", lambda: now)
     middle = start(client)
     answer_counts(db_factory, middle)
+    now = datetime(2026, 10, 7, 9, 10, tzinfo=UTC)
     first = finish(client, middle)["verification"]
     assert (
         client.post(BASE, json={"target_grade": "JUNIOR"}).json()["error"]["code"]
         == "assessment_grade_not_allowed"
     )
+    now = datetime(2026, 10, 7, 9, 20, tzinfo=UTC)
     senior = start(client, "SENIOR")
+    now = datetime(2026, 10, 7, 9, 25, tzinfo=UTC)
     assert finish(client, senior)["verification"]["normalized_assessment_score"] == 100
     # Same grade FAIL also preserves the canonical result.
-    monkeypatch.setattr(assessments, "utcnow", lambda: utcnow() + timedelta(days=91))
-    failed = start(client)
-    assert (
-        finish(client, failed)["verification"]["assessment_verified_at"]
-        == first["assessment_verified_at"]
+    fields = (
+        "specialization",
+        "verified_grade",
+        "normalized_assessment_score",
+        "assessment_verified_at",
     )
-    monkeypatch.setattr(assessments, "utcnow", lambda: utcnow() + timedelta(days=99))
+    before_failed = client.get("/candidate/profile").json()
+    canonical_before = {key: before_failed[key] for key in fields}
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC) + timedelta(days=91)
+    failed = start(client)
+    now += timedelta(minutes=5)
+    after_failed = finish(client, failed)["verification"]
+    assert {key: after_failed[key] for key in fields} == canonical_before
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC) + timedelta(days=99)
     retake = start(client)
     answer_counts(db_factory, retake, (3, 3, 3, 3, 2))
-    latest = finish(client, retake)["verification"]
-    assert latest["normalized_assessment_score"] == 70
+    now += timedelta(minutes=10)
+    retake_result = finish(client, retake)
+    assert retake_result["status"] == "PASSED"
+    latest = retake_result["verification"]
+    assert {key: latest[key] for key in fields} == {
+        "specialization": "BACKEND",
+        "verified_grade": "MIDDLE",
+        "normalized_assessment_score": 70,
+        "assessment_verified_at": "2027-01-14T09:10:00Z",
+    }
     assert latest["assessment_verified_at"] != first["assessment_verified_at"]
     # Switch clears all canonical fields and returning restores latest highest PASS.
     switched = client.put(
@@ -461,10 +722,13 @@ def test_grade_upgrade_fail_preservation_same_grade_and_specialization(
         )
     ] == [None, None, None]
     restored = client.put("/candidate/profile", json=candidate_data).json()
-    assert restored["normalized_assessment_score"] == 70
-    assert restored["assessment_verified_at"] == latest["assessment_verified_at"]
+    assert {key: restored[key] for key in fields} == {
+        key: latest[key] for key in fields
+    }
+    now += timedelta(minutes=10)
     higher = start(client, "SENIOR")
     answer_counts(db_factory, higher)
+    now += timedelta(minutes=5)
     assert finish(client, higher)["verification"]["verified_grade"] == "SENIOR"
     for grade in ("JUNIOR", "MIDDLE"):
         assert (

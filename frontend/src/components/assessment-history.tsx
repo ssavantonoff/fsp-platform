@@ -15,6 +15,57 @@ export function AssessmentHistory() {
     </RoleGate>
   );
 }
+
+export function AssessmentHistoryList({
+  attempts,
+}: {
+  attempts: AttemptSummary[];
+}) {
+  return (
+    <>
+      <p className="hint">
+        История попыток не заменяет текущую подтверждённую квалификацию.
+      </p>
+      {attempts.length === 0 ? (
+        <p>У вас пока нет попыток.</p>
+      ) : (
+        <ul className="attempt-history">
+          {attempts.map((attempt) => (
+            <li key={attempt.id}>
+              <h2>
+                Попытка: {specializationLabels[attempt.specialization]} /{" "}
+                {gradeLabels[attempt.target_grade]}
+              </h2>
+              <p>
+                Начало: {dateLabel(attempt.started_at)}. Завершение:{" "}
+                {dateLabel(attempt.finished_at)}.
+              </p>
+              <p>
+                {attempt.status === "IN_PROGRESS"
+                  ? "IN_PROGRESS · В процессе · Оценка: —"
+                  : `${attempt.status} · ${attempt.normalized_assessment_score} / 100 · ${attempt.completion_reason === "TIMEOUT" ? "Время вышло" : "Завершено кандидатом"}`}
+              </p>
+              {attempt.competency_scores && (
+                <p>
+                  {Object.entries(attempt.competency_scores)
+                    .map(
+                      ([key, score]) =>
+                        `${competencyLabels[key] ?? key}: ${score}%`,
+                    )
+                    .join(" · ")}
+                </p>
+              )}
+              <Link href={`/candidate/assessment/${attempt.id}`}>
+                {attempt.status === "IN_PROGRESS" ? "Продолжить" : "Результат"}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
 function History() {
   const [attempts, setAttempts] = useState<AttemptSummary[]>([]);
   const [error, setError] = useState<unknown>(null);
@@ -51,41 +102,8 @@ function History() {
             Повторить
           </button>
         </>
-      ) : attempts.length === 0 ? (
-        <p>У вас пока нет попыток.</p>
       ) : (
-        <ul className="attempt-history">
-          {attempts.map((attempt) => (
-            <li key={attempt.id}>
-              <h2>
-                {specializationLabels[attempt.specialization]} /{" "}
-                {gradeLabels[attempt.target_grade]}
-              </h2>
-              <p>
-                Начало: {dateLabel(attempt.started_at)}. Завершение:{" "}
-                {dateLabel(attempt.finished_at)}.
-              </p>
-              <p>
-                {attempt.status === "IN_PROGRESS"
-                  ? "В процессе"
-                  : `${attempt.status} · ${attempt.normalized_assessment_score} / 100 · ${attempt.completion_reason === "TIMEOUT" ? "Время вышло" : "Завершено кандидатом"}`}
-              </p>
-              {attempt.competency_scores && (
-                <p>
-                  {Object.entries(attempt.competency_scores)
-                    .map(
-                      ([key, score]) =>
-                        `${competencyLabels[key] ?? key}: ${score}%`,
-                    )
-                    .join(" · ")}
-                </p>
-              )}
-              <Link href={`/candidate/assessment/${attempt.id}`}>
-                {attempt.status === "IN_PROGRESS" ? "Продолжить" : "Результат"}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <AssessmentHistoryList attempts={attempts} />
       )}
     </section>
   );

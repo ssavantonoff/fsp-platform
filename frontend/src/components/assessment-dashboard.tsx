@@ -3,12 +3,29 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/api";
-import { availabilityLabel, dateLabel } from "@/assessment";
+import { availabilityLabel } from "@/assessment";
 import type { Attempt, Availability } from "@/assessment";
 import { gradeLabels, specializationLabels } from "@/types";
-import type { Grade } from "@/types";
+import type { CandidateProfile, Grade } from "@/types";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
+import { CurrentQualification } from "./assessment-result";
+
+export function AssessmentDashboardSummary({
+  profile,
+}: {
+  profile: CandidateProfile;
+}) {
+  return (
+    <>
+      <section aria-label="Заявленный уровень">
+        <h2>Заявленный уровень</h2>
+        <p>{gradeLabels[profile.declared_grade]}</p>
+      </section>
+      <CurrentQualification verification={profile} />
+    </>
+  );
+}
 
 export function AssessmentDashboard() {
   return (
@@ -83,26 +100,7 @@ function Dashboard() {
   return (
     <section className="card">
       <h1>Подтверждение уровня</h1>
-      <dl>
-        <dt>Специализация</dt>
-        <dd>{specializationLabels[data.specialization]}</dd>
-        <dt>Заявленный уровень</dt>
-        <dd>{gradeLabels[profile.declared_grade]}</dd>
-        <dt>Подтверждённый уровень</dt>
-        <dd>
-          {profile.verified_grade
-            ? gradeLabels[profile.verified_grade]
-            : "не подтверждён"}
-        </dd>
-        <dt>Результат</dt>
-        <dd>
-          {profile.normalized_assessment_score === null
-            ? "—"
-            : `${profile.normalized_assessment_score} / 100`}
-        </dd>
-        <dt>Дата подтверждения</dt>
-        <dd>{dateLabel(profile.assessment_verified_at)}</dd>
-      </dl>
+      <AssessmentDashboardSummary profile={profile} />
       <div className="actions">
         <Link href="/candidate">Профиль</Link>
         <Link href="/candidate/assessment/history">История попыток</Link>
