@@ -1,3 +1,85 @@
+# Assessment TASK 3 — implementation evidence
+
+Branch: `feat/assessment-validation-qualification`. Production base: `671ad354658ec9c092b00e6811e6a5a73f66f5af`.
+Task 8 evidence snapshot: `ecc29e9b700149485612d2fd707e4634f6c1327e`, 2026-10-07.
+
+**FINAL FULL GATE: PENDING**
+
+Tasks 1–7 completed; this section records actual implementation and checks already run. PostgreSQL full suite, final migrations, Docker, browser desktop/375px and final-head PR CI are not yet claimed. Task 9 actual results will replace the final-gate status only after every mandatory local gate passes. Original P2 provenance and historical gap map are preserved below and describe the old audit baseline, not open implementation gaps at this feature snapshot.
+
+## Completed tasks and commits
+
+| Task | Commit | Actual result |
+|---|---|---|
+| 1: pure validator | `ea8ce4ba95b5529396c88631f4cf06afe9dcbf1a` | Created validator and tests; 63 tests passed. |
+| 1 review fix | `0334f382b230c061f506ff88ea0544218cd63c27` | Grade/Difficulty require actual enum instances; raw strings rejected, enums valid; 66 tests passed. |
+| 2: loader | `6e69f9103dd431d4c85ff0995edd78999ed7f3aa` | One read/JSON parse/record parser pass/validator call; safe format and structural errors; 85 validator/loader tests, 1 immutable bank test, 3 seed tests passed. |
+| 3: G1–G5 | `1f770e35ca8d54f2a91b824eb57dd5a6c4df9634` | Literal full score dictionaries, five keys/allowed values; wrong/unanswered/overwrite and declared-grade independence. Targeted 12 passed; assessment 64 passed/1 skipped; default full 508 passed/7 skipped. |
+| 4: qualification | `1b8c26eb9967fdd7d42b16be9abd239882398823` | Fixed UTC Middle80/T1 → Senior65/T2 FAIL, complete canonical preservation across API and DB; history separate, same-grade FAIL, PASS100→70 and restoration. Targeted 2 passed; assessment 65 passed/1 skipped. |
+| 5: dates | `8578f9554168f17d0b358b012988741d09db9585` | Explicit ru-RU UTC 24-hour dates with seconds; null em dash. 15 tests passed in TZ=UTC and TZ=Europe/Moscow; typecheck passed. |
+| 6: qualification UI | `68a30e24ca3e26f4342f83e8d1bef848a9609b39` | Reused pure CurrentQualification; dashboard declared/current, result attempt/current, both explanatory thresholds, missing/unverified distinction, server status/privacy. 28 assessment tests and 87 frontend tests passed; lint/typecheck passed. |
+| 7: history | `ecc29e9b700149485612d2fd707e4634f6c1327e` | Pure attempt-only history list; exact explanation, empty/PASS/FAIL/IN_PROGRESS, UTC dates/navigation; no fabricated profile. 34 assessment tests and 93 frontend tests passed; lint/typecheck passed. |
+
+## Actual implementation files
+
+| File | Change |
+|---|---|
+| `backend/app/assessment_validation.py` | Added pure source validation and immutable safe findings; no DB/read/mutation/scoring. |
+| `backend/app/question_bank.py` | Integrated validator into load_bank; removed superseded manual checks; SeedQuestion and seed_questions unchanged. |
+| `backend/tests/test_assessment_validation.py` | Added 85 core/loader/privacy/order/metadata/graph cases. Temporary sources use scoped module path monkeypatch; repo JSON never edited. |
+| `backend/tests/test_assessments.py` | Strengthened original scoring/canonical tests and added focused regressions; production services unchanged. |
+| `frontend/src/assessment.ts` | dateLabel only; timer/API/availability/late-save behavior unchanged. |
+| `frontend/src/components/assessment-dashboard.tsx` | Pure summary and canonical block using already loaded profile. |
+| `frontend/src/components/assessment-result.tsx` | Pure shared qualification view, attempt fields, threshold explanations, cooldown label. |
+| `frontend/src/components/assessment-history.tsx` | Pure list inside existing file; hooks/fetch/error/retry remain. |
+| `frontend/tests/assessment.test.ts` | Literal UTC, semantic-section, server-status, privacy and history fixtures. |
+| `docs/assessment-methodology-draft.md` | Actual platform rubric, structural/qualification/UI evidence and limits. |
+| `docs/assessment-bank-audit-draft.md` | Separate technical evidence; original content audit not reclassified. |
+| `docs/assessment-task3-implementation-map.md` | This evidence map with original audit provenance retained. |
+
+Approved design/plan were added in documentation commits `253a0724d40271e0890f7b9ba85d80be2cf694dc` and `281217bb9a78e65b0763cb9b1a4e3cc6abf62346`; approved prework was imported unchanged as `fd4d51f251a3418fa666b1358946266fb85573e3` from `39bd567b11497c7d0121cd1c675d7a3f57068a0e`.
+
+## Latest obtained checks before Task 9
+
+Tested implementation SHA: `ecc29e9b700149485612d2fd707e4634f6c1327e`.
+
+| Command | Observed result |
+|---|---|
+| `python -m pytest -q tests/test_assessments.py` | 65 passed, 0 failed, 1 skipped. |
+| `env -u TEST_DATABASE_URL python -m pytest -q -ra` | SQLite: 509 passed, 0 failed, 7 skipped, 5 warnings. |
+| `python -m ruff check .` | PASS. |
+| `python -m ruff format --check .` | PASS, 45 files formatted. |
+| `python -m mypy app` | PASS, 29 source files. |
+| `TZ=UTC node --import tsx --test tests/assessment.test.ts` | 34 passed, 0 failed/skipped. |
+| `TZ=Europe/Moscow node --import tsx --test tests/assessment.test.ts` | Same 34 passed and literal UTC output. |
+| `npm test` | 93 passed, 0 failed/skipped. |
+| `npm run lint` / `npm run typecheck` / `npm run build` | PASS. |
+| Full Block B diff/scope check | Exactly six authorized files/four commits; frozen backend, assessment-attempt, docs, seed, Matching/Needs, migrations, CI and dependencies unchanged. |
+
+SQLite skips are real exclusions, not PostgreSQL passes: assessment row locks, concurrent email-token consumption, Need row locks/pg_blocking_pids, PostgreSQL NaN handling and three Matching concurrency cases. Existing warnings: Starlette/httpx deprecation and Python sqlite datetime adapter deprecation. No PostgreSQL run or browser screenshot evidence was obtained in Tasks 1–7. Static React HTML tests do not prove browser layout/hooks/loading/retry.
+
+## Canonical and presentation evidence
+
+Middle 4/3/3/3/3: literal80/PASSED at T1=2026-10-07T09:10:00Z; Senior G3: literal65/FAILED at T2=09:25:00Z. Submit verification, profile, availability, detail, repeated submit and DB retain Backend/Middle80/T1. History retains its own Senior score/date/competencies without verification. Same-grade FAIL keeps the full canonical state; PASS70 replaces PASS100 and date. Returning specialization restores highest successful grade/latest success at that grade.
+
+Dashboard separates declared Senior from current Middle; result sections distinguish Senior65/T2 from Middle80/T1. Both thresholds are explanatory aggregate labels, never frontend scoring authority. Missing verification is unavailable data; provided all-null canonical triple is explicitly unverified. History displays attempts only. Finished detail/UI are aggregate-only; no answer review. UTC formatter is host-timezone independent.
+
+## Content readiness and frozen contracts
+
+Content audit remains **75 reviewed / 0 BLOCKER / 27 IMPORTANT / 6 MINOR / 42 without findings**, **NOT_READY** under the reviewed rubric. All 27 IMPORTANT findings remain unresolved. Structural validation is separate from content quality and active live DB availability; inactive historical DB rows are allowed. Only Backend has a production source bank. There is no psychometric validity, scientific grade calibration, cross-grade score equivalence, industry certification, hiring probability or universal developer-grade claim.
+
+Scoring, thresholds, question/option selection, cooldown, canonical synchronization, API/schema/migrations, question JSON, Matching/Needs, seed modes, CI and dependency contracts remain unchanged. No new qualification storage/fetch or endpoint was introduced.
+
+## Final full gate evidence
+
+PENDING — record actual Task 9 PostgreSQL, SQLite, static/Alembic, frontend, Docker/seed, browser desktop/375px, privacy and full feature-integrity evidence here after execution. PR is not yet created; CI is not yet claimed.
+
+---
+
+# Historical P2 gap map — original audit provenance
+
+The following original text is retained as an audit record of baseline `9892400d57b57fe3104d1871fa3513e56e24c4b5`; its future-tense gaps are superseded by the completed-task evidence above.
+
 # Assessment TASK №3 — read-only gap map
 
 Status: ASSESSMENT PREWORK READY FOR HUMAN REVIEW. Baseline origin/main: `9892400d57b57fe3104d1871fa3513e56e24c4b5`. Branch: `docs/assessment-validation-prework`. Review date: 2026-10-06 (Europe/Moscow).

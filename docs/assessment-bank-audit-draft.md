@@ -4,6 +4,14 @@ Status: ASSESSMENT PREWORK READY FOR HUMAN REVIEW. Review date: 2026-10-06 (Euro
 
 Baseline origin/main: `9892400d57b57fe3104d1871fa3513e56e24c4b5`. Branch: `docs/assessment-validation-prework`.
 
+## Task 3 technical evidence — separate from content review
+
+Implementation snapshot: `ecc29e9b700149485612d2fd707e4634f6c1327e`; technical update 2026-10-07. Original audit baseline/review and all codes, metadata, severities, reasons, coverage and recommendations below remain unchanged.
+
+Source validation is now enforced by pure `backend/app/assessment_validation.py` through existing `load_bank()`. Real 75-record source and two v2 replacements with absent historical predecessors pass; loader/validator tests total 85 passed. Checks include exact 75/25/1:3:1 inventory, typed metadata, identities/text/options, supersedes ownership/cycles and safe deterministic diagnostics. Source JSON remains byte-equivalent with the original SHA256 above. Active live DB may retain inactive historical rows; source validation does not require 75 physical DB rows.
+
+This establishes structural correctness, not content or psychometric validity. Human audit remains **75 reviewed / 0 BLOCKER / 27 IMPORTANT / 6 MINOR / 42 without findings** and **NOT_READY** under the reviewed rubric. The 27 IMPORTANT findings are **NOT remediated**. No question text, answer key, answer position or solution is added here. Final PostgreSQL/Docker/browser gate is PENDING in the [implementation map](assessment-task3-implementation-map.md).
+
 ## Scope
 
 Полный ручной content review всех 75 Backend source questions из [backend/app/content/backend_questions.json](https://github.com/ssavantonoff/fsp-platform/blob/9892400d57b57fe3104d1871fa3513e56e24c4b5/backend/app/content/backend_questions.json). Файл не редактировался. Source SHA256: `7d2c7f2db8a7986d3027e250ac47786e700e4babf0c80e7c46ce6fce34442096`.
@@ -261,4 +269,4 @@ DB active bank отдельно не инвентаризировался. UI re
 
 Структура и scoring contract выполнены, scoring BLOCKER не найден. Рекомендация основана на 27 IMPORTANT measurement findings, особенно в Senior: содержание пока недостаточно проверяет требуемое инженерное суждение. Это экспертный вывод по rubric, не эмпирическое доказательство ошибочной классификации кандидатов.
 
-Команде следует review flagged questions и отдельно принять решение о content revisions и границах claims. Автоматического изменения банка, thresholds, grades или API из этой рекомендации не следует. Существующий исполняемый demo flow сохраняется. Content исправления потребуют отдельных version/code с сохранением истории; в P2 они не сделаны. TASK №3 не начат.
+Команде следует review flagged questions и отдельно принять решение о content revisions и границах claims. Автоматического изменения банка, thresholds, grades или API из этой рекомендации не следует. Существующий исполняемый demo flow сохраняется. Content исправления потребуют отдельных version/code с сохранением истории; в P2 они не сделаны и техническими Tasks 1–7 не выполнялись. Исходный P2 audit не включал реализацию TASK №3.

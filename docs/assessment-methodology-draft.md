@@ -1,8 +1,10 @@
 # Assessment methodology — draft
 
-Status: ASSESSMENT PREWORK READY FOR HUMAN REVIEW. Дата review: 2026-10-06 (Europe/Moscow).
+Status: TASK 3 IMPLEMENTATION EVIDENCE. Task 8 snapshot: 2026-10-07; latest final-gate status is recorded in the implementation map.
 
-Baseline origin/main: `9892400d57b57fe3104d1871fa3513e56e24c4b5`. Branch: `docs/assessment-validation-prework`. Документ описывает фактический baseline и frozen product semantics; TASK №3 не выполняется.
+Original audit baseline origin/main: `9892400d57b57fe3104d1871fa3513e56e24c4b5`. Original branch: `docs/assessment-validation-prework`; review: 2026-10-06 (Europe/Moscow). Ссылки с этим SHA сохраняют provenance первоначального audit, а не обозначают текущую feature branch.
+
+Implementation evidence: `ecc29e9b700149485612d2fd707e4634f6c1327e`, branch `feat/assessment-validation-qualification`, production base `671ad354658ec9c092b00e6811e6a5a73f66f5af`. Tasks 1–7 реализованы и проверены targeted/default tests. На этом Task 8 snapshot полный PostgreSQL/Docker/browser gate PENDING; последующие результаты, commands, commits и ограничения — в [implementation map](assessment-task3-implementation-map.md). Content audit остаётся **NOT_READY**: 75 reviewed / 0 BLOCKER / 27 IMPORTANT / 6 MINOR / 42 without findings; content remediation не выполнялась.
 
 ## What the assessment verifies
 
@@ -38,19 +40,27 @@ Backend MVP: 20 SINGLE_CHOICE вопросов, 30 минут, 4 вариант�
 
 PASS требует одновременно overall ≥70 и каждой из пяти competencies ≥50%. Это минимум 14 корректных ответов overall и минимум 2 в каждом блоке. Невыполнение любого условия даёт FAILED. Оценка результата относится к выбранному grade; fallback qualification на более низкий grade не создаётся.
 
-### Independent literal golden cases для TASK №3
+### Implemented independent literal golden cases G1–G5
 
 Вектор указан строго в порядке PROGRAMMING / HTTP_API / DATABASES / ARCHITECTURE / TESTING_SECURITY_DEBUGGING. Он обозначает агрегаты, не вопросы или варианты ответа. Expectations зафиксированы непосредственно из продуктовых порогов, не вызовом finalize.
 
 | Case | Корректно из 20 | Количество по блокам | Literal competency percentages | Literal score | Literal status | Почему |
 |---|---:|---|---|---:|---|---|
-| A | 14 | 3 / 3 / 3 / 3 / 2 | 75 / 75 / 75 / 75 / 50 | 70 | PASSED | Оба порога выполнены, включая границы. |
-| B | 16 | 4 / 4 / 1 / 4 / 3 | 100 / 100 / 25 / 100 / 75 | 80 | FAILED | Один блок ниже 50%, несмотря на overall. |
-| C | 13 | 3 / 3 / 3 / 2 / 2 | 75 / 75 / 75 / 50 / 50 | 65 | FAILED | Все блоки проходят, overall ниже 70. |
-| D | 20 | 4 / 4 / 4 / 4 / 4 | 100 / 100 / 100 / 100 / 100 | 100 | PASSED | Все ответы корректны. |
-| E | 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 | FAILED | Оба условия не выполнены. |
+| G1 | 14 | 3 / 3 / 3 / 3 / 2 | 75 / 75 / 75 / 75 / 50 | 70 | PASSED | Оба порога выполнены, включая границы. |
+| G2 | 16 | 4 / 4 / 1 / 4 / 3 | 100 / 100 / 25 / 100 / 75 | 80 | FAILED | Один блок ниже 50%, несмотря на overall. |
+| G3 | 13 | 3 / 3 / 3 / 2 / 2 | 75 / 75 / 75 / 50 / 50 | 65 | FAILED | Все блоки проходят, overall ниже 70. |
+| G4 | 20 | 4 / 4 / 4 / 4 / 4 | 100 / 100 / 100 / 100 / 100 | 100 | PASSED | Все ответы корректны. |
+| G5 | 0 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 0 | FAILED | Оба условия не выполнены. |
 
-Baseline `test_scoring_and_initial_verification` уже содержит эти пять сочетаний counts/score/status. Competency expectations там получаются выражением из counts. TASK №3 следует усилить независимыми literal competency assertions; новые tests в P2 не написаны.
+`test_scoring_and_initial_verification` теперь использует literal overall/status и полный literal словарь пяти competency scores с IDs G1–G5. Проверяются точные ключи и допустимые значения. Oracles не вычисляются формулой из counts и не вызывают production finalize. `test_wrong_and_unanswered_score_zero` проходит actual save/submit path, включая correct→wrong overwrite. `test_declared_grade_does_not_affect_result` сохраняет Backend/Middle G1 при каждом declared grade. Это техническая regression evidence, не научная калибровка уровней.
+
+## Source structural validation
+
+[assessment_validation.py](../backend/app/assessment_validation.py) содержит pure `validate_source_bank`: exact 75 source records, 25 per grade, 1 BASIC / 3 APPLIED / 1 ADVANCED для каждой пары grade/competency; blank/duplicate codes, blank prompts, четыре непустых options и whitespace-equivalent duplicates. Grade/Difficulty требуют actual enum instances, competency — Backend string membership, version — strict integer >=1. Self-reference, conflicting supersedes ownership и cycles отвергаются; отсутствующий historical predecessor допустим. Новой naming regex или inferred version order нет.
+
+Findings deterministic и содержат только category/code/safe context. Validator не читает файлы/DB и не мутирует записи. Loader читает JSON один раз, проверяет list root, использует existing SeedQuestion parser и один вызов validator. JSON/root/Pydantic errors дают фиксированное `Invalid assessment source format` с подавленным raw exception chaining; structural ValueError сериализует только safe findings, без prompt/options/key/index/solution.
+
+SOURCE inventory и ACTIVE LIVE DB availability различны. Runtime собирает attempt по active DB rows и minima 1/2/1; physical DB может хранить inactive historical predecessors и не обязана содержать ровно 75 rows. Seed сохраняет immutable published content, deliberate inactive state и historical links; вопросник и business logic не изменены. Эти проверки не классифицируют distractors, grade fit или psychometric validity.
 
 ## Grade rubric
 
@@ -91,6 +101,12 @@ BASIC / APPLIED / ADVANCED относительны к конкретному gr
 
 Attempt history — отдельные исторические результаты с собственной specialization, target_grade, score, status и датами. Detail endpoint отдаёт актуальный CandidateProfile в verification даже при просмотре старой попытки. Исторический PASS не обязан совпадать с текущей qualification; failed higher-grade attempt не повышает и не стирает её.
 
+### Implemented qualification regression evidence
+
+Fixed aware UTC times: Backend/Middle starts 2026-10-07T09:00:00Z, finishes T1=2026-10-07T09:10:00Z; 4/3/3/3/3 gives literal 80/PASSED and 100/75/75/75/75. Backend/Senior starts 09:20:00Z, finishes T2=09:25:00Z; G3 gives literal 65/FAILED and 75/75/75/50/50. Current canonical state остаётся Backend/Middle/80/T1 через Senior submit verification, profile, availability, detail, repeated submit и persisted CandidateProfile. History отдельно сохраняет Middle PASSED80/T1 и Senior FAILED65/T2, без current verification.
+
+Same-grade FAIL сравнивает всю canonical четверку specialization/grade/score/date. Последующий same-grade PASS70 заменяет прежний PASS100 и дату новым successful finished_at; highest-score-wins не используется. Switch без успешной истории очищает triple, возврат восстанавливает highest successful grade/latest PASS внутри grade. Tests не меняют synchronization/service.
+
 ## Retakes / progression
 
 - На один CandidateProfile разрешена одна IN_PROGRESS попытка; profile lock и partial unique index защищают повторный/concurrent start.
@@ -112,7 +128,7 @@ Lazy timeout вызывается чтением attempt/current, availability/h
 
 ## Product contract comparison
 
-IMPLEMENTATION / PRODUCT CONTRACT MISMATCH по перечисленным в P2 scoring, blueprint, progression и canonical rules не обнаружен. Выбор specialization реализован через профиль, target grade — через assessment start; это соответствует выбранной паре. UI gaps и content quality findings отдельно перечислены в двух соседних документах. Это не разрешение менять contracts.
+IMPLEMENTATION / PRODUCT CONTRACT MISMATCH по перечисленным в P2 scoring, blueprint, progression и canonical rules не обнаружен. Выбор specialization реализован через профиль, target grade — через assessment start; это соответствует выбранной паре. Технические presentation gaps закрыты Tasks 5–7; content quality findings сохранены. Это не разрешение менять contracts.
 
 ## Limitations
 
@@ -126,6 +142,10 @@ IMPLEMENTATION / PRODUCT CONTRACT MISMATCH по перечисленным в P2
 
 ## UI interpretation boundary
 
-Product illustration: current Backend/Middle/82, attempt Backend/Senior/65/FAILED. UI должен показывать отдельные current qualification и attempt result; Senior FAIL не превращает current в Senior и не обнуляет её. Score 82 в illustration — literal UI input из P2, допустимый integer в read contract. Фактический текущий scoring engine выдаёт кратные пяти значения; для backend-generated regression используется сохраняемый score 80/85 либо existing 100. UI не должен самостоятельно пересчитывать canonical score.
+Dashboard отдельно показывает `Заявленный уровень` и `Текущая подтверждённая квалификация`. Reused pure CurrentQualification использует только CandidateProfile specialization/verified grade/canonical score/date. All-null triple: `Подтверждённой квалификации пока нет.` Omitted verification prop: данные недоступны, а не доказанная unverified qualification; fallback из declared/target/latest attempt нет.
 
-Точное read-only UI gap map: [assessment-task3-implementation-map.md](assessment-task3-implementation-map.md). Исправления и новый TASK №3 требуют отдельной постановки после review.
+Result heading `Результат попытки` относится к attempt specialization/target/server status/score/finished_at и пяти competency rows. Отдельно поясняются overall >=70 и every competency >=50 с состояниями `Выполнено` / `Не выполнено`; missing Backend keys/null/empty scores не проходят второе условие. Эти labels не переопределяют server status. Senior FAILED65/T2 и current Middle80/T1 проверяются в разных semantic sections.
+
+History говорит `История попыток не заменяет текущую подтверждённую квалификацию.` Rows обозначены как `Попытка`, PASSED относится к historical attempt, IN_PROGRESS остаётся отдельным состоянием. Profile не запрашивается и qualification не фабрикуется. Dates explicit ru-RU UTC, 24h, включая секунды; completed/verification/cooldown dates различаются. `Следующая попытка на этом уровне — не ранее` — cooldown boundary, не guaranteed availability. Finished response questions=[]; UI не показывает options/answer review/solutions.
+
+Static render/API tests подтверждают эти semantics, не browser layout/hooks. На Task 8 snapshot browser desktop/375px и final PostgreSQL gate PENDING; фактический Task 9 итог фиксируется отдельно в implementation map. Нет claims о scientific grade calibration, cross-grade score equivalence, industry certification, hiring probability или universal objective developer grade. Platform-verified qualification означает результат по документированной platform rubric; 27 IMPORTANT human content findings не исправлены.
