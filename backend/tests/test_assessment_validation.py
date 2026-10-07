@@ -2,10 +2,13 @@ import json
 from dataclasses import FrozenInstanceError, asdict
 from hashlib import sha256
 from pathlib import Path
+from traceback import format_exception
+from unittest.mock import Mock
 
 import pytest
 from sqlalchemy.orm import Session
 
+from app import question_bank
 from app.assessment_validation import (
     AssessmentValidationCategory as Category,
 )
@@ -398,3 +401,180 @@ def test_validator_reads_no_files_or_database(source_bank, monkeypatch):
         patch.setattr(Path, "read_text", forbidden)
         patch.setattr(Session, "execute", forbidden)
         assert validate_source_bank(source_bank) == []
+
+
+SOURCE_SECRETS = (
+    "PRIVATE_PROMPT_SENTINEL",
+    "PRIVATE_OPTION_SENTINEL",
+    "PRIVATE_ANSWER_KEY_SENTINEL",
+)
+
+
+@pytest.fixture
+def temporary_source(tmp_path, monkeypatch):
+    content = tmp_path / "content"
+    content.mkdir()
+    path = content / "backend_questions.json"
+    monkeypatch.setattr(question_bank, "__file__", str(tmp_path / "question_bank.py"))
+
+    def write(value, *, raw=False):
+        path.write_text(value if raw else json.dumps(value))
+        return path
+
+    return write
+
+
+@pytest.fixture
+def raw_source_bank(source_bank):
+    records = [item.model_dump(mode="json") for item in source_bank]
+    for item in records:
+        item["prompt"] = SOURCE_SECRETS[0]
+        item["options"] = [f"{SOURCE_SECRETS[1]} {label}" for label in "ABCD"]
+    return records
+
+
+def assert_safe_loader_error(error):
+    representations = [str(error), repr(error), "".join(format_exception(error))]
+    for representation in representations:
+        for forbidden in (*SOURCE_SECRETS, "answer_key", "correct_option_index"):
+            assert forbidden not in representation
+    assert error.__cause__ is None
+    if error.__context__ is not None:
+        # Raw parser context is suppressed by `raise ... from None`.
+        assert error.__suppress_context__ is True
+
+
+def test_loader_real_source_order_and_content_unchanged():
+    path = Path(question_bank.__file__).parent / "content/backend_questions.json"
+    expected = [
+        SeedQuestion.model_validate(item) for item in json.loads(path.read_text())
+    ]
+    actual = load_bank()
+    assert len(actual) == 75
+    assert fingerprint(actual) == fingerprint(expected)
+    assert validate_source_bank(actual) == []
+
+
+def test_loader_reads_parses_and_validates_once(
+    raw_source_bank, temporary_source, monkeypatch
+):
+    path = temporary_source(raw_source_bank)
+    expected = [SeedQuestion.model_validate(item) for item in raw_source_bank]
+    read_calls = []
+    original_read = Path.read_text
+
+    def read_once(source, *args, **kwargs):
+        read_calls.append(source)
+        return original_read(source, *args, **kwargs)
+
+    parse_json = Mock(wraps=json.loads)
+    original_parse = SeedQuestion.model_validate
+    parsed = []
+
+    def parse_record(item):
+        result = original_parse(item)
+        parsed.append(result)
+        return result
+
+    parse_question = Mock(wraps=parse_record)
+    validate = Mock(wraps=validate_source_bank)
+    monkeypatch.setattr(Path, "read_text", read_once)
+    monkeypatch.setattr(json, "loads", parse_json)
+    monkeypatch.setattr(SeedQuestion, "model_validate", parse_question)
+    monkeypatch.setattr(question_bank, "validate_source_bank", validate)
+
+    actual = load_bank()
+
+    assert read_calls == [path]
+    assert parse_json.call_count == 1
+    assert parse_question.call_count == 75
+    validate.assert_called_once_with(actual)
+    assert validate.call_args.args[0] is actual
+    assert all(item is parsed[i] for i, item in enumerate(actual))
+    assert fingerprint(actual) == fingerprint(expected)
+    codes = {item.code for item in actual}
+    replacements = [item for item in actual if item.supersedes is not None]
+    assert len(replacements) == 2
+    assert all(
+        item.version == 2 and item.supersedes not in codes for item in replacements
+    )
+
+
+def test_loader_invalid_json_has_safe_error(temporary_source):
+    malformed = json.dumps(question().model_dump(mode="json"))[:-1]
+    malformed += SOURCE_SECRETS[0] + SOURCE_SECRETS[1] + SOURCE_SECRETS[2]
+    temporary_source(malformed, raw=True)
+    with pytest.raises(ValueError) as error:
+        load_bank()
+    assert str(error.value) == "Invalid assessment source format"
+    assert_safe_loader_error(error.value)
+
+
+@pytest.mark.parametrize(
+    "root", [{"prompt": SOURCE_SECRETS[0]}, SOURCE_SECRETS[1], None, 1, True]
+)
+def test_loader_non_list_root_has_safe_error(root, temporary_source):
+    temporary_source(root)
+    with pytest.raises(ValueError) as error:
+        load_bank()
+    assert str(error.value) == "Invalid assessment source format"
+    assert_safe_loader_error(error.value)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("grade", "INVALID"),
+        ("difficulty", "INVALID"),
+        ("version", 0),
+        ("options", [SOURCE_SECRETS[1]]),
+        ("answer_key", SOURCE_SECRETS[2]),
+    ],
+)
+def test_loader_pydantic_failures_have_safe_error(
+    field, value, raw_source_bank, temporary_source
+):
+    raw_source_bank[0][field] = value
+    temporary_source(raw_source_bank)
+    with pytest.raises(ValueError) as error:
+        load_bank()
+    assert str(error.value) == "Invalid assessment source format"
+    assert_safe_loader_error(error.value)
+
+
+@pytest.mark.parametrize(
+    "scenario,expected",
+    [
+        ("total", Category.INVALID_TOTAL),
+        ("duplicate", Category.DUPLICATE_CODE),
+        ("bucket", Category.INVALID_BUCKET_COUNT),
+        ("options", Category.DUPLICATE_OPTION),
+        ("conflict", Category.INVALID_SUPERSEDES),
+        ("cycle", Category.SUPERSEDES_CYCLE),
+    ],
+)
+def test_loader_structural_failures_have_safe_deterministic_error(
+    scenario, expected, raw_source_bank, temporary_source
+):
+    first, second = raw_source_bank[:2]
+    if scenario == "total":
+        raw_source_bank.pop()
+    elif scenario == "duplicate":
+        second["code"] = first["code"]
+    elif scenario == "bucket":
+        first["difficulty"] = "APPLIED" if first["difficulty"] == "BASIC" else "BASIC"
+    elif scenario == "options":
+        first["options"][1] = f" \t{first['options'][0]}\n"
+    elif scenario == "conflict":
+        first["supersedes"] = second["supersedes"] = "absent-predecessor"
+    elif scenario == "cycle":
+        first["supersedes"], second["supersedes"] = second["code"], first["code"]
+    temporary_source(raw_source_bank)
+    with pytest.raises(ValueError) as error:
+        load_bank()
+    assert str(error.value).startswith("Invalid assessment source structure: ")
+    assert expected.value in str(error.value)
+    assert_safe_loader_error(error.value)
+    with pytest.raises(ValueError) as repeated:
+        load_bank()
+    assert str(repeated.value) == str(error.value)

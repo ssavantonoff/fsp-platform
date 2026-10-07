@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.assessment_validation import validate_source_bank
 from app.models import (
     AssessmentOption,
     AssessmentQuestion,
@@ -12,7 +13,6 @@ from app.models import (
     Grade,
     Specialization,
 )
-from app.services.assessments import COMPETENCIES
 
 
 class SeedQuestion(BaseModel):
@@ -28,19 +28,25 @@ class SeedQuestion(BaseModel):
 
 
 def load_bank() -> list[SeedQuestion]:
-    content = json.loads(
-        (Path(__file__).parent / "content/backend_questions.json").read_text()
-    )
-    questions = [SeedQuestion.model_validate(item) for item in content]
-    if len({q.code for q in questions}) != len(questions):
-        raise ValueError("Duplicate question codes")
-    for question in questions:
-        if question.competency not in COMPETENCIES[Specialization.BACKEND]:
-            raise ValueError("Question bank competencies mismatch")
-        if len(set(question.options)) != 4 or any(
-            not text.strip() for text in question.options
-        ):
-            raise ValueError(f"Invalid options: {question.code}")
+    try:
+        content = json.loads(
+            (Path(__file__).parent / "content/backend_questions.json").read_text()
+        )
+        if not isinstance(content, list):
+            raise ValueError("Invalid assessment source format") from None
+        questions = [SeedQuestion.model_validate(item) for item in content]
+    except (json.JSONDecodeError, ValidationError):
+        raise ValueError("Invalid assessment source format") from None
+
+    findings = validate_source_bank(questions)
+    if findings:
+        details = "; ".join(
+            f"{finding.category}"
+            + (f" [{finding.code}]" if finding.code is not None else "")
+            + f": {finding.context}"
+            for finding in findings
+        )
+        raise ValueError(f"Invalid assessment source structure: {details}")
     return questions
 
 
