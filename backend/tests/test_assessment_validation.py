@@ -152,6 +152,31 @@ def test_invalid_difficulty_rejected(value):
     assert Category.INVALID_DIFFICULTY in categories([item])
 
 
+@pytest.mark.parametrize(
+    "field,value,expected",
+    [
+        ("grade", "JUNIOR", Category.INVALID_GRADE),
+        ("difficulty", "BASIC", Category.INVALID_DIFFICULTY),
+    ],
+)
+def test_raw_enum_value_strings_rejected(field, value, expected):
+    item = question().model_copy(update={field: value})
+    assert type(getattr(item, field)) is str
+    assert expected in categories([item])
+
+
+def test_actual_enum_metadata_remains_valid(source_bank):
+    index = next(
+        i
+        for i, item in enumerate(source_bank)
+        if item.grade is Grade.JUNIOR and item.difficulty is Difficulty.BASIC
+    )
+    source_bank[index] = source_bank[index].model_copy(
+        update={"grade": Grade.JUNIOR, "difficulty": Difficulty.BASIC}
+    )
+    assert validate_source_bank(source_bank) == []
+
+
 @pytest.mark.parametrize("value", [0, -1, None, "1", 1.5, True, [], {}])
 def test_invalid_version_rejected(value):
     item = question().model_copy(update={"version": value})

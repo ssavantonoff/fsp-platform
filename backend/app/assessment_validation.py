@@ -94,10 +94,8 @@ def validate_source_bank(
             )
 
         # Model-constructed defensive inputs may contain unhashable invalid metadata.
-        valid_grade = isinstance(question.grade, str) and question.grade in grades
-        valid_difficulty = (
-            isinstance(question.difficulty, str) and question.difficulty in difficulties
-        )
+        valid_grade = isinstance(question.grade, Grade)
+        valid_difficulty = isinstance(question.difficulty, Difficulty)
         valid_competency = (
             isinstance(question.competency, str) and question.competency in competencies
         )
