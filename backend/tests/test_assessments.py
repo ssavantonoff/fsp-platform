@@ -1,6 +1,6 @@
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Barrier
 
@@ -584,30 +584,130 @@ def test_cooldown_boundaries_and_independent_grade(
     start(client)
 
 
+def test_failed_higher_grade_preserves_current_qualification(
+    client, ready, db_factory, monkeypatch
+):
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC)
+    monkeypatch.setattr(assessments, "utcnow", lambda: now)
+    middle = start(client, "MIDDLE")
+    answer_counts(db_factory, middle, (4, 3, 3, 3, 3))
+    t1 = now = datetime(2026, 10, 7, 9, 10, tzinfo=UTC)
+    middle_result = finish(client, middle)
+    assert middle_result["status"] == "PASSED"
+    assert middle_result["normalized_assessment_score"] == 80
+    assert middle_result["competency_scores"] == {
+        "PROGRAMMING": 100,
+        "HTTP_API": 75,
+        "DATABASES": 75,
+        "ARCHITECTURE": 75,
+        "TESTING_SECURITY_DEBUGGING": 75,
+    }
+    expected = {
+        "specialization": "BACKEND",
+        "verified_grade": "MIDDLE",
+        "normalized_assessment_score": 80,
+        "assessment_verified_at": "2026-10-07T09:10:00Z",
+    }
+    assert {key: middle_result["verification"][key] for key in expected} == expected
+    now = datetime(2026, 10, 7, 9, 20, tzinfo=UTC)
+    senior = start(client, "SENIOR")
+    answer_counts(db_factory, senior, (3, 3, 3, 2, 2))
+    now = datetime(2026, 10, 7, 9, 25, tzinfo=UTC)
+    senior_result = finish(client, senior)
+    senior_scores = {
+        "PROGRAMMING": 75,
+        "HTTP_API": 75,
+        "DATABASES": 75,
+        "ARCHITECTURE": 50,
+        "TESTING_SECURITY_DEBUGGING": 50,
+    }
+    assert senior_result["specialization"] == "BACKEND"
+    assert senior_result["target_grade"] == "SENIOR"
+    assert senior_result["status"] == "FAILED"
+    assert senior_result["normalized_assessment_score"] == 65
+    assert senior_result["competency_scores"] == senior_scores
+    assert senior_result["finished_at"] == "2026-10-07T09:25:00Z"
+    assert senior_result["completion_reason"] == "SUBMITTED"
+    detail = client.get(f"{BASE}/{senior['id']}").json()
+    snapshots = {
+        "submit": senior_result["verification"],
+        "profile": client.get("/candidate/profile").json(),
+        "availability": client.get(BASE + "/availability").json()["verification"],
+        "detail": detail["verification"],
+        "repeated_submit": finish(client, senior)["verification"],
+    }
+    for boundary, profile in snapshots.items():
+        assert {key: profile[key] for key in expected} == expected, boundary
+    assert detail["normalized_assessment_score"] == 65
+    assert detail["finished_at"] == "2026-10-07T09:25:00Z"
+    assert detail["questions"] == []
+    with db_factory() as db:
+        profile = db.get(CandidateProfile, ready["id"])
+        assert (
+            profile.specialization,
+            profile.verified_grade,
+            profile.normalized_assessment_score,
+            assessments.aware(profile.assessment_verified_at),
+        ) == ("BACKEND", "MIDDLE", 80, t1)
+    history = client.get(BASE + "/history").json()
+    assert len(history) == 2
+    assert all("verification" not in item for item in history)
+    by_id = {item["id"]: item for item in history}
+    assert by_id[middle["id"]]["status"] == "PASSED"
+    assert by_id[middle["id"]]["normalized_assessment_score"] == 80
+    assert by_id[middle["id"]]["finished_at"] == "2026-10-07T09:10:00Z"
+    assert by_id[senior["id"]]["target_grade"] == "SENIOR"
+    assert by_id[senior["id"]]["status"] == "FAILED"
+    assert by_id[senior["id"]]["normalized_assessment_score"] == 65
+    assert by_id[senior["id"]]["competency_scores"] == senior_scores
+    assert by_id[senior["id"]]["finished_at"] == "2026-10-07T09:25:00Z"
+    assert by_id[senior["id"]]["completion_reason"] == "SUBMITTED"
+
+
 def test_grade_upgrade_fail_preservation_same_grade_and_specialization(
     client, ready, db_factory, candidate_data, monkeypatch
 ):
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC)
+    monkeypatch.setattr(assessments, "utcnow", lambda: now)
     middle = start(client)
     answer_counts(db_factory, middle)
+    now = datetime(2026, 10, 7, 9, 10, tzinfo=UTC)
     first = finish(client, middle)["verification"]
     assert (
         client.post(BASE, json={"target_grade": "JUNIOR"}).json()["error"]["code"]
         == "assessment_grade_not_allowed"
     )
+    now = datetime(2026, 10, 7, 9, 20, tzinfo=UTC)
     senior = start(client, "SENIOR")
+    now = datetime(2026, 10, 7, 9, 25, tzinfo=UTC)
     assert finish(client, senior)["verification"]["normalized_assessment_score"] == 100
     # Same grade FAIL also preserves the canonical result.
-    monkeypatch.setattr(assessments, "utcnow", lambda: utcnow() + timedelta(days=91))
-    failed = start(client)
-    assert (
-        finish(client, failed)["verification"]["assessment_verified_at"]
-        == first["assessment_verified_at"]
+    fields = (
+        "specialization",
+        "verified_grade",
+        "normalized_assessment_score",
+        "assessment_verified_at",
     )
-    monkeypatch.setattr(assessments, "utcnow", lambda: utcnow() + timedelta(days=99))
+    before_failed = client.get("/candidate/profile").json()
+    canonical_before = {key: before_failed[key] for key in fields}
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC) + timedelta(days=91)
+    failed = start(client)
+    now += timedelta(minutes=5)
+    after_failed = finish(client, failed)["verification"]
+    assert {key: after_failed[key] for key in fields} == canonical_before
+    now = datetime(2026, 10, 7, 9, 0, tzinfo=UTC) + timedelta(days=99)
     retake = start(client)
     answer_counts(db_factory, retake, (3, 3, 3, 3, 2))
-    latest = finish(client, retake)["verification"]
-    assert latest["normalized_assessment_score"] == 70
+    now += timedelta(minutes=10)
+    retake_result = finish(client, retake)
+    assert retake_result["status"] == "PASSED"
+    latest = retake_result["verification"]
+    assert {key: latest[key] for key in fields} == {
+        "specialization": "BACKEND",
+        "verified_grade": "MIDDLE",
+        "normalized_assessment_score": 70,
+        "assessment_verified_at": "2027-01-14T09:10:00Z",
+    }
     assert latest["assessment_verified_at"] != first["assessment_verified_at"]
     # Switch clears all canonical fields and returning restores latest highest PASS.
     switched = client.put(
@@ -622,10 +722,13 @@ def test_grade_upgrade_fail_preservation_same_grade_and_specialization(
         )
     ] == [None, None, None]
     restored = client.put("/candidate/profile", json=candidate_data).json()
-    assert restored["normalized_assessment_score"] == 70
-    assert restored["assessment_verified_at"] == latest["assessment_verified_at"]
+    assert {key: restored[key] for key in fields} == {
+        key: latest[key] for key in fields
+    }
+    now += timedelta(minutes=10)
     higher = start(client, "SENIOR")
     answer_counts(db_factory, higher)
+    now += timedelta(minutes=5)
     assert finish(client, higher)["verification"]["verified_grade"] == "SENIOR"
     for grade in ("JUNIOR", "MIDDLE"):
         assert (
