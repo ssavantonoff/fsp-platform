@@ -333,32 +333,193 @@ def test_foreign_attempt_privacy(client, ready, account, candidate_data):
 
 
 @pytest.mark.parametrize(
-    "counts,score,status",
+    "counts,score,status,expected_scores",
     [
-        ((4, 4, 4, 4, 4), 100, "PASSED"),
-        ((3, 3, 3, 3, 2), 70, "PASSED"),
-        ((3, 3, 3, 2, 2), 65, "FAILED"),
-        ((4, 4, 1, 4, 3), 80, "FAILED"),
-        ((0, 0, 0, 0, 0), 0, "FAILED"),
+        pytest.param(
+            (3, 3, 3, 3, 2),
+            70,
+            "PASSED",
+            {
+                "PROGRAMMING": 75,
+                "HTTP_API": 75,
+                "DATABASES": 75,
+                "ARCHITECTURE": 75,
+                "TESTING_SECURITY_DEBUGGING": 50,
+            },
+            id="G1_boundary_pass",
+        ),
+        pytest.param(
+            (4, 4, 1, 4, 3),
+            80,
+            "FAILED",
+            {
+                "PROGRAMMING": 100,
+                "HTTP_API": 100,
+                "DATABASES": 25,
+                "ARCHITECTURE": 100,
+                "TESTING_SECURITY_DEBUGGING": 75,
+            },
+            id="G2_weak_competency",
+        ),
+        pytest.param(
+            (3, 3, 3, 2, 2),
+            65,
+            "FAILED",
+            {
+                "PROGRAMMING": 75,
+                "HTTP_API": 75,
+                "DATABASES": 75,
+                "ARCHITECTURE": 50,
+                "TESTING_SECURITY_DEBUGGING": 50,
+            },
+            id="G3_overall_below_threshold",
+        ),
+        pytest.param(
+            (4, 4, 4, 4, 4),
+            100,
+            "PASSED",
+            {
+                "PROGRAMMING": 100,
+                "HTTP_API": 100,
+                "DATABASES": 100,
+                "ARCHITECTURE": 100,
+                "TESTING_SECURITY_DEBUGGING": 100,
+            },
+            id="G4_full_score",
+        ),
+        pytest.param(
+            (0, 0, 0, 0, 0),
+            0,
+            "FAILED",
+            {
+                "PROGRAMMING": 0,
+                "HTTP_API": 0,
+                "DATABASES": 0,
+                "ARCHITECTURE": 0,
+                "TESTING_SECURITY_DEBUGGING": 0,
+            },
+            id="G5_zero_score",
+        ),
     ],
 )
 def test_scoring_and_initial_verification(
-    client, ready, db_factory, counts, score, status
+    client, ready, db_factory, counts, score, status, expected_scores
 ):
     attempt = start(client)
     answer_counts(db_factory, attempt, counts)
     result = finish(client, attempt)
     assert result["normalized_assessment_score"] == score
     assert result["status"] == status
-    assert list(result["competency_scores"].values()) == [
-        count * 25 for count in counts
-    ]
+    assert result["competency_scores"] == expected_scores
+    assert set(result["competency_scores"]) == {
+        "PROGRAMMING",
+        "HTTP_API",
+        "DATABASES",
+        "ARCHITECTURE",
+        "TESTING_SECURITY_DEBUGGING",
+    }
+    assert set(result["competency_scores"].values()) <= {0, 25, 50, 75, 100}
     profile = client.get("/candidate/profile").json()
     assert profile["verified_grade"] == ("MIDDLE" if status == "PASSED" else None)
     assert profile["normalized_assessment_score"] == (
         score if status == "PASSED" else None
     )
     assert bool(profile["assessment_verified_at"]) == (status == "PASSED")
+
+
+@pytest.mark.parametrize(
+    "scenario,unanswered",
+    [
+        ("all_unanswered", 20),
+        ("all_wrong", 0),
+        ("mixed_wrong_and_unanswered", 18),
+        ("correct_to_wrong", 19),
+    ],
+)
+def test_wrong_and_unanswered_score_zero(
+    client, ready, db_factory, scenario, unanswered
+):
+    attempt = start(client)
+    questions = attempt["questions"]
+    if scenario == "all_unanswered":
+        questions = []
+    elif scenario == "mixed_wrong_and_unanswered":
+        questions = questions[:2]
+    elif scenario == "correct_to_wrong":
+        questions = questions[:1]
+
+    with db_factory() as db:
+        for item in questions:
+            source = db.get(AssessmentQuestion, item["question_id"])
+            wrong = next(
+                option.id for option in source.options if not option.is_correct
+            )
+            path = f"{BASE}/{attempt['id']}/answers/{item['attempt_question_id']}"
+            if scenario == "correct_to_wrong":
+                correct = next(
+                    option.id for option in source.options if option.is_correct
+                )
+                response = client.put(path, json={"selected_option_id": correct})
+                assert response.status_code == 200
+                saved = next(
+                    q
+                    for q in response.json()["questions"]
+                    if q["attempt_question_id"] == item["attempt_question_id"]
+                )
+                assert saved["selected_option_id"] == correct
+            response = client.put(path, json={"selected_option_id": wrong})
+            assert response.status_code == 200
+            saved = next(
+                q
+                for q in response.json()["questions"]
+                if q["attempt_question_id"] == item["attempt_question_id"]
+            )
+            assert saved["selected_option_id"] == wrong
+
+    persisted = client.get(f"{BASE}/{attempt['id']}").json()
+    assert (
+        sum(q["selected_option_id"] is None for q in persisted["questions"])
+        == unanswered
+    )
+    result = finish(client, attempt)
+    assert result["normalized_assessment_score"] == 0
+    assert result["status"] == "FAILED"
+    assert result["competency_scores"] == {
+        "PROGRAMMING": 0,
+        "HTTP_API": 0,
+        "DATABASES": 0,
+        "ARCHITECTURE": 0,
+        "TESTING_SECURITY_DEBUGGING": 0,
+    }
+
+
+@pytest.mark.parametrize("declared_grade", ["JUNIOR", "MIDDLE", "SENIOR"])
+def test_declared_grade_does_not_affect_result(
+    client, ready, candidate_data, db_factory, declared_grade
+):
+    response = client.put(
+        "/candidate/profile", json={**candidate_data, "declared_grade": declared_grade}
+    )
+    assert response.status_code == 200
+    assert response.json()["declared_grade"] == declared_grade
+    assert response.json()["specialization"] == "BACKEND"
+    attempt = start(client, "MIDDLE")
+    assert attempt["target_grade"] == "MIDDLE"
+    assert attempt["specialization"] == "BACKEND"
+    answer_counts(db_factory, attempt, (3, 3, 3, 3, 2))
+    result = finish(client, attempt)
+    assert result["target_grade"] == "MIDDLE"
+    assert result["specialization"] == "BACKEND"
+    assert result["normalized_assessment_score"] == 70
+    assert result["status"] == "PASSED"
+    assert result["competency_scores"] == {
+        "PROGRAMMING": 75,
+        "HTTP_API": 75,
+        "DATABASES": 75,
+        "ARCHITECTURE": 75,
+        "TESTING_SECURITY_DEBUGGING": 50,
+    }
+    assert client.get("/candidate/profile").json()["declared_grade"] == declared_grade
 
 
 @pytest.mark.parametrize(
