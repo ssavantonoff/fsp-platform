@@ -16,7 +16,9 @@ import {
 } from "../src/assessment";
 import type { AssessmentQuestion, Attempt, AttemptSummary } from "../src/assessment";
 import { AssessmentQuestion as QuestionView } from "../src/components/assessment-question";
-import { AssessmentResult } from "../src/components/assessment-result";
+import { AssessmentResult, CurrentQualification } from "../src/components/assessment-result";
+import { AssessmentDashboardSummary } from "../src/components/assessment-dashboard";
+import type { CandidateProfile } from "../src/types";
 
 const question: AssessmentQuestion = {
   attempt_question_id: "q1",
@@ -52,6 +54,31 @@ const result: AttemptSummary = {
   },
   available_at: "2026-01-08T00:30:00Z",
 };
+const verification: CandidateProfile = {
+  id: "candidate", user_id: "user", first_name: "Имя", last_name: "Фамилия",
+  city: null, about: null, specialization: "BACKEND", declared_grade: "SENIOR",
+  verified_grade: "MIDDLE", normalized_assessment_score: 80,
+  assessment_verified_at: "2026-10-07T09:10:00Z", years_of_experience: null,
+  fsp_id: null, personal_data_consent: true,
+  personal_data_consent_at: "2026-10-07T09:00:00Z", skills: [],
+};
+const g3Scores = {
+  PROGRAMMING: 75, HTTP_API: 75, DATABASES: 75, ARCHITECTURE: 50,
+  TESTING_SECURITY_DEBUGGING: 50,
+};
+const fullScores = {
+  PROGRAMMING: 100, HTTP_API: 100, DATABASES: 100, ARCHITECTURE: 100,
+  TESTING_SECURITY_DEBUGGING: 100,
+};
+function semanticSection(html: string, label: string) {
+  const match = html.match(new RegExp(`<section aria-label="${label}">([\\s\\S]*?)</section>`));
+  assert.ok(match, `Missing section: ${label}`);
+  return match[1];
+}
+function assertConditions(html: string, overall: string, competencies: string) {
+  assert.ok(html.includes(`<dt>Общий балл &gt;=70</dt><dd>${overall}</dd>`));
+  assert.ok(html.includes(`<dt>Каждая компетенция &gt;=50</dt><dd>${competencies}</dd>`));
+}
 
 test("assessment dates show explicit UTC with seconds and 24-hour time", () => {
   assert.equal(dateLabel("2026-10-07T09:10:05Z"), "07.10.2026, 09:10:05 UTC");
@@ -155,6 +182,9 @@ test("failed result shows threshold and weak competency without correct answers"
   assert.match(html, /50%/);
   assert.match(html, /Базы данных/);
   assert.match(html, /Время вышло/);
+  assertConditions(semanticSection(html, "Результат попытки"), "Выполнено", "Не выполнено");
+  assert.match(html, /Дата завершения попытки/);
+  assert.match(html, /01\.01\.2026, 00:30:00 UTC/);
   assert.ok(!html.includes("Первый вариант"));
 });
 test("passed result shows aggregate score and next attempt date", () => {
@@ -164,14 +194,133 @@ test("passed result shows aggregate score and next attempt date", () => {
         ...result,
         status: "PASSED",
         normalized_assessment_score: 100,
+        competency_scores: fullScores,
         completion_reason: "SUBMITTED",
+        available_at: "2026-04-01T00:30:00Z",
       },
     }),
   );
-  assert.match(html, /Уровень подтверждён/);
+  assert.match(html, /Попытка успешно пройдена/);
   assert.match(html, /PASSED/);
   assert.match(html, /Следующая попытка/);
   assert.ok(!html.includes("Блоки ниже порога"));
+  assertConditions(semanticSection(html, "Результат попытки"), "Выполнено", "Выполнено");
+  assert.equal((semanticSection(html, "Результат попытки").match(/class="score-row"/g) ?? []).length, 5);
+  assert.equal((semanticSection(html, "Результат попытки").match(/100%/g) ?? []).length, 5);
+  assert.match(html, /Дата завершения попытки/);
+  assert.match(html, /01\.01\.2026, 00:30:00 UTC/);
+  assert.match(html, /Следующая попытка на этом уровне — не ранее 01\.04\.2026, 00:30:00 UTC/);
+});
+test("G3 result explains failed overall and fulfilled competency condition", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, normalized_assessment_score: 65, competency_scores: g3Scores },
+  }));
+  const attempt = semanticSection(html, "Результат попытки");
+  assert.match(attempt, /FAILED/);
+  assert.match(attempt, /65 \/ 100/);
+  assertConditions(attempt, "Не выполнено", "Выполнено");
+});
+test("failed Senior attempt and current Middle qualification have separate scores and dates", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, target_grade: "SENIOR", normalized_assessment_score: 65,
+      competency_scores: g3Scores, completion_reason: "SUBMITTED",
+      started_at: "2026-10-07T09:20:00Z", expires_at: "2026-10-07T09:50:00Z",
+      finished_at: "2026-10-07T09:25:00Z", available_at: "2026-10-14T09:25:00Z" },
+    verification,
+  }));
+  const attempt = semanticSection(html, "Результат попытки");
+  const current = semanticSection(html, "Текущая подтверждённая квалификация");
+  assert.match(attempt, /Backend \/ Senior/);
+  assert.match(attempt, /FAILED/);
+  assert.match(attempt, /65 \/ 100/);
+  assert.match(attempt, /07\.10\.2026, 09:25:00 UTC/);
+  assert.doesNotMatch(attempt, /Middle|80 \/ 100|09:10:00/);
+  assert.match(current, /Специализация<\/dt><dd>Backend/);
+  assert.match(current, /Подтверждённый уровень<\/dt><dd>Middle/);
+  assert.match(current, /Оценка подтверждения<\/dt><dd>80 \/ 100/);
+  assert.match(current, /Дата подтверждения<\/dt><dd>07\.10\.2026, 09:10:00 UTC/);
+  assert.doesNotMatch(current, /Senior|65 \/ 100|09:25:00/);
+});
+test("dashboard keeps declared Senior separate from current Middle qualification", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentDashboardSummary, { profile: verification }));
+  assert.match(semanticSection(html, "Заявленный уровень"), /Senior/);
+  const current = semanticSection(html, "Текущая подтверждённая квалификация");
+  assert.match(current, /Middle/);
+  assert.match(current, /80 \/ 100/);
+  assert.doesNotMatch(current, /Senior/);
+});
+test("canonical null triple explicitly has no qualification and never uses declared grade", () => {
+  const profile = { ...verification, verified_grade: null, normalized_assessment_score: null, assessment_verified_at: null };
+  for (const view of [
+    createElement(CurrentQualification, { verification: profile }),
+    createElement(AssessmentDashboardSummary, { profile }),
+    createElement(AssessmentResult, { attempt: result, verification: profile }),
+  ]) {
+    const current = semanticSection(renderToStaticMarkup(view), "Текущая подтверждённая квалификация");
+    assert.match(current, /Подтверждённой квалификации пока нет\./);
+    assert.doesNotMatch(current, /Senior|Middle|80 \/ 100/);
+  }
+});
+test("omitted verification means unavailable data rather than an unverified candidate", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, { attempt: result }));
+  const current = semanticSection(html, "Текущая подтверждённая квалификация");
+  assert.match(current, /Данные текущей подтверждённой квалификации недоступны/);
+  assert.doesNotMatch(current, /Подтверждённой квалификации пока нет|Middle|80 \/ 100/);
+});
+test("finished result never renders attached questions, options, solutions or answer keys", () => {
+  const sentinel = "PRIVATE_ANSWER_SENTINEL";
+  const attempt = { ...result, questions: [{ ...question, prompt: sentinel,
+    options: [{ id: "correct", text: sentinel }] }], answer_key: sentinel, solution: sentinel,
+    correct_option_index: 0, explanation: sentinel };
+  const html = renderToStaticMarkup(createElement(AssessmentResult, { attempt, verification }));
+  assert.doesNotMatch(html, /PRIVATE_ANSWER_SENTINEL|answer_key|correct_option_index|solution|type="radio"/);
+});
+test("server FAILED remains authoritative even when both aggregate conditions are fulfilled", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, normalized_assessment_score: 100, competency_scores: fullScores },
+  }));
+  const attempt = semanticSection(html, "Результат попытки");
+  assert.match(attempt, /FAILED/);
+  assert.doesNotMatch(attempt, /PASSED/);
+  assertConditions(attempt, "Выполнено", "Выполнено");
+});
+test("server PASSED remains authoritative even when aggregate conditions are not fulfilled", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, status: "PASSED", normalized_assessment_score: 0, competency_scores: null },
+  }));
+  const attempt = semanticSection(html, "Результат попытки");
+  assert.match(attempt, /PASSED/);
+  assert.doesNotMatch(attempt, /FAILED/);
+  assertConditions(attempt, "Не выполнено", "Не выполнено");
+});
+for (const [label, scores] of [
+  ["null", null], ["empty", {}],
+  ["missing block", { PROGRAMMING: 100, HTTP_API: 100, ARCHITECTURE: 100, TESTING_SECURITY_DEBUGGING: 100 }],
+  ["unknown key replacing a missing block", { PROGRAMMING: 100, HTTP_API: 100, ARCHITECTURE: 100, TESTING_SECURITY_DEBUGGING: 100, UNKNOWN: 100 }],
+] as const) {
+  test(`${label} competency data cannot fulfill the block condition`, () => {
+    const html = renderToStaticMarkup(createElement(AssessmentResult, {
+      attempt: { ...result, competency_scores: scores },
+    }));
+    assertConditions(semanticSection(html, "Результат попытки"), "Выполнено", "Не выполнено");
+  });
+}
+test("historical Backend Middle PASS does not substitute for current Frontend Senior qualification", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, status: "PASSED", normalized_assessment_score: 100, competency_scores: fullScores },
+    verification: { ...verification, specialization: "FRONTEND", verified_grade: "SENIOR",
+      normalized_assessment_score: 70, assessment_verified_at: "2026-10-08T12:00:00Z" },
+  }));
+  const attempt = semanticSection(html, "Результат попытки");
+  assert.match(attempt, /Backend \/ Middle/);
+  assert.match(attempt, /PASSED/);
+  assert.match(attempt, /100 \/ 100/);
+  const current = semanticSection(html, "Текущая подтверждённая квалификация");
+  assert.match(current, /Frontend/);
+  assert.match(current, /Senior/);
+  assert.match(current, /70 \/ 100/);
+  assert.match(current, /08\.10\.2026, 12:00:00 UTC/);
+  assert.doesNotMatch(current, /Backend|Middle|100 \/ 100/);
 });
 test("answer save sends only selected option and returns canonical response", async () => {
   const original = globalThis.fetch;
