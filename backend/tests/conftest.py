@@ -13,7 +13,15 @@ from alembic import command
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.main import create_app
-from app.models import CandidateProfile, Grade, Role, Skill, Specialization, User
+from app.models import (
+    CandidateProfile,
+    EmployerProfile,
+    Grade,
+    Role,
+    Skill,
+    Specialization,
+    User,
+)
 
 ORIGIN = "http://localhost:3000"
 PASSWORD = "valid-test-password"
@@ -200,3 +208,34 @@ def matching_candidate(db_factory, skill_ids):
             return profile.id
 
     return create
+
+
+@pytest.fixture
+def invitation_setup(
+    client, employer_account, need_data, matching_candidate, db_factory
+):
+    employer_user, employer = employer_account()
+    need = client.post("/employer/needs", json=need_data).json()
+    assert client.post(f"/employer/needs/{need['id']}/activate").status_code == 200
+    candidate_id = matching_candidate(
+        last_name="PRIVATE_SURNAME",
+        city="PRIVATE_CITY",
+        about="PRIVATE_ABOUT",
+        fsp_id="PRIVATE_FSP",
+    )
+    with db_factory() as db:
+        candidate = db.get(CandidateProfile, candidate_id)
+        candidate_user_id = candidate.user_id
+        user = db.get(User, candidate_user_id)
+        user.email = "private-candidate@example.com"
+        company = db.get(EmployerProfile, employer["id"])
+        company.contact_person_name = "PRIVATE_EMPLOYER_CONTACT"
+        company.website = "https://private-company.example.com"
+        db.commit()
+    return {
+        "need_id": need["id"],
+        "candidate_id": candidate_id,
+        "employer_user_id": employer_user["id"],
+        "candidate_user_id": candidate_user_id,
+        "employer_id": employer["id"],
+    }
