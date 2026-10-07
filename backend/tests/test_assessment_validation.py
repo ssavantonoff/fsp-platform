@@ -263,9 +263,9 @@ def test_missing_historical_predecessor_allowed():
 def test_real_versioned_replacements_allow_missing_predecessors(source_bank):
     codes = {q.code for q in source_bank}
     replacements = [q for q in source_bank if q.supersedes is not None]
-    assert len(replacements) == 28
-    assert sum(q.version == 2 for q in replacements) == 27
-    assert sum(q.version == 3 for q in replacements) == 1
+    assert len(replacements) == 37
+    assert sum(q.version == 2 for q in replacements) == 35
+    assert sum(q.version == 3 for q in replacements) == 2
     assert all(q.supersedes not in codes for q in replacements)
     assert validate_source_bank(source_bank) == []
 
@@ -496,9 +496,9 @@ def test_loader_reads_parses_and_validates_once(
     assert fingerprint(actual) == fingerprint(expected)
     codes = {item.code for item in actual}
     replacements = [item for item in actual if item.supersedes is not None]
-    assert len(replacements) == 28
-    assert sum(item.version == 2 for item in replacements) == 27
-    assert sum(item.version == 3 for item in replacements) == 1
+    assert len(replacements) == 37
+    assert sum(item.version == 2 for item in replacements) == 35
+    assert sum(item.version == 3 for item in replacements) == 2
     assert all(item.supersedes not in codes for item in replacements)
 
 
