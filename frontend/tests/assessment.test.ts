@@ -18,6 +18,7 @@ import type { AssessmentQuestion, Attempt, AttemptSummary } from "../src/assessm
 import { AssessmentQuestion as QuestionView } from "../src/components/assessment-question";
 import { AssessmentResult, CurrentQualification } from "../src/components/assessment-result";
 import { AssessmentDashboardSummary } from "../src/components/assessment-dashboard";
+import { AssessmentHistoryList } from "../src/components/assessment-history";
 import type { CandidateProfile } from "../src/types";
 
 const question: AssessmentQuestion = {
@@ -321,6 +322,64 @@ test("historical Backend Middle PASS does not substitute for current Frontend Se
   assert.match(current, /70 \/ 100/);
   assert.match(current, /08\.10\.2026, 12:00:00 UTC/);
   assert.doesNotMatch(current, /Backend|Middle|100 \/ 100/);
+});
+
+const historyCopy = "История попыток не заменяет текущую подтверждённую квалификацию.";
+test("empty history explains its meaning and contains no fabricated qualification", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentHistoryList, { attempts: [] }));
+  assert.ok(html.includes(historyCopy));
+  assert.match(html, /У вас пока нет попыток/);
+  assert.doesNotMatch(html, /<li|Оценка подтверждения|Дата подтверждения|verified_grade/);
+});
+test("historical PASS describes an attempt with all aggregate scores and UTC dates", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentHistoryList, {
+    attempts: [{ ...result, status: "PASSED", normalized_assessment_score: 100,
+      competency_scores: fullScores, completion_reason: "SUBMITTED", available_at: "2026-04-01T00:30:00Z" }],
+  }));
+  assert.ok(html.includes(historyCopy));
+  assert.match(html, /Попытка: Backend \/ Middle/);
+  assert.match(html, /PASSED · 100 \/ 100 · Завершено кандидатом/);
+  for (const label of ["Программирование", "HTTP и API", "Базы данных", "Архитектура", "Тестирование, безопасность и отладка"]) {
+    assert.ok(html.includes(`${label}: 100%`));
+  }
+  assert.match(html, /Начало: 01\.01\.2026, 00:00:00 UTC/);
+  assert.match(html, /Завершение: 01\.01\.2026, 00:30:00 UTC/);
+  assert.match(html, /href="\/candidate\/assessment\/attempt"[^>]*>Результат/);
+  assert.doesNotMatch(html, /Текущая подтверждённая квалификация|Оценка подтверждения|Дата подтверждения|Уровень подтверждён/);
+});
+test("historical FAILED retains its own score, timeout reason and weak competency", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentHistoryList, { attempts: [result] }));
+  assert.ok(html.includes(historyCopy));
+  assert.match(html, /Попытка: Backend \/ Middle/);
+  assert.match(html, /FAILED · 80 \/ 100 · Время вышло/);
+  assert.match(html, /Базы данных: 25%/);
+  assert.doesNotMatch(html, /PASSED|Оценка подтверждения/);
+});
+test("IN_PROGRESS history remains in progress with continue navigation and absent result", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentHistoryList, {
+    attempts: [{ ...result, status: "IN_PROGRESS", normalized_assessment_score: null,
+      competency_scores: null, completion_reason: null, finished_at: null, available_at: null }],
+  }));
+  assert.ok(html.includes(historyCopy));
+  assert.match(html, /IN_PROGRESS · В процессе · Оценка: —/);
+  assert.match(html, /Завершение: —/);
+  assert.match(html, /href="\/candidate\/assessment\/attempt"[^>]*>Продолжить/);
+  assert.doesNotMatch(html, /PASSED|FAILED|80 \/ 100|Время вышло|Завершено кандидатом/);
+});
+test("history dates normalize offset timestamps across UTC calendar days", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentHistoryList, {
+    attempts: [{ ...result, started_at: "2026-10-08T02:50:00+03:00",
+      finished_at: "2026-10-08T03:10:00+03:00", expires_at: "2026-10-08T03:20:00+03:00",
+      completion_reason: "SUBMITTED", available_at: "2026-10-15T00:10:00Z" }],
+  }));
+  assert.match(html, /Начало: 07\.10\.2026, 23:50:00 UTC/);
+  assert.match(html, /Завершение: 08\.10\.2026, 00:10:00 UTC/);
+});
+test("history ignores injected profile and answer fields instead of fabricating current qualification", () => {
+  const attempt = { ...result, verification, questions: [question], answer_key: "PRIVATE_HISTORY_KEY" };
+  const html = renderToStaticMarkup(createElement(AssessmentHistoryList, { attempts: [attempt] }));
+  assert.ok(html.includes(historyCopy));
+  assert.doesNotMatch(html, /Текущая подтверждённая квалификация|Оценка подтверждения|Дата подтверждения|09:10:00|Senior|PRIVATE_HISTORY_KEY|Первый вариант|verified_grade/);
 });
 test("answer save sends only selected option and returns canonical response", async () => {
   const original = globalThis.fetch;
