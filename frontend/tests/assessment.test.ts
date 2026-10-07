@@ -6,6 +6,7 @@ import { ApiError } from "../src/api";
 import {
   applySavedAttempt,
   availabilityLabel,
+  dateLabel,
   loadAttempt,
   saveAssessmentAnswer,
   secondsRemaining,
@@ -51,6 +52,20 @@ const result: AttemptSummary = {
   },
   available_at: "2026-01-08T00:30:00Z",
 };
+
+test("assessment dates show explicit UTC with seconds and 24-hour time", () => {
+  assert.equal(dateLabel("2026-10-07T09:10:05Z"), "07.10.2026, 09:10:05 UTC");
+});
+test("equivalent timestamp offsets show the same UTC instant", () => {
+  assert.equal(dateLabel("2026-10-07T12:10:05+03:00"), "07.10.2026, 09:10:05 UTC");
+});
+test("assessment dates cross calendar boundaries in UTC", () => {
+  assert.equal(dateLabel("2026-10-08T01:05:06+03:00"), "07.10.2026, 22:05:06 UTC");
+  assert.equal(dateLabel("2026-10-08T00:00:00Z"), "08.10.2026, 00:00:00 UTC");
+});
+test("null assessment date keeps the empty label", () => {
+  assert.equal(dateLabel(null), "—");
+});
 
 test("timer uses server deadline and monotonic elapsed time, including request latency", () => {
   const clock = serverClock(
