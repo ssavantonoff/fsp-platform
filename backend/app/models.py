@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -79,6 +80,14 @@ class NeedStatus(StrEnum):
 class NeedSkillKind(StrEnum):
     MUST_HAVE = "MUST_HAVE"
     NICE_TO_HAVE = "NICE_TO_HAVE"
+
+
+class InvitationStatus(StrEnum):
+    SENT = "SENT"
+    VIEWED = "VIEWED"
+    ACCEPTED = "ACCEPTED"
+    DECLINED = "DECLINED"
+    WITHDRAWN = "WITHDRAWN"
 
 
 class TimestampMixin:
@@ -271,6 +280,83 @@ class EmployerNeedSkill(Base):
         Enum(NeedSkillKind, native_enum=False, create_constraint=True)
     )
     skill: Mapped[Skill] = relationship(lazy="joined")
+
+
+class Invitation(TimestampMixin, Base):
+    __tablename__ = "invitations"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    need_id: Mapped[str] = mapped_column(ForeignKey("employer_needs.id"))
+    employer_id: Mapped[str] = mapped_column(ForeignKey("employer_profiles.id"))
+    candidate_id: Mapped[str] = mapped_column(ForeignKey("candidate_profiles.id"))
+    status: Mapped[InvitationStatus] = mapped_column(
+        Enum(InvitationStatus, native_enum=False, create_constraint=True),
+        default=InvitationStatus.SENT,
+    )
+    message: Mapped[str | None] = mapped_column(Text)
+    need_snapshot: Mapped[dict[str, Any]] = mapped_column(JSON(none_as_null=True))
+    candidate_snapshot: Mapped[dict[str, Any]] = mapped_column(JSON(none_as_null=True))
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint(
+            "json_typeof(need_snapshot) = 'object' AND "
+            "json_typeof(candidate_snapshot) = 'object'",
+            name="valid_invitation_snapshots",
+        ).ddl_if(dialect="postgresql"),
+        CheckConstraint(
+            "json_type(need_snapshot) = 'object' AND "
+            "json_type(candidate_snapshot) = 'object'",
+            name="valid_invitation_snapshots",
+        ).ddl_if(dialect="sqlite"),
+        Index(
+            "uq_invitation_active_pair",
+            "need_id",
+            "candidate_id",
+            unique=True,
+            postgresql_where=text("status IN ('SENT', 'VIEWED')"),
+            sqlite_where=text("status IN ('SENT', 'VIEWED')"),
+        ),
+        # ACCEPTED keeps the reservation after the active state ends. A separate
+        # accepted-only index would allow a concurrent SENT alongside ACCEPTED.
+        Index(
+            "uq_invitation_blocking_pair",
+            "need_id",
+            "candidate_id",
+            unique=True,
+            postgresql_where=text("status IN ('SENT', 'VIEWED', 'ACCEPTED')"),
+            sqlite_where=text("status IN ('SENT', 'VIEWED', 'ACCEPTED')"),
+        ),
+        Index("ix_invitation_need_sent", "need_id", sent_at.desc(), "id"),
+        Index("ix_invitation_employer_sent", "employer_id", sent_at.desc(), "id"),
+        Index("ix_invitation_candidate_sent", "candidate_id", sent_at.desc(), "id"),
+        CheckConstraint(
+            "message IS NULL OR length(message) <= 2000",
+            name="valid_invitation_message",
+        ),
+        CheckConstraint(
+            "(status = 'SENT' AND viewed_at IS NULL AND responded_at IS NULL "
+            "AND withdrawn_at IS NULL) OR "
+            "(status = 'VIEWED' AND viewed_at IS NOT NULL AND responded_at IS NULL "
+            "AND withdrawn_at IS NULL) OR "
+            "(status IN ('ACCEPTED', 'DECLINED') AND responded_at IS NOT NULL "
+            "AND withdrawn_at IS NULL) OR "
+            "(status = 'WITHDRAWN' AND withdrawn_at IS NOT NULL "
+            "AND responded_at IS NULL)",
+            name="consistent_invitation_state",
+        ),
+        CheckConstraint(
+            "(viewed_at IS NULL OR viewed_at >= sent_at) AND "
+            "(responded_at IS NULL OR responded_at >= sent_at) AND "
+            "(withdrawn_at IS NULL OR withdrawn_at >= sent_at) AND "
+            "(viewed_at IS NULL OR responded_at IS NULL OR responded_at >= viewed_at) "
+            "AND (viewed_at IS NULL OR withdrawn_at IS NULL "
+            "OR withdrawn_at >= viewed_at)",
+            name="ordered_invitation_timestamps",
+        ),
+    )
 
 
 class AssessmentQuestion(Base):
