@@ -411,7 +411,8 @@ Downgrade удаляет assessment-таблицы и новые поля; ис�
 ## Employer Needs & Matching
 
 Backend API для собственных потребностей работодателя и текущего подбора кандидатов.
-Employer UI доступен в `/employer/needs`; Invitations пока не реализованы.
+Employer UI доступен в `/employer/needs`; приглашения отправляются из подбора,
+а их история доступна в `/employer/needs/[id]/invitations`.
 Используются существующие session cookies и справочник `/skills`; отдельного auth
 или skill catalog нет.
 
@@ -519,7 +520,8 @@ verified. Grade breakdown также содержит `exact_match`, Nice — `m
 Preview не раскрывает email, phone, Telegram, полную фамилию, user_id, personal
 consent fields, FSP ID, city/address, about, declared grade, assessment history
 или контакты. Verification date только отображается, не влияет на score/rank.
-Контакты в O1 не разблокируются; будущий accepted Invitation не реализован здесь.
+Matching preview остаётся маскированным. Контакты открываются только в отдельном
+приглашении со статусом ACCEPTED.
 
 ### Explicit matching demo
 
