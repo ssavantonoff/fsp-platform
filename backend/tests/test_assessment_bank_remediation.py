@@ -113,9 +113,22 @@ def fingerprint(value):
     return sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()
 
 
+@pytest.fixture(autouse=True)
+def private_question_diagnostics(monkeypatch):
+    # Pytest also renders fixture arguments and objects used by metadata asserts.
+    monkeypatch.setattr(
+        SeedQuestion,
+        "__repr__",
+        lambda question: (
+            f"SeedQuestion(code={question.code!r}, version={question.version!r})"
+        ),
+    )
+
+
 def frozen_bank(filename, expected_hash):
     content = (Path(__file__).parent / "fixtures" / filename).read_bytes()
-    assert sha256(content).hexdigest() == expected_hash
+    content_hash = sha256(content).hexdigest()
+    assert content_hash == expected_hash
     questions = [SeedQuestion.model_validate(q) for q in json.loads(content)]
     assert len(questions) == 75
     assert validate_source_bank(questions) == []
@@ -132,6 +145,17 @@ def b1_bank():
     return frozen_bank("assessment-bank-p3-b1.json", B1_HASH)
 
 
+def test_question_diagnostics_exclude_private_content(b1_bank):
+    for bank in (b1_bank, load_bank()):
+        rendered = repr(bank) + repr({q.code: q for q in bank})
+        content_exposed = any(
+            q.prompt in rendered or any(option in rendered for option in q.options)
+            for q in bank
+        )
+        assert not content_exposed
+        assert all(q.code in rendered for q in bank)
+
+
 @pytest.mark.parametrize("old,new", REPLACEMENTS, ids=[new for _, new in REPLACEMENTS])
 def test_exact_replacement_and_frozen_metadata(baseline_bank, b1_bank, old, new):
     before = {q.code: q for q in baseline_bank}[old]
@@ -146,8 +170,12 @@ def test_exact_replacement_and_frozen_metadata(baseline_bank, b1_bank, old, new)
         before.competency,
         before.difficulty,
     )
-    assert fingerprint(after.prompt) != fingerprint(before.prompt)
-    assert fingerprint(after.options) != fingerprint(before.options)
+    before_prompt = fingerprint(before.prompt)
+    after_prompt = fingerprint(after.prompt)
+    before_options = fingerprint(before.options)
+    after_options = fingerprint(after.options)
+    assert after_prompt != before_prompt
+    assert after_options != before_options
 
 
 def test_exact_inventory_and_48_unchanged_records(baseline_bank, b1_bank):
@@ -172,9 +200,9 @@ def test_exact_inventory_and_48_unchanged_records(baseline_bank, b1_bank):
         "SENIOR": 15,
     }
     for code in unchanged:
-        assert fingerprint(before[code].model_dump()) == fingerprint(
-            after[code].model_dump()
-        ), code
+        before_content = fingerprint(before[code].model_dump())
+        after_content = fingerprint(after[code].model_dump())
+        assert before_content == after_content, code
     assert len(MINOR_CODES) == 6 and MINOR_CODES <= unchanged
     for grade in ("JUNIOR", "MIDDLE", "SENIOR"):
         for competency in assessments.COMPETENCIES["BACKEND"]:
@@ -202,8 +230,12 @@ def test_second_replacement_and_frozen_metadata(b1_bank, old, new):
         before.competency,
         before.difficulty,
     )
-    assert fingerprint(after.prompt) != fingerprint(before.prompt)
-    assert fingerprint(after.options) != fingerprint(before.options)
+    before_prompt = fingerprint(before.prompt)
+    after_prompt = fingerprint(after.prompt)
+    before_options = fingerprint(before.options)
+    after_options = fingerprint(after.options)
+    assert after_prompt != before_prompt
+    assert after_options != before_options
 
 
 def test_second_inventory_and_65_unchanged_records(b1_bank):
@@ -234,9 +266,9 @@ def test_second_inventory_and_65_unchanged_records(b1_bank):
     assert len(SECOND_PASS_MINOR_CODES) == 13
     assert SECOND_PASS_MINOR_CODES <= unchanged
     for code in unchanged:
-        assert fingerprint(before[code].model_dump()) == fingerprint(
-            after[code].model_dump()
-        ), code
+        before_content = fingerprint(before[code].model_dump())
+        after_content = fingerprint(after[code].model_dump())
+        assert before_content == after_content, code
     for grade in ("JUNIOR", "MIDDLE", "SENIOR"):
         for competency in assessments.COMPETENCIES["BACKEND"]:
             assert Counter(
@@ -570,9 +602,13 @@ def test_attempt_keeps_historical_membership_order_read_and_scoring(
                 )
             assert_current_active_bank(db, bank)
         after_api = client.get(path).json()
-        assert fingerprint(
+        before_response = fingerprint(
+            {k: v for k, v in before_api.items() if k != "server_now"}
+        )
+        after_response = fingerprint(
             {k: v for k, v in after_api.items() if k != "server_now"}
-        ) == fingerprint({k: v for k, v in before_api.items() if k != "server_now"})
+        )
+        assert after_response == before_response
     result = client.post(path + "/submit").json()
     assert result["status"] == "PASSED"
     assert result["normalized_assessment_score"] == 100
