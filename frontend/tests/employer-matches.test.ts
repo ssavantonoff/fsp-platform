@@ -9,6 +9,7 @@ import { ApiError } from "../src/api";
 import { getMatches } from "../src/employer-needs";
 import type { EmployerNeed, EmployerCandidatePreview, MatchesPage } from "../src/employer-needs";
 import type { MatchingView } from "../src/components/employer-matches-screen";
+import { deferred as actionDeferred, handler } from "./invitation-handlers";
 
 const python = { id: "python", name: "Python" };
 const fastapi = { id: "fastapi", name: "FastAPI" };
@@ -113,8 +114,45 @@ test("matching preview renders masked name and no contacts", async () => {
   };
   for (const html of [await card(injected), await view({ result: { ...page, items: [injected] } })]) {
     assert.match(html, /Мария С\./);
-    assert.doesNotMatch(html, /PRIVATE_|Связаться|Телефон|Email|Пригласить|Telegram|Открыть контакты|<pre/);
+    assert.doesNotMatch(html, /PRIVATE_|Связаться|Телефон|Email|Telegram|Открыть контакты|<pre/);
   }
+});
+test("matching offers invitation action and history for ACTIVE Need", async () => {
+  const html = await view();
+  assert.match(html, /Пригласить/);
+  assert.match(html, /href="\/employer\/needs\/need-1\/invitations"/);
+});
+test("invitation form preserves plain text and shows salary, busy and feedback", async () => {
+  const { InvitationForm } = await import("../src/components/employer-matches-screen");
+  const props = { need, candidate, message: "<b>hello</b>", busy: false, success: "", error: null, onChange: () => {}, onSubmit: () => {}, onCancel: () => {} };
+  const html = renderToStaticMarkup(createElement(InvitationForm, props));
+  assert.match(html, /100000\.00–200000\.00/);
+  assert.match(html, /maxLength="2000"/);
+  assert.match(html, /&lt;b&gt;hello/);
+  assert.match(html, /Отправить приглашение/);
+  assert.match(renderToStaticMarkup(createElement(InvitationForm, { ...props, busy: true })), /disabled=""/);
+  assert.match(renderToStaticMarkup(createElement(InvitationForm, { ...props, success: "Приглашение отправлено" })), /Приглашение отправлено/);
+  assert.match(renderToStaticMarkup(createElement(InvitationForm, { ...props, error: new ApiError(404, "candidate_not_available", "Кандидат недоступен") })), /Кандидат недоступен/);
+});
+test("invite submit guards double clicks, success repeats and preserves input on server error", async () => {
+  const response = actionDeferred<unknown>();
+  const calls: unknown[] = [];
+  const pending = { current: false }; const mounted = { current: true };
+  let success = ""; let error: unknown = null; let busy = false;
+  const scope = { pending, mounted, need, candidate, success, message: "  Сообщение  ", ApiError,
+    sendInvitation: async (id: string, payload: unknown) => { calls.push([id, payload]); return response.promise; },
+    setBusy: (value: boolean) => { busy = value; }, setError: (value: unknown) => { error = value; }, setSuccess: (value: string) => { success = value; },
+  };
+  const submit = handler("src/components/employer-matches-screen.tsx", "InviteCandidate", "submit", scope);
+  const first = submit(); await submit(); assert.equal(calls.length, 1); assert.equal(busy, true);
+  response.resolve({ status: "SENT" }); await first;
+  assert.equal(success, "Приглашение отправлено"); assert.equal(error, null); assert.equal(busy, false);
+  assert.equal(JSON.stringify(calls[0]), JSON.stringify([need.id, { candidate_id: candidate.candidate_id, message: "  Сообщение  " }]));
+  const conflict = new ApiError(404, "candidate_not_available", "Кандидат недоступен");
+  const retry = handler("src/components/employer-matches-screen.tsx", "InviteCandidate", "submit", { ...scope, success: "", sendInvitation: async () => { throw conflict; } });
+  await retry(); assert.equal(error, conflict); assert.equal(pending.current, false);
+  const repeated = handler("src/components/employer-matches-screen.tsx", "InviteCandidate", "submit", { ...scope, success: "sent" });
+  await repeated(); assert.equal(calls.length, 1);
 });
 test("matching blocks non ACTIVE need", async () => {
   for (const status of ["DRAFT", "CLOSED"] as const) {
@@ -176,11 +214,11 @@ test("matching pagination uses total and server page boundaries", async () => {
   const first = { ...page, items: Array.from({ length: 20 }, (_, i) => ({ ...candidate, candidate_id: String(i) })), total: 21 };
   const html = await view({ result: first, onPageChange: () => {} });
   assert.match(html, /Подходящих кандидатов: 21/);
-  const buttons = html.match(/<button[^>]*>[\s\S]*?<\/button>/g)!;
+  const buttons = html.match(/<button[^>]*>(?:Назад|Далее)<\/button>/g)!;
   assert.match(buttons[0], /disabled/);
   assert.doesNotMatch(buttons[1], /disabled/);
   const last = await view({ result: { ...page, total: 21, offset: 20 }, offset: 20, onPageChange: () => {} });
-  const lastButtons = last.match(/<button[^>]*>[\s\S]*?<\/button>/g)!;
+  const lastButtons = last.match(/<button[^>]*>(?:Назад|Далее)<\/button>/g)!;
   assert.doesNotMatch(lastButtons[0], /disabled/);
   assert.match(lastButtons[1], /disabled/);
 });

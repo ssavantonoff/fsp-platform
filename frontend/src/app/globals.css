@@ -373,3 +373,12 @@ dd {
 .match-pagination {
   margin-bottom: 1rem;
 }
+
+.invitation-card, .invitation-form {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.invitation-form { margin-top: 1.5rem; }
+.invitation-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.invitation-card .actions { margin-bottom: 1rem; }
+.invitation-card h2, .invitation-card h3 { overflow-wrap: anywhere; }

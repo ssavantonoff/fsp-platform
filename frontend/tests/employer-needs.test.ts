@@ -159,6 +159,12 @@ test("CLOSED editor is blocked", () => {
   assert.match(html, /Потребность закрыта/);
   assert.match(html, /href="\/employer\/needs"/);
   assert.match(html, /Backend engineer/);
+  assert.match(html, /\/invitations"/);
+});
+test("invitation history remains reachable for CLOSED Needs", () => {
+  const html = renderToStaticMarkup(createElement(NeedsListView, { ...listProps, items: [{ ...need, status: "CLOSED" }] }));
+  assert.match(html, /\/invitations"/);
+  assert.doesNotMatch(html, /\/matches"/);
 });
 test("need list renders loading empty and API error states", () => {
   const render = (overrides: Partial<Parameters<typeof NeedsListView>[0]>) => renderToStaticMarkup(createElement(NeedsListView, { ...listProps, ...overrides }));

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/api";
 import { getMatches, getNeed } from "@/employer-needs";
+import { sendInvitation } from "@/invitations";
 import type { EmployerCandidatePreview, EmployerNeed, FactorBreakdown, MatchesPage } from "@/employer-needs";
 import { gradeLabels, specializationLabels } from "@/types";
 import type { Skill } from "@/types";
@@ -24,7 +25,47 @@ function skillNames(skills: Skill[], empty = "—"): string {
 function FactorValue({ factor }: { factor: FactorBreakdown }) {
   return <>{factor.active ? `${formatScore(factor.score)} / ${formatScore(factor.max)}` : "Не участвует в расчёте"}</>;
 }
-export function MatchCard({ candidate }: { candidate: EmployerCandidatePreview }) {
+export function InvitationForm({ need, candidate, message, busy, success, error, onChange, onSubmit, onCancel }: {
+  need: EmployerNeed; candidate: EmployerCandidatePreview; message: string; busy: boolean; success: string; error: unknown;
+  onChange: (message: string) => void; onSubmit: () => void; onCancel: () => void;
+}) {
+  return <form className="invitation-form" onSubmit={(event) => { event.preventDefault(); if (!busy && message.length <= 2000) onSubmit(); }}>
+    <h3>Пригласить: {candidate.display_name}</h3>
+    <p>{need.position_title}</p><p>Зарплата: {need.salary_from}–{need.salary_to} ₽</p>
+    <label>Сообщение (необязательно)<textarea value={message} maxLength={2000} disabled={busy} onChange={(event) => onChange(event.target.value)} /></label>
+    <p className="hint">{message.length} / 2000</p>
+    <Feedback error={error} success={success} />
+    <div className="actions"><button disabled={busy || !!success || message.length > 2000} type="submit">{busy ? "Отправляем…" : "Отправить приглашение"}</button><button className="secondary" type="button" disabled={busy} onClick={onCancel}>{success ? "Закрыть" : "Отмена"}</button></div>
+  </form>;
+}
+function InviteCandidate({ need, candidate }: { need: EmployerNeed; candidate: EmployerCandidatePreview }) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [success, setSuccess] = useState("");
+  const pending = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  async function submit() {
+    if (pending.current || success || message.length > 2000) return;
+    pending.current = true;
+    setBusy(true); setError(null);
+    try {
+      await sendInvitation(need.id, { candidate_id: candidate.candidate_id, message: message === "" ? null : message });
+      if (mounted.current) setSuccess("Приглашение отправлено");
+    } catch (err) {
+      if (mounted.current) setError(err instanceof ApiError && err.code === "invitation_conflict"
+        ? new ApiError(err.status, err.code, "Новое приглашение недоступно. Проверьте историю приглашений по этой потребности.") : err);
+    } finally {
+      pending.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  }
+  return open ? <InvitationForm need={need} candidate={candidate} message={message} busy={busy} error={error} success={success} onChange={setMessage} onSubmit={() => void submit()} onCancel={() => setOpen(false)} />
+    : <div className="actions"><button disabled={!!success} onClick={() => setOpen(true)}>Пригласить</button><Feedback success={success} /></div>;
+}
+export function MatchCard({ candidate, need }: { candidate: EmployerCandidatePreview; need?: EmployerNeed }) {
   const date = verificationDate(candidate.assessment_verified_at);
   const breakdown = candidate.breakdown;
   return <article className="card match-card">
@@ -55,6 +96,7 @@ export function MatchCard({ candidate }: { candidate: EmployerCandidatePreview }
         <dt>Опыт</dt><dd><FactorValue factor={breakdown.experience} /></dd>
       </dl>
     </details>
+    {need?.status === "ACTIVE" && <InviteCandidate need={need} candidate={candidate} />}
   </article>;
 }
 export function MatchingView({ need, result, loading, error, onRetry, offset = 0, onPageChange }: {
@@ -79,6 +121,7 @@ export function MatchingView({ need, result, loading, error, onRetry, offset = 0
       </>}
       <div className="actions">
         {path && <Link href={`${path}/edit`}>{active ? "Редактировать потребность" : "К потребности"}</Link>}
+        {path && <Link href={`${path}/invitations`}>Приглашения</Link>}
         <Link href="/employer/needs">К списку потребностей</Link>
       </div>
     </section>
@@ -97,7 +140,7 @@ export function MatchingView({ need, result, loading, error, onRetry, offset = 0
             <p>Подходящих кандидатов пока нет.</p>
             <p>Проверьте требования или вернитесь к подбору позже.</p>
           </section>}
-          {currentPage.items.map((candidate) => <MatchCard key={candidate.candidate_id} candidate={candidate} />)}
+          {currentPage.items.map((candidate) => <MatchCard key={candidate.candidate_id} candidate={candidate} need={need} />)}
         </> : <p role="status">Загрузка подбора…</p>)}
     </>}
     {active && currentPage && error == null && onPageChange && <div className="actions match-pagination" aria-label="Страницы подбора">
