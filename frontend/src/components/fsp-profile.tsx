@@ -62,22 +62,26 @@ export function FspProfile() {
   const generation = useRef(0);
   const pending = useRef(false);
   const mounted = useRef(true);
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     const request = ++generation.current;
-    setLoading(true); setError(null);
-    try {
-      const result = await getFspStatus();
-      if (request === generation.current) setStatus(result);
-    } catch (err) { if (request === generation.current) setError(err); }
-    finally { if (request === generation.current) setLoading(false); }
+    return getFspStatus().then(
+      (result) => { if (mounted.current && request === generation.current) setStatus(result); },
+      (err) => { if (mounted.current && request === generation.current) setError(err); },
+    ).finally(() => { if (mounted.current && request === generation.current) setLoading(false); });
   }, []);
   useEffect(() => {
+    const requestGeneration = generation;
     mounted.current = true;
     void load();
-    return () => { mounted.current = false; generation.current++; };
+    return () => { mounted.current = false; requestGeneration.current++; };
   }, [load]);
+  function retry() {
+    if (pending.current || !mounted.current) return;
+    setLoading(true); setError(null);
+    void load();
+  }
   async function act(action: Action) {
-    if (pending.current) return;
+    if (pending.current || !mounted.current) return;
     pending.current = true;
     generation.current++;
     setBusy(true); setError(null); setSuccess("");
@@ -90,5 +94,5 @@ export function FspProfile() {
     } catch (err) { if (mounted.current) setError(err); }
     finally { pending.current = false; if (mounted.current) setBusy(false); }
   }
-  return <FspProfileView status={status} loading={loading} busy={busy} error={error} success={success} onRetry={() => void load()} onAction={(action) => void act(action)} />;
+  return <FspProfileView status={status} loading={loading} busy={busy} error={error} success={success} onRetry={retry} onAction={(action) => void act(action)} />;
 }

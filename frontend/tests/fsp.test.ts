@@ -3,10 +3,12 @@ import { afterEach, mock, test } from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
+import ts from "typescript";
 import { ApiError } from "../src/api";
 import { getFspStatus, verifyFsp, refreshFsp, unlinkFsp, type FspStatus } from "../src/fsp";
 import { FspProfileView, FspExplanation } from "../src/components/fsp-profile";
-import { deferred, handler } from "./invitation-handlers";
+import { deferred, handler, settle } from "./invitation-handlers";
 
 afterEach(() => mock.restoreAll());
 const status: FspStatus = {
@@ -15,6 +17,111 @@ const status: FspStatus = {
   fsp_achievement_score: 80, fsp_bonus: 4, competition_count: 1, best_result_level: "WINNER",
   achievements: [{ competition_name: "Cup", discipline: "Programming", year: 2025, event_date: null, result_level: "WINNER", placement: 1, scope: "TEAM" }],
 };
+
+type ProfileProps = Parameters<typeof FspProfileView>[0];
+function profileHarness(read: () => Promise<FspStatus>, mutate = async () => status) {
+  const values: unknown[] = [], writes: unknown[] = [];
+  let index = 0;
+  let effect: (() => () => void) | undefined;
+  let cleanup: (() => void) | undefined;
+  const file = "src/components/fsp-profile.tsx";
+  const source = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const declaration = source.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "FspProfile");
+  assert.ok(declaration);
+  const compiled = ts.transpileModule(declaration.getText(source).replace(/^export /, ""), {
+    fileName: file,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React },
+  }).outputText;
+  const profile = runInNewContext(`${compiled}\nFspProfile`, {
+    React: { createElement(_component: unknown, props: ProfileProps) { return props; } },
+    FspProfileView, getFspStatus: read, verifyFsp: mutate, refreshFsp: mutate, unlinkFsp: mutate,
+    useState(initial: unknown) {
+      const slot = index++;
+      if (!(slot in values)) values[slot] = initial;
+      return [values[slot], (next: unknown) => { writes.push([slot, next]); values[slot] = next; }];
+    },
+    useRef(initial: unknown) {
+      const slot = index++;
+      if (!(slot in values)) values[slot] = { current: initial };
+      return values[slot];
+    },
+    useCallback(callback: unknown) { return callback; },
+    useEffect(callback: () => () => void) { effect = callback; },
+  }) as () => ProfileProps;
+  return {
+    writes,
+    render() { index = 0; return profile(); },
+    mount() { cleanup = effect?.(); },
+    unmount() { cleanup?.(); cleanup = undefined; },
+  };
+}
+
+test("FSP initial effect starts loading without synchronous state updates", async () => {
+  const read = deferred<FspStatus>();
+  const profile = profileHarness(() => read.promise);
+  assert.equal(profile.render().loading, true);
+  profile.mount();
+  assert.deepEqual(profile.writes, []);
+  read.resolve(status); await settle();
+  assert.equal(profile.render().status, status);
+  assert.equal(profile.render().loading, false);
+});
+
+test("FSP effect restart ignores the older response without resetting request generation", async () => {
+  const reads = [deferred<FspStatus>(), deferred<FspStatus>()];
+  let calls = 0;
+  const profile = profileHarness(() => reads[calls++].promise);
+  profile.render(); profile.mount(); profile.unmount(); profile.mount();
+  assert.equal(calls, 2);
+  reads[0].resolve({ ...status, fsp_id: "STALE_ID" }); await settle();
+  assert.equal(profile.render().status, null);
+  assert.equal(profile.render().loading, true);
+  reads[1].resolve(status); await settle();
+  assert.equal(profile.render().status, status);
+  assert.equal(profile.render().loading, false);
+});
+
+test("FSP loading failure after unmount cannot update state", async () => {
+  const read = deferred<FspStatus>();
+  const profile = profileHarness(() => read.promise);
+  profile.render(); profile.mount(); profile.unmount();
+  read.reject(new ApiError(503, "fsp_provider_unavailable", "Недоступно")); await settle();
+  assert.deepEqual(profile.writes, []);
+});
+
+test("FSP retry resets loading and error in the event handler then uses server state", async () => {
+  const reads = [deferred<FspStatus>(), deferred<FspStatus>()];
+  let calls = 0;
+  const profile = profileHarness(() => reads[calls++].promise);
+  profile.render(); profile.mount();
+  const error = new ApiError(503, "fsp_provider_unavailable", "Недоступно");
+  reads[0].reject(error); await settle();
+  assert.equal(profile.render().error, error);
+  assert.equal(profile.render().loading, false);
+  profile.render().onRetry();
+  assert.equal(calls, 2);
+  assert.equal(profile.render().loading, true);
+  assert.equal(profile.render().error, null);
+  reads[1].resolve(status); await settle();
+  assert.equal(profile.render().status, status);
+  assert.equal(profile.render().loading, false);
+});
+
+test("FSP pending mutation blocks duplicate actions and retry and ignores unmounted callbacks", async () => {
+  const mutation = deferred<FspStatus>();
+  let reads = 0, mutations = 0;
+  const profile = profileHarness(async () => { reads++; return status; }, () => { mutations++; return mutation.promise; });
+  profile.render(); profile.mount(); await settle();
+  const controls = profile.render();
+  controls.onAction("verify"); controls.onAction("verify"); controls.onRetry();
+  assert.equal(mutations, 1); assert.equal(reads, 1);
+  assert.equal(profile.render().busy, true);
+  const beforeUnmount = profile.writes.length;
+  profile.unmount(); mutation.resolve(status); await settle();
+  assert.equal(profile.writes.length, beforeUnmount);
+  controls.onAction("refresh"); controls.onRetry();
+  assert.equal(mutations, 1); assert.equal(reads, 1);
+});
 test("FSP client uses exact endpoints, empty POST payloads and DELETE", async () => {
   const upstream = mock.method(globalThis, "fetch", async () => Response.json(status));
   assert.deepEqual(await getFspStatus(), status);
