@@ -1,6 +1,7 @@
 import { api } from "./api";
 import type { MatchBreakdown, Page } from "./employer-needs";
 import type { Grade, Skill, Specialization } from "./types";
+import type { FspResultLevel } from "./fsp";
 
 export type InvitationStatus = "SENT" | "VIEWED" | "ACCEPTED" | "DECLINED" | "WITHDRAWN";
 export interface NeedSnapshot {
@@ -18,6 +19,12 @@ export interface NeedSnapshot {
   company_name: string;
 }
 export interface CandidateSnapshot {
+  ranking_score?: number | null;
+  fsp_verified?: boolean | null;
+  fsp_achievement_score?: number | null;
+  fsp_bonus?: number | null;
+  competition_count?: number | null;
+  best_result_level?: FspResultLevel | null;
   candidate_id: string;
   display_name: string;
   specialization: Specialization;

@@ -28,6 +28,8 @@ const candidate = {
   verified_grade: "MIDDLE", skills: [python, fastapi, postgres], years_of_experience: 3,
   normalized_assessment_score: 90, assessment_verified_at: "2026-09-18T12:00:00Z",
   professional_fit_score: 76,
+  ranking_score: 72.2, fsp_verified: false, fsp_achievement_score: 0,
+  fsp_bonus: 0, competition_count: 0, best_result_level: null,
   breakdown: {
     assessment: { score: 60, max: 70, active: true },
     grade: { score: 16, max: 30, active: true, exact_match: false },
@@ -102,6 +104,7 @@ test("matching renders assessment verification date", async () => {
 });
 test("matching preview renders masked name and no contacts", async () => {
   assert.deepEqual(Object.keys(candidate).sort(), [
+    "ranking_score", "fsp_verified", "fsp_achievement_score", "fsp_bonus", "competition_count", "best_result_level",
     "candidate_id", "display_name", "specialization", "verified_grade", "skills",
     "years_of_experience", "normalized_assessment_score", "assessment_verified_at",
     "professional_fit_score", "breakdown", "matched_must_have_skills",

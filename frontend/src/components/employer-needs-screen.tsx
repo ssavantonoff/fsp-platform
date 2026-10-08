@@ -21,7 +21,7 @@ function NeedSummary({ need }: { need: EmployerNeed }) {
   return <dl className="need-meta">
     <dt>Специализация</dt><dd>{specializationLabels[need.specialization]}</dd>
     <dt>Требуемый уровень</dt><dd>{gradeLabels[need.required_grade]}</dd>
-    <dt>Зарплата</dt><dd>{need.salary_from}–{need.salary_to} ₽</dd>
+    <dt>Зарплата</dt><dd>{need.salary_from}–{need.salary_to} ₽ (RUB, до вычета налогов)</dd>
     <dt>Целевой опыт, лет</dt><dd>{need.target_experience_years ?? "Не учитывается"}</dd>
     <dt>Обязательные навыки</dt><dd>{need.must_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>
     <dt>Желательные навыки</dt><dd>{need.nice_to_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>

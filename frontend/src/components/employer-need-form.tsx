@@ -80,7 +80,7 @@ export function EmployerNeedForm({ values, skills, busy, errors, onChange, onSub
         {fieldError("target_experience_years")}
         <div className="columns">
           {(["salary_from", "salary_to"] as const).map((key) => <div key={key}>
-            <label>{key === "salary_from" ? "Зарплата от" : "Зарплата до"}
+            <label>{key === "salary_from" ? "Зарплата от" : "Зарплата до"} (RUB, до вычета налогов)
               <input
                 name={key}
                 type="number"
