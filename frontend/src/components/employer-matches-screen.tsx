@@ -10,6 +10,7 @@ import { gradeLabels, specializationLabels } from "@/types";
 import type { Skill } from "@/types";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
+import { FspExplanation } from "./fsp-profile";
 
 export function formatScore(value: number): string {
   return Number.isFinite(value) ? value.toFixed(1) : "—";
@@ -31,7 +32,7 @@ export function InvitationForm({ need, candidate, message, busy, success, error,
 }) {
   return <form className="invitation-form" onSubmit={(event) => { event.preventDefault(); if (!busy && message.length <= 2000) onSubmit(); }}>
     <h3>Пригласить: {candidate.display_name}</h3>
-    <p>{need.position_title}</p><p>Зарплата: {need.salary_from}–{need.salary_to} ₽</p>
+    <p>{need.position_title}</p><p>Зарплата: {need.salary_from}–{need.salary_to} ₽ (RUB, до вычета налогов)</p>
     <label>Сообщение (необязательно)<textarea value={message} maxLength={2000} disabled={busy} onChange={(event) => onChange(event.target.value)} /></label>
     <p className="hint">{message.length} / 2000</p>
     <Feedback error={error} success={success} />
@@ -71,8 +72,9 @@ export function MatchCard({ candidate, need }: { candidate: EmployerCandidatePre
   return <article className="card match-card">
     <div className="matching-header">
       <h2>{candidate.display_name}</h2>
-      <p className="match-score">Соответствие: {formatScore(candidate.professional_fit_score)} / 100</p>
+      <p className="match-score">Соответствие: {formatScore(candidate.professional_fit_score)} / 100 (Professional Fit)</p>
     </div>
+    <FspExplanation signal={candidate} />
     <dl className="match-meta">
       <dt>Специализация</dt><dd>{specializationLabels[candidate.specialization]}</dd>
       <dt>Подтверждённый уровень</dt><dd>{gradeLabels[candidate.verified_grade]}</dd>

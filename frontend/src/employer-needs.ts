@@ -1,5 +1,6 @@
 import { api } from "./api";
 import type { Grade, Role, Skill, Specialization } from "./types";
+import type { FspSummary } from "./fsp";
 
 export type NeedStatus = "DRAFT" | "ACTIVE" | "CLOSED";
 export interface NeedWrite {
@@ -55,7 +56,8 @@ export interface MatchBreakdown {
   nice_to_have: NiceToHaveBreakdown;
   experience: FactorBreakdown;
 }
-export interface EmployerCandidatePreview {
+export interface EmployerCandidatePreview extends FspSummary {
+  ranking_score: number;
   candidate_id: string;
   display_name: string;
   specialization: Specialization;

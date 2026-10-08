@@ -8,6 +8,7 @@ import type { CandidateProfile, Grade, Skill, Specialization } from "@/types";
 import { dateLabel } from "@/assessment";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
+import { FspProfile } from "./fsp-profile";
 
 export function CandidateScreen({ edit = false }: { edit?: boolean }) {
   return (
@@ -111,6 +112,7 @@ function CandidateContent({ edit }: { edit: boolean }) {
         <dt>Согласие на обработку данных</dt>
         <dd>{profile.personal_data_consent ? "Дано" : "Не дано"}</dd>
       </dl>
+      <FspProfile key={profile.id} />
       <div className="actions">
         <Link className="button secondary" href="/candidate/invitations">Приглашения от работодателей</Link>
         <Link className="button" href="/candidate/edit">
@@ -298,6 +300,7 @@ function CandidateEditor({
               maxLength={200}
               defaultValue={profile?.fsp_id ?? ""}
             />
+            <span className="hint">Ввод ID не подтверждает достижения. Проверка через mock-реестр доступна в профиле; смена ID снимает старую проверку.</span>
           </label>
           <label className="checkbox">
             <input

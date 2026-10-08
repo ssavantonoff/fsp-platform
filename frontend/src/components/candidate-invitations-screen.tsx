@@ -21,7 +21,7 @@ export function CandidateInvitationCard({ invitation, busy, expanded, onAction, 
     <dl>
       <dt>Специализация</dt><dd>{specializationLabels[need.specialization]}</dd>
       <dt>Требуемый уровень</dt><dd>{gradeLabels[need.required_grade]}</dd>
-      <dt>Зарплата</dt><dd>{need.salary_from}–{need.salary_to} ₽</dd>
+      <dt>Зарплата</dt><dd>{need.salary_from}–{need.salary_to} ₽ (RUB, до вычета налогов)</dd>
       <dt>Отправлено (UTC)</dt><dd>{invitationDate(invitation.sent_at)}</dd>
     </dl>
     {invitation.message && <p className="invitation-message">{invitation.message}</p>}

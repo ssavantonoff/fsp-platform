@@ -7,7 +7,15 @@ from app.config import get_settings
 from app.dependencies import Db
 from app.errors import install_error_handlers
 from app.mail import create_mailer
-from app.routes import assessments, auth, employer_needs, invitations, profiles, skills
+from app.routes import (
+    assessments,
+    auth,
+    employer_needs,
+    fsp,
+    invitations,
+    profiles,
+    skills,
+)
 from app.schemas import ErrorOut
 
 
@@ -26,7 +34,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["Content-Type"],
     )
 
@@ -46,6 +54,7 @@ def create_app() -> FastAPI:
     app.include_router(profiles.employer)
     app.include_router(employer_needs.router)
     app.include_router(invitations.router)
+    app.include_router(fsp.router)
     app.include_router(skills.router)
 
     @app.get("/health", tags=["health"])

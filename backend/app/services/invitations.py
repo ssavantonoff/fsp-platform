@@ -28,8 +28,9 @@ from app.models import (
     utcnow,
 )
 from app.schemas import SkillOut
-from app.services import employer_needs, matching
+from app.services import employer_needs, fsp, matching
 from app.services.candidate_assessments import CandidateAssessmentProvider
+from app.services.fsp_rules import FspSignal
 from app.services.matching_rules import CandidateMatchInput
 
 
@@ -98,7 +99,10 @@ def send(
             )
             assessment = provider.get_assessments([candidate.id]).get(candidate.id)
             evaluation = matching.evaluate_candidate(
-                criteria, candidate_input, assessment
+                criteria,
+                candidate_input,
+                assessment,
+                fsp=fsp.load_signals(db, [candidate.id]).get(candidate.id, FspSignal()),
             )
             if evaluation is None:
                 raise _unavailable()
@@ -141,6 +145,7 @@ def send(
                 website=company.website,
             )
             candidate_snapshot = CandidateSnapshot(
+                **matching.ranking_fields(evaluation),
                 candidate_id=candidate.id,
                 display_name=matching.masked_display_name(
                     candidate.first_name, surname_initial

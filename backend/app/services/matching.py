@@ -1,4 +1,6 @@
 from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import TypedDict
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, load_only, selectinload
@@ -8,6 +10,7 @@ from app.models import (
     CandidateProfile,
     EmployerNeed,
     EmployerNeedSkill,
+    FspResultLevel,
     NeedSkillKind,
     NeedStatus,
     Skill,
@@ -26,6 +29,8 @@ from app.services.candidate_assessments import (
     CandidateAssessment,
     CandidateAssessmentProvider,
 )
+from app.services.fsp import load_signals
+from app.services.fsp_rules import UNVERIFIED, FspSignal
 from app.services.matching_rules import (
     CandidateMatchInput,
     FactorContribution,
@@ -33,10 +38,51 @@ from app.services.matching_rules import (
     RankedCandidate,
     ScoringInput,
     eligible_candidate,
-    rank_candidates,
     score_professional_fit,
 )
 from app.services.profiles import employer_profile
+
+
+@dataclass(frozen=True)
+class EvaluatedCandidate(RankedCandidate):
+    fsp: FspSignal
+
+    @property
+    def ranking_score(self) -> float:
+        return 0.95 * self.fit.score + self.fsp.fsp_bonus
+
+
+def rank_evaluations(values: Iterable[EvaluatedCandidate]) -> list[EvaluatedCandidate]:
+    return sorted(
+        values,
+        key=lambda item: (
+            -item.ranking_score,
+            -item.fit.score,
+            -item.eligible.normalized_assessment_score,
+            item.eligible.candidate.candidate_id,
+        ),
+    )
+
+
+class RankingFields(TypedDict):
+    ranking_score: float
+    fsp_verified: bool
+    fsp_achievement_score: float
+    fsp_bonus: float
+    competition_count: int
+    best_result_level: FspResultLevel | None
+
+
+def ranking_fields(item: EvaluatedCandidate) -> RankingFields:
+    signal = item.fsp
+    return {
+        "ranking_score": item.ranking_score,
+        "fsp_verified": signal.fsp_verified,
+        "fsp_achievement_score": signal.fsp_achievement_score,
+        "fsp_bonus": signal.fsp_bonus,
+        "competition_count": signal.competition_count,
+        "best_result_level": signal.best_result_level,
+    }
 
 
 def load_need_criteria(db: Session, user: User, need_id: str) -> NeedCriteria:
@@ -107,6 +153,7 @@ def match_need(
             .order_by(CandidateProfile.id)
         ).all()
         assessments = provider.get_assessments([profile.id for profile, _ in pool])
+        fsp_signals = load_signals(db, [profile.id for profile, _ in pool])
         catalog = {
             row.id: SkillOut(id=row.id, name=row.name)
             for row in db.execute(
@@ -128,13 +175,16 @@ def match_need(
                 years_of_experience=profile.years_of_experience,
             )
             evaluation = evaluate_candidate(
-                criteria, candidate, assessments.get(profile.id)
+                criteria,
+                candidate,
+                assessments.get(profile.id),
+                fsp=fsp_signals.get(profile.id, FspSignal()),
             )
             if evaluation is None:
                 continue
             ranked.append(evaluation)
             profiles[profile.id] = (profile, surname_initial)
-        ordered = rank_candidates(ranked)
+        ordered = rank_evaluations(ranked)
         return MatchesPage(
             items=[
                 _preview(
@@ -155,7 +205,9 @@ def evaluate_candidate(
     criteria: NeedCriteria,
     candidate: CandidateMatchInput,
     assessment: CandidateAssessment | None,
-) -> RankedCandidate | None:
+    *,
+    fsp: FspSignal = UNVERIFIED,
+) -> EvaluatedCandidate | None:
     eligible = eligible_candidate(criteria, candidate, assessment)
     if eligible is None:
         return None
@@ -171,7 +223,7 @@ def evaluate_candidate(
             target_experience_years=criteria.target_experience_years,
         )
     )
-    return RankedCandidate(eligible=eligible, fit=fit)
+    return EvaluatedCandidate(eligible=eligible, fit=fit, fsp=fsp)
 
 
 def masked_display_name(first_name: str, surname_initial: str) -> str:
@@ -212,7 +264,7 @@ def _factor(factor: FactorContribution) -> FactorBreakdown:
 
 
 def _preview(
-    item: RankedCandidate,
+    item: EvaluatedCandidate,
     profile: CandidateProfile,
     surname_initial: str,
     criteria: NeedCriteria,
@@ -223,6 +275,7 @@ def _preview(
     fit = item.fit
     matched_nice = candidate.skill_ids & criteria.nice_to_have_skill_ids
     return EmployerCandidatePreview(
+        **ranking_fields(item),
         candidate_id=candidate.candidate_id,
         display_name=masked_display_name(profile.first_name, surname_initial),
         specialization=candidate.specialization,

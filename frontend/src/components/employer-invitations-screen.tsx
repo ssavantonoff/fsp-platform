@@ -6,6 +6,7 @@ import { invitationDate, invitationStatusLabels, listEmployerInvitations, withdr
 import type { EmployerInvitation } from "@/invitations";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
+import { FspExplanation } from "./fsp-profile";
 import { formatScore } from "./employer-matches-screen";
 import { InvitationListState, InvitationPagination, useInvitationPage } from "./invitation-page";
 
@@ -20,9 +21,10 @@ export function EmployerInvitationCard({ invitation, busy, onWithdraw }: {
     <dl>
       <dt>Позиция</dt><dd>{need.position_title}</dd>
       <dt>Отправлено (UTC)</dt><dd>{invitationDate(invitation.sent_at)}</dd>
-      <dt>Зарплата при отправке</dt><dd>{need.salary_from}–{need.salary_to} ₽</dd>
+      <dt>Зарплата при отправке</dt><dd>{need.salary_from}–{need.salary_to} ₽ (RUB, до вычета налогов)</dd>
       <dt>Соответствие при отправке</dt><dd>{formatScore(candidate.professional_fit_score)} / 100</dd>
     </dl>
+    <FspExplanation signal={candidate} />
     {invitation.message && <p className="invitation-message">{invitation.message}</p>}
     {contact && <section aria-label="Контакт кандидата"><h3>Контакт кандидата</h3><p>{contact.first_name} {contact.last_name}</p><p>{contact.email}</p></section>}
     {(invitation.status === "SENT" || invitation.status === "VIEWED") && <button className="secondary" disabled={busy} onClick={onWithdraw}>{busy ? "Отзываем…" : "Отозвать приглашение"}</button>}
