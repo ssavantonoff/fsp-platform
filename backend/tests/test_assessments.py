@@ -210,13 +210,13 @@ def test_blueprint_stability_and_no_answer_leak(client, ready, db_factory, grade
 
 
 def test_bank_integrity_and_immutable_seed(db_factory):
-    assert len(load_bank()) == 75
+    assert len(load_bank()) == 120
     with db_factory() as db:
         seed(db)
     with db_factory() as db:
         questions = list(db.scalars(select(AssessmentQuestion)))
-        assert len(questions) == 75
-        assert len({q.code for q in questions}) == 75
+        assert len(questions) == 120
+        assert len({q.code for q in questions}) == 120
         assert all(
             len(q.options) == 4 and sum(o.is_correct for o in q.options) == 1
             for q in questions
@@ -227,7 +227,7 @@ def test_bank_integrity_and_immutable_seed(db_factory):
                     q.difficulty
                     for q in questions
                     if q.grade == grade and q.competency == competency
-                ) == {"BASIC": 1, "APPLIED": 3, "ADVANCED": 1}
+                ) == {"BASIC": 2, "APPLIED": 4, "ADVANCED": 2}
         questions[0].is_active = False
         db.commit()
     with db_factory() as db:
@@ -861,7 +861,7 @@ def test_migration_0001_0002_preserves_profiles_and_resets_legacy_grade(database
         command.check(config)
 
 
-def test_deterministic_selection_and_cooldown_cannot_be_bypassed_by_specialization(
+def test_history_aware_selection_and_cooldown_survive_specialization_restore(
     client, ready, candidate_data, monkeypatch
 ):
     import random
@@ -880,13 +880,10 @@ def test_deterministic_selection_and_cooldown_cannot_be_bypassed_by_specializati
     monkeypatch.setattr(assessments, "utcnow", lambda: utcnow() + timedelta(days=8))
     second = start(client)
 
-    def variant(attempt):
-        return [
-            (q["question_id"], [o["id"] for o in q["options"]])
-            for q in attempt["questions"]
-        ]
-
-    assert variant(first) == variant(second)
+    first_ids = {q["question_id"] for q in first["questions"]}
+    second_ids = {q["question_id"] for q in second["questions"]}
+    assert len(first_ids) == len(second_ids) == 20
+    assert first_ids.isdisjoint(second_ids)
 
 
 def test_timeout_exact_boundary(client, ready, db_factory, monkeypatch):

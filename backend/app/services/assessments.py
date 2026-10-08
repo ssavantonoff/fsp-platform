@@ -1,8 +1,9 @@
 import random
+from collections import Counter
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -208,6 +209,58 @@ def bank_available(
     return True
 
 
+def question_family(code: str) -> str:
+    """The published bank uses one stable slot with a -vN suffix per lineage."""
+    family, separator, version = code.rpartition("-v")
+    return family if separator and version.isdecimal() else code
+
+
+def historical_exposure(
+    db: Session, profile: CandidateProfile, grade: Grade
+) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    rows = db.execute(
+        select(AssessmentQuestion.code, func.count(AssessmentAttemptQuestion.id))
+        .join(
+            AssessmentAttemptQuestion,
+            AssessmentAttemptQuestion.question_id == AssessmentQuestion.id,
+        )
+        .join(
+            AssessmentAttempt,
+            AssessmentAttempt.id == AssessmentAttemptQuestion.attempt_id,
+        )
+        .where(
+            AssessmentAttempt.candidate_id == profile.id,
+            AssessmentAttempt.specialization == profile.specialization,
+            AssessmentAttempt.target_grade == grade,
+        )
+        .group_by(AssessmentQuestion.code)
+    )
+    # Membership counts even when unanswered or completed by timeout. Versions of
+    # a published slot share exposure; neither history nor question rows are edited.
+    for code, count in rows:
+        counts[question_family(code)] += count
+    return counts
+
+
+def least_exposed_questions(
+    questions: list[AssessmentQuestion],
+    count: int,
+    exposure: Counter[str],
+    source: RandomSource,
+) -> list[AssessmentQuestion]:
+    levels: dict[int, list[AssessmentQuestion]] = {}
+    for question in questions:
+        levels.setdefault(exposure[question_family(question.code)], []).append(question)
+    selected: list[AssessmentQuestion] = []
+    for level in sorted(levels):
+        pool = levels[level]
+        selected.extend(source.sample(pool, min(count - len(selected), len(pool))))
+        if len(selected) == count:
+            break
+    return selected
+
+
 def next_available(attempt: AssessmentAttempt) -> datetime | None:
     if attempt.finished_at is None:
         return None
@@ -316,17 +369,20 @@ def start(
         raise ApiError(*errors[allowed.reason])
     source = rng or random.SystemRandom()
     questions = bank(db, profile.specialization, grade)
+    exposure = historical_exposure(db, profile, grade)
     selected = []
     for competency in COMPETENCIES[profile.specialization]:
         for difficulty, count in BLUEPRINT.items():
             selected.extend(
-                source.sample(
+                least_exposed_questions(
                     [
                         q
                         for q in questions
                         if q.competency == competency and q.difficulty == difficulty
                     ],
                     count,
+                    exposure,
+                    source,
                 )
             )
     question_ids = [q.id for q in selected]
