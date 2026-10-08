@@ -7,6 +7,9 @@ import pytest
 from sqlalchemy import select
 
 from app import question_bank
+from app.assessment_validation import (
+    AssessmentValidationCategory as Category,
+)
 from app.assessment_validation import validate_source_bank
 from app.models import AssessmentAttempt, AssessmentOption, AssessmentQuestion, User
 from app.question_bank import SeedQuestion, load_bank
@@ -108,6 +111,24 @@ SECOND_PASS_MINOR_CODES = {
 }
 
 
+DIVERSITY_CODES = {
+    f"backend-{grade}-{competency.lower()}-{slot}-v1"
+    for grade in ("junior", "middle", "senior")
+    for competency in assessments.COMPETENCIES["BACKEND"]
+    for slot in (6, 7, 8)
+}
+
+
+def assert_historical_validation(bank):
+    # Frozen P3 fixtures keep their old inventory; only that inventory differs
+    # from the new production 120/40/2-4-2 contract. All other checks still apply.
+    assert Counter(f.category for f in validate_source_bank(bank)) == {
+        Category.INVALID_TOTAL: 1,
+        Category.INVALID_GRADE_COUNT: 3,
+        Category.INVALID_BUCKET_COUNT: 45,
+    }
+
+
 def fingerprint(value):
     # Assertion output must not print real prompt/options or internal marking.
     return sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()
@@ -131,7 +152,7 @@ def frozen_bank(filename, expected_hash):
     assert content_hash == expected_hash
     questions = [SeedQuestion.model_validate(q) for q in json.loads(content)]
     assert len(questions) == 75
-    assert validate_source_bank(questions) == []
+    assert_historical_validation(questions)
     return questions
 
 
@@ -211,7 +232,7 @@ def test_exact_inventory_and_48_unchanged_records(baseline_bank, b1_bank):
                 for q in current
                 if q.grade == grade and q.competency == competency
             ) == {"BASIC": 1, "APPLIED": 3, "ADVANCED": 1}
-    assert validate_source_bank(current) == []
+    assert_historical_validation(current)
 
 
 @pytest.mark.parametrize(
@@ -247,14 +268,14 @@ def test_second_inventory_and_65_unchanged_records(b1_bank):
     unchanged = set(before) - old_codes
     assert len(old_codes) == len(new_codes) == 10
     assert set(before) - set(after) == old_codes
-    assert set(after) - set(before) == new_codes
+    assert set(after) - set(before) == new_codes | DIVERSITY_CODES
     assert len(unchanged) == 65 and set(before).intersection(after) == unchanged
-    assert len(current) == 75
-    assert Counter(q.version for q in current) == {1: 38, 2: 35, 3: 2}
+    assert len(current) == 120
+    assert Counter(q.version for q in current) == {1: 83, 2: 35, 3: 2}
     assert Counter(q.grade for q in current) == {
-        "JUNIOR": 25,
-        "MIDDLE": 25,
-        "SENIOR": 25,
+        "JUNIOR": 40,
+        "MIDDLE": 40,
+        "SENIOR": 40,
     }
     assert Counter(before[old].grade for old in old_codes) == {
         "MIDDLE": 3,
@@ -275,7 +296,7 @@ def test_second_inventory_and_65_unchanged_records(b1_bank):
                 q.difficulty
                 for q in current
                 if q.grade == grade and q.competency == competency
-            ) == {"BASIC": 1, "APPLIED": 3, "ADVANCED": 1}
+            ) == {"BASIC": 2, "APPLIED": 4, "ADVANCED": 2}
     assert validate_source_bank(current) == []
 
 
@@ -314,22 +335,33 @@ def assert_current_active_bank(db, expected_bank=None):
             select(AssessmentQuestion).where(AssessmentQuestion.is_active.is_(True))
         )
     )
-    assert len(rows) == 75
     if expected_bank is None:
         expected_bank = load_bank()
+    expected_count = len(expected_bank)
+    assert expected_count in (75, 120)
+    assert len(rows) == expected_count
+    grade_count = expected_count // 3
+    mix = (
+        {"BASIC": 2, "APPLIED": 4, "ADVANCED": 2}
+        if expected_count == 120
+        else {"BASIC": 1, "APPLIED": 3, "ADVANCED": 1}
+    )
     assert {q.code for q in rows} == {q.code for q in expected_bank}
     for grade in ("JUNIOR", "MIDDLE", "SENIOR"):
-        assert sum(q.grade == grade for q in rows) == 25
+        assert sum(q.grade == grade for q in rows) == grade_count
         for competency in assessments.COMPETENCIES["BACKEND"]:
-            assert Counter(
-                q.difficulty
-                for q in rows
-                if q.grade == grade and q.competency == competency
-            ) == {"BASIC": 1, "APPLIED": 3, "ADVANCED": 1}
+            assert (
+                Counter(
+                    q.difficulty
+                    for q in rows
+                    if q.grade == grade and q.competency == competency
+                )
+                == mix
+            )
         assert assessments.bank_available(
             rows_for_grade := [q for q in rows if q.grade == grade], "BACKEND"
         )
-        assert len(rows_for_grade) == 25
+        assert len(rows_for_grade) == grade_count
 
 
 def test_fresh_seed_and_repeat_are_idempotent(db_factory):
@@ -337,17 +369,17 @@ def test_fresh_seed_and_repeat_are_idempotent(db_factory):
         seed(db)
     with db_factory() as db:
         before = question_snapshot(db)
-        assert len(before) == 75
+        assert len(before) == 120
         assert not {old for old, _ in REPLACEMENTS + SECOND_REPLACEMENTS}.intersection(
             before
         )
-        assert len(list(db.scalars(select(AssessmentOption)))) == 300
+        assert len(list(db.scalars(select(AssessmentOption)))) == 480
         assert_current_active_bank(db)
     with db_factory() as db:
         seed(db)
     with db_factory() as db:
         assert question_snapshot(db) == before
-        assert len(list(db.scalars(select(AssessmentOption)))) == 300
+        assert len(list(db.scalars(select(AssessmentOption)))) == 480
 
 
 def test_baseline_upgrade_keeps_rows_options_ids_and_v2_history(
@@ -412,9 +444,11 @@ def test_second_upgrade_preserves_each_immediate_predecessor(
         seed(db)
     with db_factory() as db:
         after = question_snapshot(db)
-        assert len(after) == (112 if from_original else 85)
+        assert len(after) == (157 if from_original else 130)
         assert_current_active_bank(db)
-        assert set(after) == set(before) | {new for _, new in SECOND_REPLACEMENTS}
+        assert set(after) == (
+            set(before) | {new for _, new in SECOND_REPLACEMENTS} | DIVERSITY_CODES
+        )
         assert options_before <= {o.id for o in db.scalars(select(AssessmentOption))}
         assert len(list(db.scalars(select(AssessmentOption)))) == len(after) * 4
         second_old = {old for old, _ in SECOND_REPLACEMENTS}
