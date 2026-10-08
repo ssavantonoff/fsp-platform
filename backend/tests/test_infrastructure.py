@@ -33,6 +33,7 @@ def test_migration_upgrade_downgrade_and_schema_matches_models(database):
             "employer_needs",
             "employer_need_skills",
             "invitations",
+            "fsp_achievements",
         }
         command.check(config)
         command.downgrade(config, "base")
@@ -43,9 +44,7 @@ def test_migration_upgrade_downgrade_and_schema_matches_models(database):
 
 def test_need_migration_round_trip_preserves_assessment_state(database, db_factory):
     config = Config(str(Path(__file__).parents[1] / "alembic.ini"))
-    with database.begin() as connection:
-        config.attributes["connection"] = connection
-        command.downgrade(config, "0002")
+    # Create evidence before downgrade: the current ORM includes P4 columns.
     with db_factory() as db:
         seed(db, demo=True, demo_password="migration-test-password")
         candidate = db.scalar(select(CandidateProfile))
@@ -55,6 +54,7 @@ def test_need_migration_round_trip_preserves_assessment_state(database, db_facto
         db.commit()
     with database.begin() as connection:
         config.attributes["connection"] = connection
+        command.downgrade(config, "0002")
         original_tables = set(inspect(connection).get_table_names())
         assert "employer_needs" not in original_tables
         assert "employer_need_skills" not in original_tables
@@ -74,7 +74,12 @@ def test_need_migration_round_trip_preserves_assessment_state(database, db_facto
             else:
                 command.downgrade(config, revision)
             expected_tables = original_tables | (
-                {"employer_needs", "employer_need_skills", "invitations"}
+                {
+                    "employer_needs",
+                    "employer_need_skills",
+                    "invitations",
+                    "fsp_achievements",
+                }
                 if revision == "head"
                 else set()
             )

@@ -4,7 +4,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models import Grade, NeedStatus, Specialization
+from app.models import FspResultLevel, Grade, NeedStatus, Specialization
 from app.schemas import InputModel, SkillOut
 
 Salary = Annotated[
@@ -89,6 +89,12 @@ class MatchBreakdown(BaseModel):
 
 
 class EmployerCandidatePreview(BaseModel):
+    ranking_score: float
+    fsp_verified: bool
+    fsp_achievement_score: float
+    fsp_bonus: float
+    competition_count: int
+    best_result_level: FspResultLevel | None
     candidate_id: str
     display_name: str
     specialization: Specialization

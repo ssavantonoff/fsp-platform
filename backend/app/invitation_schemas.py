@@ -3,7 +3,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models import Grade, InvitationStatus, Specialization
+from app.models import FspResultLevel, Grade, InvitationStatus, Specialization
 from app.need_schemas import MatchBreakdown
 from app.schemas import InputModel, SkillOut
 
@@ -36,6 +36,13 @@ class StoredNeedSnapshot(NeedSnapshot):
 
 
 class CandidateSnapshot(BaseModel):
+    # Historical V1 evidence has no P4 explanation: never fabricate it on read.
+    ranking_score: float | None = None
+    fsp_verified: bool | None = None
+    fsp_achievement_score: float | None = None
+    fsp_bonus: float | None = None
+    competition_count: int | None = None
+    best_result_level: FspResultLevel | None = None
     candidate_id: str
     display_name: str
     specialization: Specialization

@@ -54,6 +54,12 @@ def test_send_uses_current_match_and_masks_candidate(
         saved = db.get(Invitation, result["id"])
         assert saved.employer_id == invitation_setup["employer_id"]
         assert set(saved.candidate_snapshot) == {
+            "ranking_score",
+            "fsp_verified",
+            "fsp_achievement_score",
+            "fsp_bonus",
+            "competition_count",
+            "best_result_level",
             "candidate_id",
             "display_name",
             "specialization",

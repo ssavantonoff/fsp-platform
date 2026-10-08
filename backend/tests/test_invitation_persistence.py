@@ -433,7 +433,7 @@ def test_invitation_migration_round_trip_preserves_existing_tables(
             else:
                 command.downgrade(config, target)
             assert set(inspect(connection).get_table_names()) == original_tables | (
-                {"invitations"} if target == "head" else set()
+                {"invitations", "fsp_achievements"} if target == "head" else set()
             )
             if target == "head":
                 table = invitations(connection)

@@ -41,6 +41,12 @@ NEED = dict.fromkeys(
 }
 CANDIDATE = dict.fromkeys(
     [
+        "ranking_score",
+        "fsp_verified",
+        "fsp_achievement_score",
+        "fsp_bonus",
+        "competition_count",
+        "best_result_level",
         "candidate_id",
         "display_name",
         "specialization",
@@ -237,8 +243,8 @@ def test_send_and_matches_use_same_evaluator(
     original = matching.evaluate_candidate
     calls = []
 
-    def tracked(*args):
-        result = original(*args)
+    def tracked(*args, **kwargs):
+        result = original(*args, **kwargs)
         calls.append((args[1].candidate_id, result))
         return result
 

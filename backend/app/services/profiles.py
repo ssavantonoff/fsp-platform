@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.models import CandidateProfile, EmployerProfile, Skill, User, utcnow
 from app.schemas import CandidateWrite, EmployerWrite
-from app.services import assessments
+from app.services import assessments, fsp
 
 
 def candidate_profile(db: Session, user: User) -> CandidateProfile:
@@ -58,6 +58,8 @@ def save_candidate(
         profile.personal_data_consent_at = utcnow()
     elif not data.personal_data_consent:
         profile.personal_data_consent_at = None
+    if not create and data.fsp_id != profile.fsp_id:
+        fsp.clear_verification(db, profile)
     for key, value in data.model_dump(exclude={"skill_ids"}).items():
         setattr(profile, key, value)
     profile.skills = skills

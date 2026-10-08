@@ -253,6 +253,12 @@ def test_matching_preview_exact_allowlist(
     assert set(result) == {"items", "total", "limit", "offset"}
     item = result["items"][0]
     assert set(item) == {
+        "ranking_score",
+        "fsp_verified",
+        "fsp_achievement_score",
+        "fsp_bonus",
+        "competition_count",
+        "best_result_level",
         "candidate_id",
         "display_name",
         "specialization",
@@ -460,7 +466,7 @@ def test_matching_ranks_before_pagination(client, active_need, matching_candidat
 
 
 @pytest.mark.parametrize(
-    "count,provider_queries,max_queries", [(5, 1, 7), (50, 1, 7), (501, 2, 9)]
+    "count,provider_queries,max_queries", [(5, 1, 8), (50, 1, 8), (501, 2, 11)]
 )
 def test_matching_batches_queries(
     client,
@@ -485,6 +491,9 @@ def test_matching_batches_queries(
     ]
     assert len(provider_reads) == provider_queries
     assert all(" in (" in sql for sql in provider_reads)
+    # P4 adds one aggregate evidence query per 500 profiles, never one per candidate.
+    fsp_reads = [sql for sql in statements if "fsp_achievements.competition_id" in sql]
+    assert len(fsp_reads) == provider_queries
     skill_reads = [sql for sql in statements if "join candidate_skills" in sql]
     assert len(skill_reads) == (2 if count > 500 else 1)
 

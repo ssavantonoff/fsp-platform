@@ -90,6 +90,18 @@ class InvitationStatus(StrEnum):
     WITHDRAWN = "WITHDRAWN"
 
 
+class FspResultLevel(StrEnum):
+    PARTICIPANT = "PARTICIPANT"
+    FINALIST = "FINALIST"
+    PRIZE_WINNER = "PRIZE_WINNER"
+    WINNER = "WINNER"
+
+
+class FspScope(StrEnum):
+    INDIVIDUAL = "INDIVIDUAL"
+    TEAM = "TEAM"
+
+
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow
@@ -161,6 +173,15 @@ class CandidateProfile(TimestampMixin, Base):
     __tablename__ = "candidate_profiles"
     __table_args__ = (
         CheckConstraint(
+            "(fsp_verified_id IS NULL AND fsp_verified_at IS NULL "
+            "AND fsp_synced_at IS NULL) OR "
+            "(fsp_verified_id IS NOT NULL AND fsp_id IS NOT NULL "
+            "AND fsp_verified_id = fsp_id AND fsp_verified_at IS NOT NULL "
+            "AND fsp_synced_at IS NOT NULL AND fsp_synced_at >= fsp_verified_at)",
+            name="consistent_fsp_verification",
+        ),
+        Index("uq_candidate_verified_fsp_id", "fsp_verified_id", unique=True),
+        CheckConstraint(
             "years_of_experience IS NULL OR years_of_experience BETWEEN 0 AND 80",
             name="valid_experience",
         ),
@@ -206,12 +227,46 @@ class CandidateProfile(TimestampMixin, Base):
     )
     years_of_experience: Mapped[float | None] = mapped_column(Float)
     fsp_id: Mapped[str | None] = mapped_column(String(200))
+    fsp_verified_id: Mapped[str | None] = mapped_column(String(200))
+    fsp_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    fsp_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     personal_data_consent: Mapped[bool] = mapped_column(Boolean, default=False)
     personal_data_consent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
     skills: Mapped[list[Skill]] = relationship(
         secondary=candidate_skills, lazy="selectin", order_by="Skill.name"
+    )
+
+
+class FspAchievement(Base):
+    __tablename__ = "fsp_achievements"
+    __table_args__ = (
+        UniqueConstraint("candidate_id", "external_id", name="uq_fsp_achievement"),
+        CheckConstraint(
+            "placement IS NULL OR placement > 0", name="valid_fsp_placement"
+        ),
+        CheckConstraint(
+            "year IS NULL OR year BETWEEN 1 AND 9999", name="valid_fsp_year"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    candidate_id: Mapped[str] = mapped_column(
+        ForeignKey("candidate_profiles.id", ondelete="CASCADE"), index=True
+    )
+    external_id: Mapped[str] = mapped_column(String(200))
+    competition_id: Mapped[str] = mapped_column(String(200))
+    competition_name: Mapped[str] = mapped_column(String(500))
+    discipline: Mapped[str] = mapped_column(String(200))
+    year: Mapped[int | None] = mapped_column(Integer)
+    event_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    result_level: Mapped[FspResultLevel] = mapped_column(
+        Enum(FspResultLevel, native_enum=False, create_constraint=True)
+    )
+    placement: Mapped[int | None] = mapped_column(Integer)
+    scope: Mapped[FspScope | None] = mapped_column(
+        Enum(FspScope, native_enum=False, create_constraint=True)
     )
 
 

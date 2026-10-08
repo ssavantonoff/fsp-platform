@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "MOCK-EMPTY": [],
+    "MOCK-PARTICIPANT": [{"external_id":"p1","competition_id":"cup-1","competition_name":"Кубок прототипа","discipline":"Программирование","year":2025,"result_level":"PARTICIPANT","scope":"INDIVIDUAL"}],
+    "MOCK-FINALIST": [{"external_id":"f1","competition_id":"cup-1","competition_name":"Кубок прототипа","discipline":"Программирование","year":2025,"result_level":"FINALIST","scope":"INDIVIDUAL"}],
+    "MOCK-PRIZE": [{"external_id":"r1","competition_id":"cup-1","competition_name":"Кубок прототипа","discipline":"Программирование","year":2025,"result_level":"PRIZE_WINNER","placement":2,"scope":"INDIVIDUAL"}],
+    "MOCK-WINNER": [{"external_id":"w1","competition_id":"cup-1","competition_name":"Кубок прототипа","discipline":"Программирование","year":2025,"result_level":"WINNER","placement":1,"scope":"INDIVIDUAL"}],
+    "MOCK-MULTI": [
+      {"external_id":"m1","competition_id":"cup-1","competition_name":"Кубок прототипа","discipline":"Программирование","year":2025,"result_level":"WINNER","placement":1,"scope":"INDIVIDUAL"},
+      {"external_id":"m2","competition_id":"cup-2","competition_name":"Командный турнир","discipline":"Кибербезопасность","year":2024,"result_level":"PARTICIPANT","scope":"TEAM"},
+      {"external_id":"m3","competition_id":"cup-3","competition_name":"Турнир данных","discipline":"Анализ данных","year":2023,"result_level":"FINALIST","scope":"INDIVIDUAL"}
+    ],
+    "MOCK-TEAM": [{"external_id":"t1","competition_id":"team-1","competition_name":"Командный турнир","discipline":"Кибербезопасность","year":2020,"result_level":"WINNER","placement":1,"scope":"TEAM"}]
+  }
+}
