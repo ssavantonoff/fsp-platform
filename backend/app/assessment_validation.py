@@ -46,9 +46,9 @@ def validate_source_bank(
     grades = tuple(Grade)
     difficulties = tuple(Difficulty)
     expected_mix = {
-        Difficulty.BASIC: 1,
-        Difficulty.APPLIED: 3,
-        Difficulty.ADVANCED: 1,
+        Difficulty.BASIC: 2,
+        Difficulty.APPLIED: 4,
+        Difficulty.ADVANCED: 2,
     }
     grade_counts: Counter[Grade] = Counter()
     bucket_counts: Counter[tuple[Grade, str, Difficulty]] = Counter()
@@ -132,21 +132,21 @@ def validate_source_bank(
             bucket_counts[question.grade, question.competency, question.difficulty] += 1
 
     findings = []
-    if len(questions) != 75:
+    if len(questions) != 120:
         findings.append(
             AssessmentValidationFinding(
                 category.INVALID_TOTAL,
                 None,
-                f"Expected 75 source records; found {len(questions)}.",
+                f"Expected 120 source records; found {len(questions)}.",
             )
         )
     for grade in grades:
-        if grade_counts[grade] != 25:
+        if grade_counts[grade] != 40:
             findings.append(
                 AssessmentValidationFinding(
                     category.INVALID_GRADE_COUNT,
                     None,
-                    f"{grade}: expected 25 source records; "
+                    f"{grade}: expected 40 source records; "
                     f"found {grade_counts[grade]}.",
                 )
             )

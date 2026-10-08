@@ -49,25 +49,25 @@ def fingerprint(questions):
 
 
 def test_real_source_bank_passes(source_bank):
-    assert len(source_bank) == 75
+    assert len(source_bank) == 120
     assert validate_source_bank(source_bank) == []
 
 
-@pytest.mark.parametrize("total", [74, 76])
+@pytest.mark.parametrize("total", [119, 121])
 def test_wrong_total_rejected(source_bank, total):
-    questions = source_bank[:74] if total == 74 else [*source_bank, question()]
+    questions = source_bank[:119] if total == 119 else [*source_bank, question()]
     assert Category.INVALID_TOTAL in categories(questions)
 
 
 def test_wrong_grade_count_rejected(source_bank):
     source_bank[0] = source_bank[0].model_copy(update={"grade": Grade.MIDDLE})
-    assert len(source_bank) == 75
+    assert len(source_bank) == 120
     findings = validate_source_bank(source_bank)
     assert [
         f.context for f in findings if f.category == Category.INVALID_GRADE_COUNT
     ] == [
-        "JUNIOR: expected 25 source records; found 24.",
-        "MIDDLE: expected 25 source records; found 26.",
+        "JUNIOR: expected 40 source records; found 39.",
+        "MIDDLE: expected 40 source records; found 41.",
     ]
 
 
@@ -79,8 +79,8 @@ def test_wrong_bucket_difficulty_mix_rejected(source_bank):
     findings = validate_source_bank(source_bank)
     assert Category.INVALID_GRADE_COUNT not in {f.category for f in findings}
     assert [f.context for f in findings] == [
-        "JUNIOR/PROGRAMMING/BASIC: expected 1 source record(s); found 2.",
-        "JUNIOR/PROGRAMMING/APPLIED: expected 3 source record(s); found 2.",
+        "JUNIOR/PROGRAMMING/BASIC: expected 2 source record(s); found 3.",
+        "JUNIOR/PROGRAMMING/APPLIED: expected 4 source record(s); found 3.",
     ]
 
 
@@ -196,7 +196,7 @@ def test_invalid_metadata_not_counted_in_buckets(source_bank, field, value):
     assert any(
         f.category == Category.INVALID_BUCKET_COUNT
         and f.context
-        == "JUNIOR/PROGRAMMING/BASIC: expected 1 source record(s); found 0."
+        == "JUNIOR/PROGRAMMING/BASIC: expected 2 source record(s); found 1."
         for f in findings
     )
 
@@ -368,30 +368,30 @@ def test_empty_bank_findings_use_stable_inventory_order():
     assert len(findings) == 49
     assert findings[:4] == [
         AssessmentValidationFinding(
-            Category.INVALID_TOTAL, None, "Expected 75 source records; found 0."
+            Category.INVALID_TOTAL, None, "Expected 120 source records; found 0."
         ),
         AssessmentValidationFinding(
             Category.INVALID_GRADE_COUNT,
             None,
-            "JUNIOR: expected 25 source records; found 0.",
+            "JUNIOR: expected 40 source records; found 0.",
         ),
         AssessmentValidationFinding(
             Category.INVALID_GRADE_COUNT,
             None,
-            "MIDDLE: expected 25 source records; found 0.",
+            "MIDDLE: expected 40 source records; found 0.",
         ),
         AssessmentValidationFinding(
             Category.INVALID_GRADE_COUNT,
             None,
-            "SENIOR: expected 25 source records; found 0.",
+            "SENIOR: expected 40 source records; found 0.",
         ),
     ]
     assert findings[4].context == (
-        "JUNIOR/PROGRAMMING/BASIC: expected 1 source record(s); found 0."
+        "JUNIOR/PROGRAMMING/BASIC: expected 2 source record(s); found 0."
     )
     assert findings[-1].context == (
         "SENIOR/TESTING_SECURITY_DEBUGGING/ADVANCED: "
-        "expected 1 source record(s); found 0."
+        "expected 2 source record(s); found 0."
     )
 
 
@@ -452,7 +452,7 @@ def test_loader_real_source_order_and_content_unchanged():
         SeedQuestion.model_validate(item) for item in json.loads(path.read_text())
     ]
     actual = load_bank()
-    assert len(actual) == 75
+    assert len(actual) == 120
     assert fingerprint(actual) == fingerprint(expected)
     assert validate_source_bank(actual) == []
 
@@ -489,7 +489,7 @@ def test_loader_reads_parses_and_validates_once(
 
     assert read_calls == [path]
     assert parse_json.call_count == 1
-    assert parse_question.call_count == 75
+    assert parse_question.call_count == 120
     validate.assert_called_once_with(actual)
     assert validate.call_args.args[0] is actual
     assert all(item is parsed[i] for i, item in enumerate(actual))

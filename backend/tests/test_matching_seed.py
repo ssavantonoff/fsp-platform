@@ -85,7 +85,7 @@ def test_matching_demo_is_explicit_and_preserves_base_demo(db_factory):
     with db_factory() as db:
         assert db.scalar(select(func.count()).select_from(User)) == 0
         assert {s.name for s in db.scalars(select(Skill))} == set(SKILLS)
-        assert db.scalar(select(func.count()).select_from(AssessmentQuestion)) == 75
+        assert db.scalar(select(func.count()).select_from(AssessmentQuestion)) == 120
     with db_factory() as db:
         seed(db, demo=True, demo_password=uuid4().hex)
     with db_factory() as db:
