@@ -25,7 +25,7 @@ export function CandidateInvitationCard({ invitation, busy, expanded, onAction, 
       <dt>Отправлено (UTC)</dt><dd>{invitationDate(invitation.sent_at)}</dd>
     </dl>
     <div className="actions">
-      <button className="secondary" disabled={busy} aria-expanded={expanded} aria-controls={`invitation-details-${invitation.id}`} onClick={onOpen}>{expanded ? "Скрыть подробности" : "Открыть"}</button>
+      <button className="secondary" disabled={busy} aria-expanded={expanded} aria-controls={expanded ? `invitation-details-${invitation.id}` : undefined} onClick={onOpen}>{expanded ? "Скрыть подробности" : "Открыть"}</button>
       {canRespond && <><button disabled={busy} onClick={() => onAction("accept")}>Принять</button><button className="secondary" disabled={busy} onClick={() => onAction("decline")}>Отклонить</button></>}
     </div>
     {expanded && <section className="workflow-details" id={`invitation-details-${invitation.id}`} aria-label="Детали приглашения">

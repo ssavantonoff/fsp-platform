@@ -63,12 +63,14 @@ test("candidate offer and response actions remain visible before explicit openin
   assert.match(compact, /Backend Engineer/);
   assert.match(compact, /180000\.00–230000\.00/);
   assert.match(compact, /07\.10\.2026/);
-  assert.match(compact, /aria-expanded="false" aria-controls="invitation-details-invitation"[^>]*>Открыть/);
+  assert.match(compact, /aria-expanded="false"[^>]*>Открыть/);
+  assert.doesNotMatch(compact, /aria-controls=/);
   assert.match(compact, />Принять<\/button>/);
   assert.match(compact, />Отклонить<\/button>/);
   assert.doesNotMatch(compact, /Описание позиции|Дополнительные условия|Сообщение работодателя/);
   const expanded = candidateHtml(candidateInvitation, true);
   assert.match(expanded, /aria-expanded="true"[\s\S]*Скрыть подробности/);
+  assert.match(expanded, /aria-controls="invitation-details-invitation"/);
   assert.match(expanded, /id="invitation-details-invitation" aria-label="Детали приглашения"/);
   for (const text of ["Описание позиции", "Дополнительные условия", "Сообщение работодателя", "Python", "Django", "Целевой опыт, лет"])
     assert.ok(expanded.includes(text), text);
