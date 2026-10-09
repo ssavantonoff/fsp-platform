@@ -68,9 +68,9 @@ export function useInvitationPage<T extends { id: string }>(fetchPage: (offset: 
 export function InvitationListState({ loading, error, empty, onRetry }: {
   loading: boolean; error: unknown; empty: boolean; onRetry: () => void;
 }) {
-  if (loading) return <p role="status">Загрузка приглашений…</p>;
-  if (error != null) return <section className="card"><Feedback error={error} /><button onClick={onRetry}>Повторить</button></section>;
-  return empty ? <section className="card"><p>Приглашений пока нет.</p></section> : null;
+  if (loading) return <section className="card workflow-list-state"><p role="status">Загрузка приглашений…</p></section>;
+  if (error != null) return <section className="card workflow-list-state"><Feedback error={error} /><button onClick={onRetry}>Повторить</button></section>;
+  return empty ? <section className="card workflow-list-state"><p>Приглашений пока нет.</p></section> : null;
 }
 export function InvitationPagination({ page, loading, busy, onPageChange }: {
   page: Page<{ id: string }> | null; loading: boolean; busy: boolean; onPageChange: (offset: number) => void;

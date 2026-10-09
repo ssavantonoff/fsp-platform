@@ -17,15 +17,28 @@ import type { NeedFormProps } from "./employer-need-form";
 import { Feedback } from "./feedback";
 
 const statusLabels = { DRAFT: "Черновик", ACTIVE: "Активна", CLOSED: "Закрыта" };
-function NeedSummary({ need }: { need: EmployerNeed }) {
-  return <dl className="need-meta">
-    <dt>Специализация</dt><dd>{specializationLabels[need.specialization]}</dd>
-    <dt>Требуемый уровень</dt><dd>{gradeLabels[need.required_grade]}</dd>
-    <dt>Зарплата</dt><dd>{need.salary_from}–{need.salary_to} ₽ (RUB, до вычета налогов)</dd>
-    <dt>Целевой опыт, лет</dt><dd>{need.target_experience_years ?? "Не учитывается"}</dd>
-    <dt>Обязательные навыки</dt><dd>{need.must_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>
-    <dt>Желательные навыки</dt><dd>{need.nice_to_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>
-  </dl>;
+function NeedSummary({ need, compact = false }: { need: EmployerNeed; compact?: boolean }) {
+  return <>
+    <dl className="need-meta workflow-facts">
+      <dt>Специализация</dt><dd>{specializationLabels[need.specialization]}</dd>
+      <dt>Требуемый уровень</dt><dd>{gradeLabels[need.required_grade]}</dd>
+      <dt>Зарплата</dt><dd>{need.salary_from}–{need.salary_to} ₽ (RUB, до вычета налогов)</dd>
+      <dt>Обязательные навыки</dt><dd>{need.must_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>
+      {!compact && <>
+        <dt>Целевой опыт, лет</dt><dd>{need.target_experience_years ?? "Не учитывается"}</dd>
+        <dt>Желательные навыки</dt><dd>{need.nice_to_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>
+      </>}
+    </dl>
+    {compact && <details className="workflow-details">
+      <summary>Дополнительные требования и описание</summary>
+      <dl className="need-meta workflow-facts">
+        <dt>Целевой опыт, лет</dt><dd>{need.target_experience_years ?? "Не учитывается"}</dd>
+        <dt>Желательные навыки</dt><dd>{need.nice_to_have_skills.map((skill) => skill.name).join(", ") || "—"}</dd>
+        <dt>Описание</dt><dd className="workflow-text">{need.description}</dd>
+        <dt>Дополнительные требования</dt><dd className="workflow-text">{need.additional_requirements || "—"}</dd>
+      </dl>
+    </details>}
+  </>;
 }
 function NeedError({ error }: { error: unknown }) {
   return <>
@@ -41,8 +54,8 @@ export function NeedsListView({ items, loading, error, onRetry, onAction, busyId
   onAction: (id: string, action: "activate" | "close") => void;
   busyIds?: string[];
 }) {
-  return <section className="need-list">
-    <div className="need-card-header"><h1>Потребности</h1><Link className="button" href="/employer/needs/new">Новая потребность</Link></div>
+  return <section className="need-list workflow-screen">
+    <div className="need-card-header workflow-heading"><div><h1>Потребности</h1><p className="hint">Требования к кандидатам, подбор и приглашения.</p></div><Link className="button" href="/employer/needs/new">Новая потребность</Link></div>
     {loading ? <p role="status">Загрузка потребностей…</p> : <>
       {error != null && <section className="card"><NeedError error={error} /><button onClick={onRetry}>Повторить</button></section>}
       {!items.length && error == null && <section className="card"><p>У вас пока нет потребностей.</p><Link className="button" href="/employer/needs/new">Создать потребность</Link></section>}
@@ -50,14 +63,14 @@ export function NeedsListView({ items, loading, error, onRetry, onAction, busyId
         const actions = needActions(need.status);
         const busy = busyIds.includes(need.id);
         const path = `/employer/needs/${encodeURIComponent(need.id)}`;
-        return <article className="card need-card" key={need.id}>
-          <div className="need-card-header"><h2>{need.position_title}</h2><span className="need-status">{statusLabels[need.status]}</span></div>
-          <NeedSummary need={need} />
+        return <article className="card need-card workflow-need-card" key={need.id}>
+          <div className="need-card-header"><h2>{need.position_title}</h2><span className="need-status workflow-status" data-status={need.status}>{statusLabels[need.status]}</span></div>
+          <NeedSummary need={need} compact />
           <div className="actions need-actions">
-            <Link href={`${path}/invitations`}>Приглашения</Link>
-            {actions.edit && (busy ? <span>Редактировать</span> : <Link href={`${path}/edit`}>Редактировать</Link>)}
-            {actions.matches && (busy ? <span>Подбор кандидатов</span> : <Link href={`${path}/matches`}>Подбор кандидатов</Link>)}
+            {actions.matches && (busy ? <span className="button" aria-disabled="true">Подбор кандидатов</span> : <Link className="button" href={`${path}/matches`}>Подбор кандидатов</Link>)}
             {actions.activate && <button disabled={busy} onClick={() => onAction(need.id, "activate")}>{busy ? "Активируем…" : "Активировать"}</button>}
+            {actions.edit && (busy ? <span className="button secondary" aria-disabled="true">Редактировать</span> : <Link className="button secondary" href={`${path}/edit`}>Редактировать</Link>)}
+            <Link className="button secondary" href={`${path}/invitations`}>Приглашения</Link>
             {actions.close && <button className="secondary" disabled={busy} onClick={() => onAction(need.id, "close")}>{busy ? "Закрываем…" : "Закрыть"}</button>}
             {need.status === "CLOSED" && <p className="hint">Потребность закрыта.</p>}
           </div>
@@ -151,14 +164,17 @@ export function NeedEditorView({ need, loading, error, form, onRetry, ready = tr
 }) {
   if (loading) return <p role="status">Загрузка потребности…</p>;
   const missing = error instanceof ApiError && error.code === "need_not_found";
-  return <section className="card need-card">
-    <h1>{need ? need.position_title : "Новая потребность"}</h1>
+  return <section className="card need-card workflow-editor">
+    <div className="need-card-header workflow-heading">
+      <h1>{need ? need.position_title : "Новая потребность"}</h1>
+      {need && <span className="need-status workflow-status" data-status={need.status}>{statusLabels[need.status]}</span>}
+    </div>
     <NeedError error={error} />
     {!ready && error != null && !missing && <button onClick={onRetry}>Повторить</button>}
     {need?.status === "CLOSED" ? <>
       <p className="notice">Потребность закрыта. Редактирование и подбор недоступны.</p>
       <NeedSummary need={need} />
-      <dl><dt>Описание</dt><dd>{need.description}</dd><dt>Дополнительные требования</dt><dd>{need.additional_requirements || "—"}</dd></dl>
+      <dl className="workflow-facts"><dt>Описание</dt><dd className="workflow-text">{need.description}</dd><dt>Дополнительные требования</dt><dd className="workflow-text">{need.additional_requirements || "—"}</dd></dl>
     </> : ready && !missing && <>
       {need && <p className="notice">{need.status === "ACTIVE"
         ? "Потребность активна. После сохранения следующий подбор будет рассчитан по обновлённым требованиям."
@@ -166,8 +182,10 @@ export function NeedEditorView({ need, loading, error, form, onRetry, ready = tr
       <Feedback success={success} />
       <EmployerNeedForm {...form} submitLabel={need ? "Сохранить" : "Создать потребность"} />
     </>}
-    <p><Link href="/employer/needs">К списку потребностей</Link></p>
-    {need && <p><Link href={`/employer/needs/${encodeURIComponent(need.id)}/invitations`}>Приглашения</Link></p>}
+    <div className="actions workflow-editor-navigation">
+      <Link className="button secondary" href="/employer/needs">К списку потребностей</Link>
+      {need && <Link className="button secondary" href={`/employer/needs/${encodeURIComponent(need.id)}/invitations`}>Приглашения</Link>}
+    </div>
   </section>;
 }
 export function EmployerNeedEditor({ needId }: { needId?: string }) {

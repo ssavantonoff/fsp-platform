@@ -186,6 +186,83 @@ test("need form disables invalid or busy submit", () => {
   assert.match(busy, /<button[^>]*type="submit"[^>]*disabled/);
   assert.doesNotMatch(render({}), /<button[^>]*type="submit"[^>]*disabled/);
 });
+test("need form groups all existing fields into five named sections", () => {
+  const html = renderToStaticMarkup(createElement(EmployerNeedForm, form));
+  const sections = html.match(/<section class="workflow-form-section"[\s\S]*?<\/section>/g)!;
+  assert.equal(sections.length, 5);
+  const expected = [
+    { title: "Основная информация", fields: ["position_title", "specialization", "description"] },
+    { title: "Требования к квалификации", fields: ["required_grade", "target_experience_years"] },
+    { title: "Навыки", fields: ["must_have_skill_ids", "nice_to_have_skill_ids"] },
+    { title: "Условия работы", fields: ["salary_from", "salary_to"] },
+    { title: "Дополнительная информация", fields: ["additional_requirements"] },
+  ];
+  expected.forEach(({ title, fields }, index) => {
+    assert.match(sections[index], new RegExp(`<h2 id="[^"]+">${title}</h2>`));
+    const headingId = sections[index].match(/<h2 id="([^"]+)"/)![1];
+    assert.ok(sections[index].includes(`aria-labelledby="${headingId}"`));
+    const actualFields = [...new Set([...sections[index].matchAll(/ name="([^"]+)"/g)].map((match) => match[1]))];
+    assert.deepEqual(actualFields, fields);
+  });
+  const control = (name: string) => html.match(new RegExp(`<(?:input|textarea)[^>]*name="${name}"[^>]*>`))![0];
+  assert.match(control("position_title"), /required=""/);
+  assert.match(control("position_title"), /maxLength="200"/);
+  assert.match(control("description"), /required=""/);
+  assert.match(control("target_experience_years"), /min="0"/);
+  assert.match(control("target_experience_years"), /step="0.5"/);
+  for (const name of ["salary_from", "salary_to"]) {
+    assert.match(control(name), /min="0"/);
+    assert.match(control(name), /step="0.01"/);
+    assert.match(control(name), /required=""/);
+  }
+});
+test("skill groups explain filtering and ranking through associated hints", () => {
+  const html = renderToStaticMarkup(createElement(EmployerNeedForm, form));
+  assert.match(html, /class="skills need-skills-required" aria-describedby="need-hint-must_have_skill_ids"/);
+  assert.match(html, /class="skills need-skills-preferred" aria-describedby="need-hint-nice_to_have_skill_ids"/);
+  assert.match(html, /Кандидат должен иметь все обязательные навыки, иначе он не попадёт в подбор/);
+  assert.match(html, /их отсутствие не исключает кандидата из подбора/);
+  assert.match(html, /name="additional_requirements"[^>]*aria-describedby="need-additional-hint"/);
+  assert.match(html, /id="need-additional-hint"[^>]*>Не влияет на Professional Fit и автоматическое ранжирование/);
+});
+test("compact Need cards retain essential data and disclose secondary information", () => {
+  const item = { ...need, target_experience_years: 3, additional_requirements: "Возможны командировки" };
+  const html = renderToStaticMarkup(createElement(NeedsListView, { ...listProps, items: [item] }));
+  const [essential, secondary] = html.split('<details class="workflow-details">');
+  assert.match(essential, /Backend engineer/);
+  for (const label of ["Специализация", "Требуемый уровень", "Зарплата", "Обязательные навыки"]) {
+    assert.ok(essential.includes(`<dt>${label}</dt>`));
+  }
+  assert.match(essential, /100000\.50–200000 ₽/);
+  assert.match(essential, /Python/);
+  assert.doesNotMatch(essential, /Целевой опыт|Желательные навыки|Django|Возможны командировки/);
+  assert.match(secondary, /<summary>Дополнительные требования и описание<\/summary>/);
+  assert.match(secondary, /Целевой опыт, лет<\/dt><dd>3/);
+  assert.match(secondary, /Django/);
+  assert.match(secondary, /Описание/);
+  assert.match(secondary, /Возможны командировки/);
+  assert.doesNotMatch(html, /<details[^>]*\sopen/);
+  const actions = html.slice(html.indexOf("</details>"));
+  assert.match(actions, /Активировать/);
+  assert.match(actions, /\/edit"/);
+  assert.match(actions, /\/invitations"/);
+});
+test("Need statuses retain Russian text and provide distinct style hooks", () => {
+  for (const [status, label] of [["DRAFT", "Черновик"], ["ACTIVE", "Активна"], ["CLOSED", "Закрыта"]] as const) {
+    const item = { ...need, status };
+    const html = renderToStaticMarkup(createElement(NeedsListView, { ...listProps, items: [item] }));
+    assert.ok(html.includes(`class="need-status workflow-status" data-status="${status}">${label}</span>`));
+    assert.ok(editorHtml({ need: item }).includes(`data-status="${status}">${label}</span>`));
+  }
+});
+test("long Need text stays escaped and fully available in secondary details", () => {
+  const html = renderToStaticMarkup(createElement(NeedsListView, {
+    ...listProps, items: [{ ...need, position_title: "<script>position</script>", description: "<img onerror=alert(1)>".repeat(20) }],
+  }));
+  assert.match(html, /&lt;script&gt;position&lt;\/script&gt;/);
+  assert.equal((html.match(/&lt;img onerror=alert\(1\)&gt;/g) ?? []).length, 20);
+  assert.doesNotMatch(html, /<script|<img/);
+});
 test("skill selection disables opposite category", () => {
   const html = renderToStaticMarkup(createElement(EmployerNeedForm, form));
   const inputs = html.match(/<input[^>]*type="checkbox"[^>]*>/g)!;
