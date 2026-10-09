@@ -17,13 +17,14 @@ export function AssessmentDashboardSummary({
   profile: CandidateProfile;
 }) {
   return (
-    <>
-      <section aria-label="Заявленный уровень">
+    <div className="assessment-summary">
+      <section aria-label="Заявленный уровень" className="assessment-declared">
         <h2>Заявленный уровень</h2>
         <p>{gradeLabels[profile.declared_grade]}</p>
+        <p className="hint">Указан вами в профиле. Это не подтверждение квалификации.</p>
       </section>
       <CurrentQualification verification={profile} />
-    </>
+    </div>
   );
 }
 
@@ -72,25 +73,50 @@ function Dashboard() {
       setBusy(false);
     }
   }
-  if (loading) return <p role="status">Загрузка доступных тестов…</p>;
+  return <AssessmentDashboardView
+    data={data}
+    error={error}
+    loading={loading}
+    selected={selected}
+    busy={busy}
+    onSelect={(grade) => {
+      setSelected(grade);
+      setError(null);
+    }}
+    onStart={() => void start()}
+    onRetry={() => {
+      setLoading(true);
+      void load();
+    }}
+    onRefresh={() => void load()} />;
+}
+
+export function AssessmentDashboardView({ data, error, loading, selected, busy, onSelect, onStart, onRetry, onRefresh }: {
+  data: Availability | null;
+  error: unknown;
+  loading: boolean;
+  selected: Grade | null;
+  busy: boolean;
+  onSelect: (grade: Grade) => void;
+  onStart: () => void;
+  onRetry: () => void;
+  onRefresh: () => void;
+}) {
+  if (loading) return <p className="assessment-loading" role="status">Загрузка доступных тестов…</p>;
   if (error instanceof ApiError && error.code === "profile_not_found")
     return (
-      <section className="card">
+      <section className="card assessment-screen">
         <h1>Подтверждение уровня</h1>
         <p>Сначала заполните профиль кандидата.</p>
-        <Link href="/candidate/edit">Создать профиль</Link>
+        <Link className="button" href="/candidate/edit">Создать профиль</Link>
       </section>
     );
   if (!data)
     return (
-      <section className="card">
+      <section className="card assessment-screen">
+        <h1>Подтверждение уровня</h1>
         <Feedback error={error} />
-        <button
-          onClick={() => {
-            setLoading(true);
-            void load();
-          }}
-        >
+        <button onClick={onRetry}>
           Повторить
         </button>
       </section>
@@ -98,24 +124,32 @@ function Dashboard() {
   const profile = data.verification;
   const choice = data.grades.find((g) => g.grade === selected);
   return (
-    <section className="card">
-      <h1>Подтверждение уровня</h1>
+    <section className="card assessment-screen">
+      <div className="assessment-heading">
+        <div>
+          <p className="eyebrow">Assessment</p>
+          <h1>Подтверждение уровня</h1>
+          <p>Пройдите тест по своей специализации, чтобы подтвердить профессиональный уровень.</p>
+        </div>
+        <span className="badge">{specializationLabels[data.specialization]}</span>
+      </div>
       <AssessmentDashboardSummary profile={profile} />
       <div className="actions">
-        <Link href="/candidate">Профиль</Link>
-        <Link href="/candidate/assessment/history">История попыток</Link>
+        <Link className="button secondary" href="/candidate">Профиль</Link>
+        <Link className="button secondary" href="/candidate/assessment/history">История попыток</Link>
       </div>
       {data.active_attempt_id && (
-        <p className="notice">
-          У вас есть активный тест.{" "}
-          <Link href={`/candidate/assessment/${data.active_attempt_id}`}>
+        <section className="notice assessment-active" aria-label="Активная попытка">
+          <h2>Тест уже начат</h2>
+          <p>У вас есть активный тест. Вернитесь к вопросам, чтобы продолжить.</p>
+          <Link className="button" href={`/candidate/assessment/${data.active_attempt_id}`}>
             Продолжить тест
           </Link>
-        </p>
+        </section>
       )}
       <div className="grade-cards">
         {data.grades.map((grade) => (
-          <article className="grade-card" key={grade.grade}>
+          <article className="grade-card assessment-grade-card" data-selected={selected === grade.grade} key={grade.grade}>
             <h2>{gradeLabels[grade.grade]}</h2>
             {grade.grade === profile.verified_grade && (
               <p className="success">Подтверждён</p>
@@ -126,11 +160,9 @@ function Dashboard() {
             <p>{availabilityLabel(grade)}</p>
             <button
               className={selected === grade.grade ? "" : "secondary"}
+              aria-pressed={selected === grade.grade}
               disabled={!grade.available || busy}
-              onClick={() => {
-                setSelected(grade.grade);
-                setError(null);
-              }}
+              onClick={() => onSelect(grade.grade)}
             >
               Выбрать {gradeLabels[grade.grade]}
             </button>
@@ -138,8 +170,8 @@ function Dashboard() {
         ))}
       </div>
       {selected && (
-        <div className="assessment-rules">
-          <h2>
+        <section className="assessment-rules" aria-labelledby="assessment-rules-heading">
+          <h2 id="assessment-rules-heading">
             Перед началом: {specializationLabels[data.specialization]} /{" "}
             {gradeLabels[selected]}
           </h2>
@@ -160,20 +192,19 @@ function Dashboard() {
               на том же уровне.
             </li>
           </ul>
-          <button
-            disabled={busy || !choice?.available}
-            onClick={() => void start()}
-          >
-            {busy ? "Начинаем…" : "Начать тест"}
-          </button>
-        </div>
+          <div className="actions">
+            <button disabled={busy || !choice?.available} onClick={onStart}>
+              {busy ? "Начинаем…" : "Начать тест"}
+            </button>
+          </div>
+        </section>
       )}
       <Feedback error={error} />
       {Boolean(error) && (
         <button
           className="secondary"
           disabled={busy}
-          onClick={() => void load()}
+          onClick={onRefresh}
         >
           Обновить доступность
         </button>

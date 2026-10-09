@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <section className="card">
-      <h1>FSP Platform</h1>
+    <section className="card narrow auth-screen">
+      <h1>Платформа ФСП</h1>
       <p>
         Создайте аккаунт кандидата или работодателя и заполните свой профиль.
       </p>
@@ -11,7 +11,7 @@ export default function Home() {
         <Link href="/register" className="button">
           Регистрация
         </Link>
-        <Link href="/login">Войти</Link>
+        <Link href="/login" className="button secondary">Войти</Link>
       </div>
     </section>
   );

@@ -4,6 +4,12 @@ import type { AttemptSummary } from "@/assessment";
 import { gradeLabels, specializationLabels } from "@/types";
 import type { CandidateProfile } from "@/types";
 
+export const assessmentOutcomeLabels: Record<AttemptSummary["status"], string> = {
+  IN_PROGRESS: "Тестирование не завершено",
+  PASSED: "Попытка успешно пройдена",
+  FAILED: "Попытка не пройдена",
+};
+
 export function CurrentQualification({
   verification,
 }: {
@@ -15,14 +21,14 @@ export function CurrentQualification({
     verification.normalized_assessment_score === null &&
     verification.assessment_verified_at === null;
   return (
-    <section aria-label="Текущая подтверждённая квалификация">
+    <section aria-label="Текущая подтверждённая квалификация" className="assessment-current">
       <h2>Текущая подтверждённая квалификация</h2>
       {!verification ? (
         <p>Данные текущей подтверждённой квалификации недоступны.</p>
       ) : (
         <>
-          {unverified && <p>Подтверждённой квалификации пока нет.</p>}
-          <dl>
+          {unverified && <p className="notice">Подтверждённой квалификации пока нет.</p>}
+          <dl className="workflow-facts">
             <dt>Специализация</dt>
             <dd>{specializationLabels[verification.specialization]}</dd>
             <dt>Подтверждённый уровень</dt>
@@ -76,20 +82,20 @@ export function AssessmentResult({
       return typeof score === "number" && score >= 50;
     });
   return (
-    <section className="card assessment-result">
-      <section aria-label="Результат попытки">
-        <h1>Результат попытки</h1>
+    <section className="card assessment-screen assessment-result">
+      <section aria-label="Результат попытки" className="assessment-summary">
+        <div className="assessment-result-heading">
+          <h1>Результат попытки</h1>
+          <p className="hint">Assessment · тестирование квалификации</p>
+        </div>
         <h2>
           {specializationLabels[attempt.specialization]} /{" "}
           {gradeLabels[attempt.target_grade]}
         </h2>
-        <p className={attempt.status === "PASSED" ? "success" : "notice"}>
-          {attempt.status === "PASSED"
-            ? "Попытка успешно пройдена"
-            : "Попытка не пройдена"}{" "}
-          — {attempt.status}
+        <p className={`assessment-outcome ${attempt.status === "PASSED" ? "success" : "notice"}`}>
+          {assessmentOutcomeLabels[attempt.status]}
         </p>
-        <dl>
+        <dl className="workflow-facts">
           <dt>Оценка попытки</dt>
           <dd>
             {attempt.normalized_assessment_score === null
@@ -100,9 +106,10 @@ export function AssessmentResult({
           <dd>{dateLabel(attempt.finished_at)}</dd>
         </dl>
         {attempt.completion_reason === "TIMEOUT" && (
-          <p>Время вышло. Результат рассчитан по сохранённым ответам.</p>
+          <p className="notice">Время вышло. Результат рассчитан по сохранённым ответам.</p>
         )}
-        <dl>
+        <h3>Результаты по компетенциям</h3>
+        <dl className="assessment-score-grid">
           {Object.entries(attempt.competency_scores ?? {}).map(([key, value]) => (
             <div className="score-row" key={key}>
               <dt>{competencyLabels[key] ?? key}</dt>
@@ -110,7 +117,7 @@ export function AssessmentResult({
             </div>
           ))}
         </dl>
-        <dl aria-label="Условия подтверждения">
+        <dl className="workflow-facts assessment-thresholds" aria-label="Условия подтверждения">
           <dt>Общий балл &gt;=70</dt>
           <dd>{overallMet ? "Выполнено" : "Не выполнено"}</dd>
           <dt>Каждая компетенция &gt;=50</dt>
@@ -132,14 +139,19 @@ export function AssessmentResult({
         )}
       </section>
       <CurrentQualification verification={verification} />
-      <p>
-        Следующая попытка на этом уровне — не ранее{" "}
-        {dateLabel(attempt.available_at)}.
-      </p>
+      {verification && <section aria-label="Заявленный уровень" className="assessment-declared">
+        <h2>Заявленный уровень</h2>
+        <p>{gradeLabels[verification.declared_grade]}</p>
+        <p className="hint">Указан вами в профиле. Для подтверждения квалификации нужно тестирование.</p>
+      </section>}
+      {attempt.available_at ? <p className="hint">
+          Следующая попытка на этом уровне — не ранее{" "}
+          {dateLabel(attempt.available_at)}.
+        </p> : <p className="hint">Доступность следующей попытки указана на странице выбора уровня.</p>}
       <div className="actions">
-        <Link href="/candidate/assessment">Выбрать уровень</Link>
-        <Link href="/candidate/assessment/history">История</Link>
-        <Link href="/candidate">Профиль</Link>
+        <Link className="button" href="/candidate/assessment">Выбрать уровень</Link>
+        <Link className="button secondary" href="/candidate/assessment/history">История</Link>
+        <Link className="button secondary" href="/candidate">Профиль</Link>
       </div>
     </section>
   );

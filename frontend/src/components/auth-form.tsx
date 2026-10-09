@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api } from "@/api";
+import { api, ApiError } from "@/api";
 import type { User } from "@/types";
 import { useAuth } from "./auth";
 import { Feedback } from "./feedback";
@@ -43,68 +43,92 @@ export function AuthForm({ register = false }: { register?: boolean }) {
       setBusy(false);
     }
   }
+  return <AuthFormView register={register} busy={busy} error={error} success={success} onSubmit={submit} />;
+}
+
+export function AuthFormView({ register, busy, error, success, onSubmit }: {
+  register: boolean;
+  busy: boolean;
+  error: unknown;
+  success: boolean;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  const invalid = (field: string) => error instanceof ApiError && error.fields.some((item) => item.field === field);
+  const describedBy = (field: string, hint?: string) => [hint, invalid(field) ? "auth-feedback" : null].filter(Boolean).join(" ") || undefined;
   if (success)
     return (
-      <section className="card">
-        <h1>Аккаунт создан</h1>
-        <p>
-          Подтвердите email по ссылке из письма. Для локальной разработки ссылка
-          выводится в журнал backend.
-        </p>
+      <section className="card narrow auth-screen auth-success">
+        <div className="auth-heading">
+          <span className="eyebrow">Регистрация</span>
+          <h1>Аккаунт создан</h1>
+        </div>
+        <Feedback success="Регистрация завершена." />
+        <p>Подтвердите email по ссылке из письма.</p>
         <div className="actions">
           <Link className="button" href="/login">
             Перейти ко входу
           </Link>
-          <Link href="/verify-email">Подтверждение email</Link>
+          <Link className="button secondary" href="/verify-email">Подтверждение email</Link>
         </div>
       </section>
     );
   return (
-    <section className="card narrow">
-      <h1>{register ? "Регистрация" : "Вход"}</h1>
-      <form onSubmit={submit}>
-        <fieldset disabled={busy}>
-          <label>
+    <section className="card narrow auth-screen">
+      <div className="auth-heading">
+        <span className="eyebrow">Платформа ФСП</span>
+        <h1 id="auth-title">{register ? "Регистрация" : "Вход"}</h1>
+        <p>{register ? "Создайте аккаунт кандидата или работодателя." : "Войдите, чтобы продолжить работу с платформой."}</p>
+      </div>
+      <form className="auth-form" onSubmit={onSubmit} aria-labelledby="auth-title" aria-describedby={error != null ? "auth-feedback" : undefined} aria-busy={busy}>
+        <fieldset className="auth-fields" disabled={busy}>
+          <label htmlFor="auth-email">
             Email
             <input
+              id="auth-email"
               name="email"
               type="email"
               required
               maxLength={254}
               autoComplete="email"
+              aria-invalid={invalid("email") || undefined}
+              aria-describedby={describedBy("email", "auth-email-hint")}
             />
           </label>
-          <label>
+          <p id="auth-email-hint" className="hint">{register ? "На этот адрес придёт ссылка для подтверждения email." : "Email, указанный при регистрации."}</p>
+          <label htmlFor="auth-password">
             Пароль
             <input
+              id="auth-password"
               name="password"
               type="password"
               required
               minLength={register ? 10 : 1}
               maxLength={128}
               autoComplete={register ? "new-password" : "current-password"}
+              aria-invalid={invalid("password") || undefined}
+              aria-describedby={describedBy("password", register ? "auth-password-hint" : undefined)}
             />
           </label>
           {register && (
             <>
-              <p className="hint">От 10 до 128 символов.</p>
-              <label>
-                Роль
-                <select name="role" required>
+              <p id="auth-password-hint" className="hint">От 10 до 128 символов.</p>
+              <label htmlFor="auth-role">
+                Тип аккаунта
+                <select id="auth-role" name="role" required aria-invalid={invalid("role") || undefined} aria-describedby={describedBy("role", "auth-role-hint")}>
                   <option value="CANDIDATE">Кандидат</option>
                   <option value="EMPLOYER">Работодатель</option>
                 </select>
               </label>
-              <p className="hint">Роль выбирается один раз при регистрации.</p>
+              <p id="auth-role-hint" className="hint">Тип аккаунта выбирается один раз при регистрации.</p>
             </>
           )}
-          <Feedback error={error} />
+          {error != null && <div id="auth-feedback"><Feedback error={error} /></div>}
           <button type="submit" disabled={busy}>
             {busy ? "Отправляем…" : register ? "Создать аккаунт" : "Войти"}
           </button>
         </fieldset>
       </form>
-      <p>
+      <p className="auth-footer">
         {register ? "Уже есть аккаунт?" : "Нет аккаунта?"}{" "}
         <Link href={register ? "/login" : "/register"}>
           {register ? "Войти" : "Зарегистрироваться"}
