@@ -100,7 +100,7 @@ export function Header() {
                 {needsNavigationVisible(user.role) && (
                   <Link href="/employer/needs" aria-current={pathname.startsWith("/employer/needs") ? "page" : undefined}>Потребности</Link>
                 )}
-                {user.role === "CANDIDATE" && <Link href="/candidate/invitations" aria-current={pathname === "/candidate/invitations" ? "page" : undefined}>Приглашения от работодателей</Link>}
+                {user.role === "CANDIDATE" && <Link href="/candidate/invitations" aria-current={pathname === "/candidate/invitations" ? "page" : undefined}>Приглашения</Link>}
                 <button className="secondary" disabled={busy} onClick={logout}>
                   {busy ? "Выходим…" : "Выйти"}
                 </button>

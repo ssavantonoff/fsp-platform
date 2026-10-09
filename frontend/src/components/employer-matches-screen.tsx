@@ -7,6 +7,7 @@ import { getMatches, getNeed } from "@/employer-needs";
 import { sendInvitation } from "@/invitations";
 import type { EmployerCandidatePreview, EmployerNeed, FactorBreakdown, MatchesPage } from "@/employer-needs";
 import { gradeLabels, specializationLabels } from "@/types";
+import { fspResultLabels } from "@/fsp";
 import type { Skill } from "@/types";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
@@ -84,30 +85,32 @@ export function MatchCard({ candidate, need, position }: { candidate: EmployerCa
       <div className="metric metric-primary" aria-label="Professional Fit">
         <span className="metric-label">Professional Fit</span>
         <p className="metric-value match-score">{formatScore(candidate.professional_fit_score)} / 100</p>
-        <p className="hint">Соответствие требованиям потребности</p>
       </div>
       <div className="metric metric-ranking" aria-label="Ranking Score">
         <span className="metric-label">Ranking Score</span>
         <p className="metric-value match-score">{formatScore(candidate.ranking_score)} / 100</p>
-        <p className="hint">Итоговый рейтинг с учётом ФСП</p>
       </div>
     </div>
-    <FspExplanation signal={candidate} showRanking={false} />
-    <dl className="match-meta">
-      <dt>Специализация</dt><dd>{specializationLabels[candidate.specialization]}</dd>
-      <dt>Подтверждённый уровень</dt><dd>{gradeLabels[candidate.verified_grade]}</dd>
-      <dt>Результат оценки</dt><dd>{candidate.normalized_assessment_score} / 100</dd>
-      <dt>Опыт, лет</dt><dd>{candidate.years_of_experience ?? "не указан"}</dd>
-    </dl>
-    <p>{date ? `Компетенция подтверждена: ${date}` : "Дата подтверждения не указана"}</p>
+    <FspExplanation signal={candidate} compact />
     <dl className="match-skills">
-      <dt>Навыки, указанные кандидатом</dt><dd>{skillNames(candidate.skills)}</dd>
       <dt>Обязательные навыки совпали</dt><dd>{skillNames(candidate.matched_must_have_skills)}</dd>
       <dt>Совпавшие желательные навыки</dt><dd>{skillNames(candidate.matched_nice_to_have_skills, "Нет совпадений")}</dd>
-      <dt>Не хватает из желательных</dt><dd>{skillNames(candidate.missing_nice_to_have_skills, "Все желательные навыки совпали.")}</dd>
     </dl>
     <details className="match-breakdown">
       <summary>Почему такой результат</summary>
+      <dl className="match-meta">
+        <dt>Результат оценки</dt><dd>{candidate.normalized_assessment_score} / 100</dd>
+        <dt>Опыт, лет</dt><dd>{candidate.years_of_experience ?? "не указан"}</dd>
+        <dt>Навыки, указанные кандидатом</dt><dd>{skillNames(candidate.skills)}</dd>
+        <dt>Не хватает из желательных</dt><dd>{skillNames(candidate.missing_nice_to_have_skills, "Все желательные навыки совпали.")}</dd>
+        {candidate.fsp_verified && <>
+          <dt>Участий ФСП</dt><dd>{candidate.competition_count}</dd>
+          <dt>Лучший результат ФСП</dt><dd>{candidate.best_result_level ? fspResultLabels[candidate.best_result_level] : "Нет достижений"}</dd>
+          <dt>Оценка достижений ФСП</dt><dd>{formatScore(candidate.fsp_achievement_score)} / 100</dd>
+        </>}
+      </dl>
+      <p>{date ? `Компетенция подтверждена: ${date}` : "Дата подтверждения не указана"}</p>
+      <h3>Факторы Professional Fit</h3>
       <dl>
         <dt>Результат оценки</dt><dd><FactorValue factor={breakdown.assessment} /></dd>
         <dt>Уровень</dt><dd><FactorValue factor={breakdown.grade} /><p className="hint">{breakdown.grade.exact_match
@@ -156,6 +159,7 @@ export function MatchingView({ need, result, loading, error, onRetry, offset = 0
       {need && !active ? <p className="notice">{need.status === "DRAFT"
         ? "Подбор доступен после активации потребности." : "Для закрытой потребности подбор недоступен."}</p>
         : active && error == null && (currentPage ? <>
+          <p className="ranking-explanation">Professional Fit — соответствие требованиям потребности. Ranking V2: 95% Professional Fit + до 5 баллов за подтверждённые достижения ФСП.</p>
           <p className="match-count">Подходящих кандидатов: {currentPage.total}</p>
           {currentPage.items.length === 0 && currentPage.total === 0 && <section className="card">
             <p>Подходящих кандидатов пока нет.</p>

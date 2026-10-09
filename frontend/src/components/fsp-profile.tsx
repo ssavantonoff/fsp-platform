@@ -8,8 +8,14 @@ import { invitationDate } from "@/invitations";
 import { Feedback } from "./feedback";
 
 type Action = "verify" | "refresh" | "unlink";
-export function FspExplanation({ signal, showRanking = true }: { signal: Partial<{ [K in keyof FspSummary]: FspSummary[K] | null }> & { ranking_score?: number | null }; showRanking?: boolean }) {
+export function FspExplanation({ signal, showRanking = true, compact = false }: { signal: Partial<{ [K in keyof FspSummary]: FspSummary[K] | null }> & { ranking_score?: number | null }; showRanking?: boolean; compact?: boolean }) {
   if (signal.ranking_score == null && signal.fsp_verified == null) return null;
+  if (compact) return <section className="fsp-explanation fsp-compact" aria-label="Вклад ФСП">
+    {signal.fsp_verified === true
+      ? <span className="badge badge-primary">ФСП · MOCK / прототип</span>
+      : <span>ФСП не подтверждена</span>}
+    <strong>Вклад ФСП: {signal.fsp_verified === true ? signal.fsp_bonus?.toFixed(1) : "0"} / 5</strong>
+  </section>;
   return <section className="fsp-explanation" aria-label="Рейтинг и ФСП">
     {showRanking && signal.ranking_score != null && <p><strong>Ranking Score: {signal.ranking_score.toFixed(1)} / 100</strong></p>}
     {signal.fsp_verified === true ? <>

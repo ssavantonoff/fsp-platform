@@ -94,8 +94,9 @@ export function CandidateProfileView({ profile }: { profile: CandidateProfile })
         </div>
         <div className="actions">
           <Link className="button" href="/candidate/edit">Редактировать профиль</Link>
-          <Link className="button secondary" href="/candidate/assessment">Подтвердить уровень</Link>
-          <Link href="/candidate/invitations">Приглашения от работодателей</Link>
+          <Link className="button secondary" href="/candidate/assessment">
+            {profile.verified_grade ? "Результаты тестирования" : "Подтвердить уровень"}
+          </Link>
         </div>
       </section>
       <div className="profile-grid">
@@ -104,7 +105,7 @@ export function CandidateProfileView({ profile }: { profile: CandidateProfile })
             <div className="section-heading">
               <h2>Квалификация</h2>
               <span className={`badge ${profile.verified_grade ? "badge-success" : "badge-neutral"}`}>
-                {profile.verified_grade ? "Подтверждена assessment" : "Пока не подтверждена"}
+                {profile.verified_grade ? "Подтверждена тестированием" : "Пока не подтверждена"}
               </span>
             </div>
             <div className="qualification-metrics">
@@ -113,7 +114,7 @@ export function CandidateProfileView({ profile }: { profile: CandidateProfile })
                 <strong className="metric-value">{profile.verified_grade ? gradeLabels[profile.verified_grade] : "—"}</strong>
               </div>
               <div className="metric">
-                <span className="metric-label">Assessment score</span>
+                <span className="metric-label">Результат тестирования</span>
                 <strong className="metric-value">{profile.normalized_assessment_score === null ? "—" : <>{profile.normalized_assessment_score} <small>/ 100</small></>}</strong>
               </div>
             </div>
@@ -125,7 +126,7 @@ export function CandidateProfileView({ profile }: { profile: CandidateProfile })
               <span className="badge badge-neutral">Указаны кандидатом</span>
             </div>
             {profile.skills.length ? <ul className="skill-chips">{profile.skills.map((skill) => <li key={skill.id}>{skill.name}</li>)}</ul> : <p>Навыки не указаны.</p>}
-            <p className="hint">Этот список заполнен самостоятельно. Подтверждённая квалификация показана отдельно, по результатам assessment.</p>
+            <p className="hint">Этот список заполнен самостоятельно. Подтверждённая квалификация показана отдельно, по результатам тестирования.</p>
           </section>
           <section className="card" aria-label="О кандидате">
             <h2>О кандидате</h2>

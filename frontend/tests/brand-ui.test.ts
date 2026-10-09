@@ -23,16 +23,25 @@ function text(html: string) { return html.replace(/<[^>]*>/g, "").replace(/\s+/g
 test("candidate separates canonical qualification from declared grade and skills", () => {
   const html = view();
   assert.match(html, /<h1>Мария Смирнова<\/h1>/);
-  assert.match(html, /aria-label="Квалификация"[\s\S]*Подтверждена assessment/);
-  assert.match(text(html), /Подтверждённый уровеньMiddleAssessment score90 \/ 100/);
+  assert.match(html, /aria-label="Квалификация"[\s\S]*Подтверждена тестированием/);
+  assert.match(text(html), /Подтверждённый уровеньMiddleРезультат тестирования90 \/ 100/);
   assert.match(html, /aria-label="Самостоятельно указанные навыки"/);
   assert.match(html, /Указаны кандидатом/);
   assert.match(html, /<li>Python<\/li>/);
   assert.match(html, /Заявленный уровень<\/dt><dd>Senior/);
   assert.doesNotMatch(html, /Подтверждённые навыки|Подтверждённый опыт/);
-  for (const path of ["/candidate/edit", "/candidate/assessment", "/candidate/invitations"])
+  for (const path of ["/candidate/edit", "/candidate/assessment"])
     assert.ok(html.includes('href="' + path + '"'));
+  assert.doesNotMatch(html, /href="\/candidate\/invitations"/);
   assert.match(html, /MOCK \/ прототип/);
+});
+test("candidate assessment CTA reflects verification and keeps the existing assessment route", () => {
+  const verified = view();
+  assert.match(verified, /href="\/candidate\/assessment">\s*Результаты тестирования\s*<\/a>/);
+  assert.doesNotMatch(verified, /Подтвердить уровень|Подтверждена assessment/);
+  const unverified = view({ verified_grade: null, normalized_assessment_score: null, assessment_verified_at: null });
+  assert.match(unverified, /href="\/candidate\/assessment">\s*Подтвердить уровень\s*<\/a>/);
+  assert.doesNotMatch(unverified, /Результаты тестирования/);
 });
 test("candidate canonical unverified and empty optional fields do not fabricate evidence", () => {
   const html = view({
@@ -45,14 +54,14 @@ test("candidate canonical unverified and empty optional fields do not fabricate 
   assert.match(html, /Город<\/dt><dd>Не указан/);
   assert.match(html, /Опыт, лет<\/dt><dd>Не указан/);
   assert.match(html, /Согласие на обработку данных<\/dt><dd>Не дано/);
-  assert.doesNotMatch(html, /Подтверждена assessment|NaN|Invalid Date|undefined/);
+  assert.doesNotMatch(html, /Подтверждена тестированием|NaN|Invalid Date|undefined/);
 });
 test("candidate keeps legitimate zero assessment and experience and escapes user content", () => {
   const html = view({
     normalized_assessment_score: 0, years_of_experience: 0, about: "<script>private()</script>",
     skills: [{ id: "unsafe", name: "<b>Skill</b>" }],
   });
-  assert.match(text(html), /Assessment score0 \/ 100/);
+  assert.match(text(html), /Результат тестирования0 \/ 100/);
   assert.match(html, /Опыт, лет<\/dt><dd>0<\/dd>/);
   assert.match(html, /&lt;script&gt;private/);
   assert.match(html, /&lt;b&gt;Skill/);

@@ -15,6 +15,17 @@ Presentation changes reuse the existing global CSS and React components. No UI f
 - Matching: masked identity, separately styled Professional Fit and Ranking Score, FSP contribution, skills and existing factor disclosure/invitation action.
 - Responsive layouts at 375, 768 and 1440 CSS pixels.
 
+### Final visual polish
+
+- Matching cards initially show position, masked name, specialization, verified grade, both server scores, individual FSP contribution, matched required/optional skills and invitation action.
+- The native details block is closed by default. It keeps assessment score/date, experience, all declared skills, missing optional skills, verified FSP aggregates and the full Professional Fit breakdown. No data is discarded.
+- The Ranking V2 explanation appears once above the results. Compact FSP presentation is used only by Matching; the existing invitation snapshot presentation retains its full explanation.
+- Verified profiles link to the existing `/candidate/assessment` route as “Результаты тестирования”; unverified profiles retain “Подтвердить уровень”. Qualification labels use natural Russian wording.
+- The duplicate invitation link in the profile hero is removed. The same role navigation route remains available as “Приглашения”.
+- At 375px, body text is 15px, metric/status/help labels are 14px, secondary position/brand captions are 13px. Navigation links, action links, buttons and the details summary have at least 44px touch height. Mobile card padding/gaps are reduced while profile data remains available.
+
+On the same real demo data at 375px, closed Matching cards changed from 1416/1311/1287/1311px to 621/615/615/615px (a 52–56% reduction). The default Matching page changed from 6359px to 3671px. At 1440px the closed cards are 490/487/487/487px. These are measured layout values for the supplied demo content, not height limits imposed on arbitrary content.
+
 Backend, assessment engine/content, ranking/eligibility rules, API contracts and permissions are unchanged. The existing AuthProvider, RoleGate, CandidateEditor, InvitationForm, InviteCandidate, MatchesContent and FspProfile functions were compared against origin/main and are unchanged. Header logout behavior is unchanged. Matching items keep server order; the displayed position uses page offset plus item index only. Scores and evidence come from server responses.
 
 ## Brand source
@@ -77,13 +88,13 @@ All required frontend commands passed:
 - `npm ci` — unchanged lockfile/dependency versions.
 - `npm run lint`.
 - `npm run typecheck`.
-- `npm test` — **126 passed, 0 failed**.
+- `npm test` — **130 passed, 0 failed**.
 - `npm run build`.
 - `git diff --check`.
 
-Six regression tests were added: verified vs declared qualification/skills, canonical unverified and empty values, zero values and escaped content, official asset byte integrity/local fonts, feedback contrast, independent display of server Professional Fit/Ranking/FSP values. Existing privacy, invitation state, stale response, unmount and duplicate action regressions passed.
+Ten regression tests were added across P7-A: verified vs declared qualification/skills, canonical unverified and empty values, zero values and escaped content, official asset byte integrity/local fonts, feedback contrast, independent display of server Professional Fit/Ranking/FSP values; the polish adds verified/unverified CTA behavior, essential information outside closed details, one shared Ranking V2 explanation and retained verified FSP details/visible zero bonus. Existing privacy, invitation state, stale response, unmount and duplicate action regressions passed. The existing FSP invitation regression also confirms its full aggregate/formula presentation is preserved.
 
-### Real browser smoke
+### Initial P7-A real browser smoke
 
 A separate local SQLite demo database was migrated and populated by existing `--demo --matching-demo` seeds. No production database was used or reset.
 
@@ -98,7 +109,15 @@ A separate local SQLite demo database was migrated and populated by existing `--
 - Unlink did not change persisted invitation snapshots: both candidate/need snapshot SHA-256 hashes are identical before/after unlink.
 - Actual API outage produced error feedback without horizontal overflow; explicit retry recovered after restarting the local API.
 
-Four full-page JPEG screenshots were captured from the working application and supplied with the task report: candidate desktop 1440/mobile 375; Matching desktop 1440/mobile 375. Matching screenshots show the first factor disclosure expanded. They use the existing demo data and real server responses, without fabricated DOM/API state.
+### Final polish browser smoke
+
+- Candidate and Matching rechecked at 375/768/1440px with document scroll width equal to viewport width. Mobile font/touch sizes and compact card heights measured from the live DOM.
+- The Matching details block opens with a click and closes with Enter; it preserves all additional characteristics and the server breakdown. The formula remains present only once with details open or closed.
+- A new local demo invitation was sent to the Senior candidate. Its employer card had no contact before ACCEPTED; after acceptance, both sides showed their respective contact sections. Success feedback and disabled repeat submission were verified.
+- Both verified and canonical unverified profile CTAs were checked; the verified CTA opens the existing Assessment dashboard without starting a test. The invitation route occurs only once in the candidate page, in main navigation.
+- Existing profile data saved successfully on mobile; FSP refresh kept the canonical qualification and achievement contribution intact.
+
+Four new full-page JPEG screenshots were captured from the working application and supplied with the polish report: candidate desktop 1440/mobile 375; Matching desktop 1440/mobile 375. Matching screenshots show the default compact state with all details closed. They use the existing demo data and real server responses, without fabricated DOM/API state. Original P7-A screenshots remain separate from these review artifacts.
 
 ## Remaining review
 
