@@ -85,13 +85,57 @@ test("matching preserves ranked candidate order", async () => {
 });
 test("matching renders effective breakdown and excluded factors", async () => {
   const html = await card();
-  assert.match(html, /Соответствие: 76\.0 \/ 100/);
+  assert.match(html, /aria-label="Professional Fit"[\s\S]*76\.0 \/ 100/);
   assert.match(html, /60\.0 \/ 70\.0/);
   assert.match(html, /16\.0 \/ 30\.0/);
   assert.equal((html.match(/Не участвует в расчёте/g) ?? []).length, 2);
   assert.doesNotMatch(html, /0\.0 \/ 0\.0|45\.0|25\.0/);
   assert.match(html, /<details/);
   assert.match(html, /<summary>Почему такой результат<\/summary>/);
+});
+test("matching separates server Professional Fit, Ranking Score and FSP bonus without recalculating", async () => {
+  const html = await card({ professional_fit_score: 76, ranking_score: 81, fsp_verified: true,
+    fsp_bonus: 4, fsp_achievement_score: 80, competition_count: 1, best_result_level: "WINNER" });
+  assert.match(html, /class="metric metric-primary" aria-label="Professional Fit"[\s\S]*?76\.0 \/ 100/);
+  assert.match(html, /class="metric metric-ranking" aria-label="Ranking Score"[\s\S]*?81\.0 \/ 100/);
+  assert.equal((html.match(/Ranking Score/g) ?? []).length, 2);
+  assert.match(html, /Вклад ФСП: 4\.0 \/ 5/);
+  assert.match(html, /MOCK \/ прототип/);
+  assert.doesNotMatch(html, /76\.2 \/ 100|вероятность|Шанс найма/i);
+});
+test("matching compact cards keep essential information outside the closed details", async () => {
+  const html = await view();
+  const article = html.match(/<article[\s\S]*?<\/article>/)?.[0];
+  assert.ok(article);
+  const details = article.match(/<details class="match-breakdown">([\s\S]*?)<\/details>/)?.[1];
+  assert.ok(details, "details is closed by default");
+  const visible = article.replace(/<details[\s\S]*?<\/details>/, "");
+  for (const value of ["#1 в подборе", "Мария С.", "Backend", "Middle · подтверждён", "Professional Fit", "Ranking Score", "Вклад ФСП: 0 / 5", "Python, FastAPI", "PostgreSQL", "Пригласить"])
+    assert.ok(visible.includes(value), value);
+  for (const value of ["Результат оценки", "Опыт, лет", "Навыки, указанные кандидатом", "Не хватает из желательных", "Компетенция подтверждена", "Факторы Professional Fit", "60.0 / 70.0"])
+    assert.ok(details.includes(value), value);
+  assert.doesNotMatch(visible, /Опыт, лет|Навыки, указанные кандидатом|Не хватает из желательных|60\.0 \/ 70\.0/);
+  assert.doesNotMatch(article, /<details[^>]*\bopen\b/);
+});
+test("matching shows the Ranking V2 formula once above all compact cards", async () => {
+  const items = [candidate, { ...candidate, candidate_id: "second", display_name: "Second", fsp_verified: true, fsp_bonus: 4, fsp_achievement_score: 80, competition_count: 2, best_result_level: "WINNER" as const }];
+  const html = await view({ result: { ...page, items, total: 2 } });
+  assert.equal((html.match(/Ranking V2:/g) ?? []).length, 1);
+  assert.ok(html.indexOf("Ranking V2:") < html.indexOf("<article"));
+  assert.doesNotMatch(await card(), /Ranking V2:/);
+  assert.doesNotMatch(await card(items[1]), /Ranking V2:/);
+});
+test("matching keeps verified FSP aggregates in details and its server bonus visible", async () => {
+  const html = await card({ fsp_verified: true, fsp_bonus: 0, fsp_achievement_score: 0, competition_count: 2, best_result_level: "PARTICIPANT" });
+  const visible = html.replace(/<details[\s\S]*?<\/details>/, "");
+  assert.match(visible, /Вклад ФСП: 0\.0 \/ 5/);
+  assert.match(visible, /MOCK \/ прототип/);
+  assert.doesNotMatch(visible, /Участий ФСП|Лучший результат ФСП|Оценка достижений ФСП/);
+  assert.match(html, /Участий ФСП<\/dt><dd>2<\/dd>/);
+  assert.match(html, /Лучший результат ФСП<\/dt><dd>Участник<\/dd>/);
+  assert.match(html, /Оценка достижений ФСП<\/dt><dd>0\.0 \/ 100<\/dd>/);
+  const unverified = await card({ fsp_verified: false, fsp_bonus: 0, competition_count: 2, best_result_level: "WINNER" });
+  assert.doesNotMatch(unverified, /Участий ФСП|Лучший результат ФСП|Оценка достижений ФСП/);
 });
 test("matching renders assessment verification date", async () => {
   assert.match(await card(), /Компетенция подтверждена: 18\.09\.2026/);

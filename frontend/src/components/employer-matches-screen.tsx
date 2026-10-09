@@ -7,6 +7,7 @@ import { getMatches, getNeed } from "@/employer-needs";
 import { sendInvitation } from "@/invitations";
 import type { EmployerCandidatePreview, EmployerNeed, FactorBreakdown, MatchesPage } from "@/employer-needs";
 import { gradeLabels, specializationLabels } from "@/types";
+import { fspResultLabels } from "@/fsp";
 import type { Skill } from "@/types";
 import { RoleGate } from "./auth";
 import { Feedback } from "./feedback";
@@ -66,30 +67,50 @@ function InviteCandidate({ need, candidate }: { need: EmployerNeed; candidate: E
   return open ? <InvitationForm need={need} candidate={candidate} message={message} busy={busy} error={error} success={success} onChange={setMessage} onSubmit={() => void submit()} onCancel={() => setOpen(false)} />
     : <div className="actions"><button disabled={!!success} onClick={() => setOpen(true)}>Пригласить</button><Feedback success={success} /></div>;
 }
-export function MatchCard({ candidate, need }: { candidate: EmployerCandidatePreview; need?: EmployerNeed }) {
+export function MatchCard({ candidate, need, position }: { candidate: EmployerCandidatePreview; need?: EmployerNeed; position?: number }) {
   const date = verificationDate(candidate.assessment_verified_at);
   const breakdown = candidate.breakdown;
   return <article className="card match-card">
     <div className="matching-header">
-      <h2>{candidate.display_name}</h2>
-      <p className="match-score">Соответствие: {formatScore(candidate.professional_fit_score)} / 100 (Professional Fit)</p>
+      <div>
+        {position != null && <p className="match-position">#{position} в подборе</p>}
+        <h2>{candidate.display_name}</h2>
+      </div>
+      <div className="match-identity">
+        <span className="badge badge-neutral">{specializationLabels[candidate.specialization]}</span>
+        <span className="badge badge-success">{gradeLabels[candidate.verified_grade]} · подтверждён</span>
+      </div>
     </div>
-    <FspExplanation signal={candidate} />
-    <dl className="match-meta">
-      <dt>Специализация</dt><dd>{specializationLabels[candidate.specialization]}</dd>
-      <dt>Подтверждённый уровень</dt><dd>{gradeLabels[candidate.verified_grade]}</dd>
-      <dt>Результат оценки</dt><dd>{candidate.normalized_assessment_score} / 100</dd>
-      <dt>Опыт, лет</dt><dd>{candidate.years_of_experience ?? "не указан"}</dd>
-    </dl>
-    <p>{date ? `Компетенция подтверждена: ${date}` : "Дата подтверждения не указана"}</p>
+    <div className="match-score-grid">
+      <div className="metric metric-primary" aria-label="Professional Fit">
+        <span className="metric-label">Professional Fit</span>
+        <p className="metric-value match-score">{formatScore(candidate.professional_fit_score)} / 100</p>
+      </div>
+      <div className="metric metric-ranking" aria-label="Ranking Score">
+        <span className="metric-label">Ranking Score</span>
+        <p className="metric-value match-score">{formatScore(candidate.ranking_score)} / 100</p>
+      </div>
+    </div>
+    <FspExplanation signal={candidate} compact />
     <dl className="match-skills">
-      <dt>Навыки, указанные кандидатом</dt><dd>{skillNames(candidate.skills)}</dd>
       <dt>Обязательные навыки совпали</dt><dd>{skillNames(candidate.matched_must_have_skills)}</dd>
       <dt>Совпавшие желательные навыки</dt><dd>{skillNames(candidate.matched_nice_to_have_skills, "Нет совпадений")}</dd>
-      <dt>Не хватает из желательных</dt><dd>{skillNames(candidate.missing_nice_to_have_skills, "Все желательные навыки совпали.")}</dd>
     </dl>
     <details className="match-breakdown">
       <summary>Почему такой результат</summary>
+      <dl className="match-meta">
+        <dt>Результат оценки</dt><dd>{candidate.normalized_assessment_score} / 100</dd>
+        <dt>Опыт, лет</dt><dd>{candidate.years_of_experience ?? "не указан"}</dd>
+        <dt>Навыки, указанные кандидатом</dt><dd>{skillNames(candidate.skills)}</dd>
+        <dt>Не хватает из желательных</dt><dd>{skillNames(candidate.missing_nice_to_have_skills, "Все желательные навыки совпали.")}</dd>
+        {candidate.fsp_verified && <>
+          <dt>Участий ФСП</dt><dd>{candidate.competition_count}</dd>
+          <dt>Лучший результат ФСП</dt><dd>{candidate.best_result_level ? fspResultLabels[candidate.best_result_level] : "Нет достижений"}</dd>
+          <dt>Оценка достижений ФСП</dt><dd>{formatScore(candidate.fsp_achievement_score)} / 100</dd>
+        </>}
+      </dl>
+      <p>{date ? `Компетенция подтверждена: ${date}` : "Дата подтверждения не указана"}</p>
+      <h3>Факторы Professional Fit</h3>
       <dl>
         <dt>Результат оценки</dt><dd><FactorValue factor={breakdown.assessment} /></dd>
         <dt>Уровень</dt><dd><FactorValue factor={breakdown.grade} /><p className="hint">{breakdown.grade.exact_match
@@ -110,6 +131,7 @@ export function MatchingView({ need, result, loading, error, onRetry, offset = 0
   const active = need?.status === "ACTIVE";
   return <section className="match-list">
     <section className="card match-card">
+      <span className="eyebrow">Работодатель · Результаты подбора</span>
       <h1>Подбор кандидатов</h1>
       {need && <>
         <h2>{need.position_title}</h2>
@@ -137,12 +159,13 @@ export function MatchingView({ need, result, loading, error, onRetry, offset = 0
       {need && !active ? <p className="notice">{need.status === "DRAFT"
         ? "Подбор доступен после активации потребности." : "Для закрытой потребности подбор недоступен."}</p>
         : active && error == null && (currentPage ? <>
-          <p>Подходящих кандидатов: {currentPage.total}</p>
+          <p className="ranking-explanation">Professional Fit — соответствие требованиям потребности. Ranking V2: 95% Professional Fit + до 5 баллов за подтверждённые достижения ФСП.</p>
+          <p className="match-count">Подходящих кандидатов: {currentPage.total}</p>
           {currentPage.items.length === 0 && currentPage.total === 0 && <section className="card">
             <p>Подходящих кандидатов пока нет.</p>
             <p>Проверьте требования или вернитесь к подбору позже.</p>
           </section>}
-          {currentPage.items.map((candidate) => <MatchCard key={candidate.candidate_id} candidate={candidate} need={need} />)}
+          {currentPage.items.map((candidate, index) => <MatchCard key={candidate.candidate_id} candidate={candidate} need={need} position={offset + index + 1} />)}
         </> : <p role="status">Загрузка подбора…</p>)}
     </>}
     {active && currentPage && error == null && onPageChange && <div className="actions match-pagination" aria-label="Страницы подбора">

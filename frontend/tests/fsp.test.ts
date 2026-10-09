@@ -168,6 +168,9 @@ test("employer explanation shows aggregates only and ignores raw provider/privat
   const html = renderToStaticMarkup(createElement(FspExplanation, {signal: fabricated}));
   assert.match(html, /Ranking Score: 88\.0/);
   assert.match(html, /Вклад ФСП: 4\.0 \/ 5/);
+  assert.match(html, /Участий: 1/);
+  assert.match(html, /Достижения: 80\.0 \/ 100/);
+  assert.equal((html.match(/Ranking V2:/g) ?? []).length, 1);
   assert.doesNotMatch(html, /PRIVATE/);
 });
 test("DELETE proxy route is exported for explicit unlink", () => {

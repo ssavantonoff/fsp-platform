@@ -8,12 +8,18 @@ import { invitationDate } from "@/invitations";
 import { Feedback } from "./feedback";
 
 type Action = "verify" | "refresh" | "unlink";
-export function FspExplanation({ signal }: { signal: Partial<{ [K in keyof FspSummary]: FspSummary[K] | null }> & { ranking_score?: number | null } }) {
+export function FspExplanation({ signal, showRanking = true, compact = false }: { signal: Partial<{ [K in keyof FspSummary]: FspSummary[K] | null }> & { ranking_score?: number | null }; showRanking?: boolean; compact?: boolean }) {
   if (signal.ranking_score == null && signal.fsp_verified == null) return null;
+  if (compact) return <section className="fsp-explanation fsp-compact" aria-label="Вклад ФСП">
+    {signal.fsp_verified === true
+      ? <span className="badge badge-primary">ФСП · MOCK / прототип</span>
+      : <span>ФСП не подтверждена</span>}
+    <strong>Вклад ФСП: {signal.fsp_verified === true ? signal.fsp_bonus?.toFixed(1) : "0"} / 5</strong>
+  </section>;
   return <section className="fsp-explanation" aria-label="Рейтинг и ФСП">
-    {signal.ranking_score != null && <p><strong>Ranking Score: {signal.ranking_score.toFixed(1)} / 100</strong></p>}
+    {showRanking && signal.ranking_score != null && <p><strong>Ranking Score: {signal.ranking_score.toFixed(1)} / 100</strong></p>}
     {signal.fsp_verified === true ? <>
-      <p>Подтверждено через ФСП · MOCK / прототип</p>
+      <p><span className="badge badge-primary">Подтверждено через ФСП · MOCK / прототип</span></p>
       <p>Участий: {signal.competition_count} · Лучший результат: {signal.best_result_level ? fspResultLabels[signal.best_result_level] : "Нет достижений"}</p>
       <p>Достижения: {signal.fsp_achievement_score?.toFixed(1)} / 100 · Вклад ФСП: {signal.fsp_bonus?.toFixed(1)} / 5</p>
     </> : <p>ФСП не подтверждена · Вклад ФСП: 0 / 5</p>}
@@ -24,9 +30,9 @@ export function FspProfileView({ status, loading, busy, error, success, onRetry,
   status: FspStatus | null; loading: boolean; busy: boolean; error: unknown; success: string;
   onRetry: () => void; onAction: (action: Action) => void;
 }) {
-  return <section className="fsp-profile" aria-label="Профиль ФСП">
-    <h2>Профиль ФСП</h2>
-    <p className="hint">MOCK / прототип интеграции. Проверка использует тестовый реестр, а не реальную связь с ФСП.</p>
+  return <section className="card fsp-profile" aria-label="Профиль ФСП">
+    <div className="section-heading"><h2>Достижения ФСП</h2><span className="badge badge-primary">MOCK / прототип</span></div>
+    <p className="notice">Проверка использует тестовый реестр, а не реальную связь с ФСП.</p>
     {loading ? <p role="status">Загрузка ФСП…</p> : <>
       <Feedback error={error} success={success} />
       {error != null && <button className="secondary" disabled={busy} onClick={onRetry}>Повторить</button>}
@@ -37,11 +43,11 @@ export function FspProfileView({ status, loading, busy, error, success, onRetry,
             <dt>Последняя синхронизация (UTC)</dt><dd>{status.fsp_synced_at ? invitationDate(status.fsp_synced_at) : "—"}</dd>
             <dt>Достижения / вклад ФСП</dt><dd>{status.fsp_achievement_score.toFixed(1)} / 100 · {status.fsp_bonus.toFixed(1)} / 5</dd></>}
         </dl>
-        {status.fsp_verified && (status.achievements.length ? <ul>{status.achievements.map((item, index) => <li key={index}>
-          <strong>{item.competition_name}</strong> · {item.discipline} · {item.year ?? "Год не указан"}
-          {item.event_date && <> · {invitationDate(item.event_date)}</>} · {fspResultLabels[item.result_level]}
-          {item.placement != null && <> · Место: {item.placement}</>}
-          {item.scope && <> · {item.scope === "TEAM" ? "Командный результат" : "Индивидуальный результат"}</>}
+        {status.fsp_verified && (status.achievements.length ? <ul className="fsp-achievements">{status.achievements.map((item, index) => <li key={index}>
+          <strong>{item.competition_name}</strong>
+          <span>{item.discipline} · {item.year ?? "Год не указан"}{item.event_date && <> · {invitationDate(item.event_date)}</>}</span>
+          <span>{fspResultLabels[item.result_level]}{item.placement != null && <> · Место: {item.placement}</>}</span>
+          {item.scope && <span>{item.scope === "TEAM" ? "Командный результат" : "Индивидуальный результат"}</span>}
         </li>)}</ul> : <p>Подтверждённых достижений пока нет.</p>)}
         <div className="actions">
           {status.fsp_verified ? <><button disabled={busy} onClick={() => onAction("refresh")}>Обновить достижения</button><button disabled={busy} className="secondary" onClick={() => onAction("unlink")}>Снять проверку</button></>
