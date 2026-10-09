@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.assessment_bank_config import COMPETENCIES
 from app.assessment_schemas import (
     AttemptOut,
     AttemptSummary,
@@ -29,31 +30,9 @@ from app.models import (
     User,
     utcnow,
 )
+from app.question_bank import bank_is_published
 from app.schemas import CandidateOut
 
-COMPETENCIES: dict[Specialization, tuple[str, ...]] = {
-    Specialization.BACKEND: (
-        "PROGRAMMING",
-        "HTTP_API",
-        "DATABASES",
-        "ARCHITECTURE",
-        "TESTING_SECURITY_DEBUGGING",
-    ),
-    Specialization.FRONTEND: (
-        "JAVASCRIPT_TYPESCRIPT",
-        "REACT_UI",
-        "BROWSER_WEB",
-        "STATE_DATA",
-        "TESTING_PERFORMANCE_ACCESSIBILITY",
-    ),
-    Specialization.DATA_ML: (
-        "PYTHON_DATA",
-        "STATISTICS_ML",
-        "DATA_PROCESSING_SQL",
-        "MODELING_EVALUATION",
-        "MLOPS_PRODUCTION",
-    ),
-}
 GRADE_ORDER = {grade: index for index, grade in enumerate(Grade)}
 BLUEPRINT = {Difficulty.BASIC: 1, Difficulty.APPLIED: 2, Difficulty.ADVANCED: 1}
 
@@ -290,7 +269,7 @@ def grade_availability(
         and GRADE_ORDER[grade] < GRADE_ORDER[profile.verified_grade]
     ):
         reason = "LOWER_THAN_VERIFIED"
-    elif not bank_available(
+    elif not bank_is_published(db, profile.specialization) or not bank_available(
         bank(db, profile.specialization, grade), profile.specialization
     ):
         reason = "UNAVAILABLE"

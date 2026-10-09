@@ -324,7 +324,7 @@ def question_snapshot(db):
 
 def seed_fixed_bank(db_factory, bank, monkeypatch):
     with monkeypatch.context() as patch:
-        patch.setattr(question_bank, "load_bank", lambda: bank)
+        patch.setattr(question_bank, "load_banks", lambda: {"BACKEND": bank})
         with db_factory() as db:
             seed(db)
 
@@ -512,7 +512,7 @@ def test_same_code_content_mutation_still_fails_atomically(
         "version": item.version + 1,
     }
     questions[0] = item.model_copy(update={field: changes[field]})
-    monkeypatch.setattr(question_bank, "load_bank", lambda: questions)
+    monkeypatch.setattr(question_bank, "load_banks", lambda: {"BACKEND": questions})
     with (
         db_factory() as db,
         pytest.raises(ValueError, match="Immutable question changed"),
@@ -588,7 +588,11 @@ def test_attempt_keeps_historical_membership_order_read_and_scoring(
     monkeypatch.setattr(
         assessments.random, "SystemRandom", lambda: HistoricalSelection(replacements)
     )
-    response = client.post("/candidate/assessments", json={"target_grade": grade})
+    # Reconstruct a start in the historical 75-record release, before publication
+    # gating existed. The current reviewed-source gate resumes immediately.
+    with monkeypatch.context() as patch:
+        patch.setattr(assessments, "bank_is_published", lambda db, spec: True)
+        response = client.post("/candidate/assessments", json={"target_grade": grade})
     assert response.status_code == 201
     attempt = response.json()
     path = f"/candidate/assessments/{attempt['id']}"
