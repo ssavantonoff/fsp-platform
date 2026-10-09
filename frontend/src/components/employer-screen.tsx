@@ -62,29 +62,47 @@ function EmployerContent({ edit }: { edit: boolean }) {
         </Link>
       </section>
     );
+  return <EmployerProfileView profile={profile} />;
+}
+
+export function EmployerProfileView({ profile }: { profile: EmployerProfile }) {
   return (
-    <section className="card">
-      <h1>{profile.company_name}</h1>
-      <dl>
-        <dt>Описание компании</dt>
-        <dd>{profile.company_description || "Не указано"}</dd>
-        <dt>Сайт</dt>
-        <dd>
-          {profile.website ? (
-            <a href={profile.website} target="_blank" rel="noopener noreferrer">
-              {profile.website}
-            </a>
-          ) : (
-            "Не указан"
-          )}
-        </dd>
-        <dt>Контактное лицо</dt>
-        <dd>{profile.contact_person_name}</dd>
-      </dl>
-      <Link className="button" href="/employer/edit">
-        Редактировать профиль
-      </Link>
-    </section>
+    <div className="workflow-screen employer-dashboard">
+      <section className="card workflow-heading employer-overview">
+        <div>
+          <span className="eyebrow">Профиль работодателя</span>
+          <h1>{profile.company_name}</h1>
+        </div>
+        <div className="actions">
+          <Link className="button" href="/employer/needs">
+            Потребности компании
+          </Link>
+          <Link className="button secondary" href="/employer/edit">
+            Редактировать профиль
+          </Link>
+        </div>
+      </section>
+      <section className="card" aria-label="О компании">
+        <h2>О компании</h2>
+        <p className="workflow-copy">
+          {profile.company_description || "Описание компании не указано."}
+        </p>
+        <dl className="workflow-facts">
+          <dt>Сайт</dt>
+          <dd>
+            {profile.website ? (
+              <a href={profile.website} target="_blank" rel="noopener noreferrer">
+                {profile.website}
+              </a>
+            ) : (
+              "Не указан"
+            )}
+          </dd>
+          <dt>Контактное лицо</dt>
+          <dd>{profile.contact_person_name}</dd>
+        </dl>
+      </section>
+    </div>
   );
 }
 

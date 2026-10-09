@@ -601,6 +601,177 @@ dd {
 .invitation-card h2, .invitation-card h3 {
   overflow-wrap: anywhere;
 }
+.workflow-screen {
+  display: grid;
+  gap: var(--space-6);
+}
+.workflow-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+}
+.workflow-heading > div {
+  min-width: 0;
+}
+.workflow-heading h1, .workflow-heading h2 {
+  margin-bottom: 0;
+}
+.workflow-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.workflow-heading .hint {
+  margin-top: var(--space-2);
+}
+.workflow-editor > .workflow-heading {
+  margin-bottom: var(--space-6);
+}
+.workflow-editor-navigation {
+  margin-top: var(--space-6);
+}
+.workflow-screen .button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.workflow-facts {
+  margin: var(--space-4) 0;
+  gap: var(--space-2) var(--space-6);
+}
+.workflow-status {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.workflow-status[data-status="DRAFT"],
+.workflow-status[data-status="VIEWED"] {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+.workflow-status[data-status="ACTIVE"],
+.workflow-status[data-status="ACCEPTED"] {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+.workflow-status[data-status="SENT"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.workflow-status[data-status="CLOSED"],
+.workflow-status[data-status="WITHDRAWN"] {
+  background: var(--brand-light);
+  color: var(--color-muted);
+  border-color: var(--brand-neutral);
+}
+.workflow-status[data-status="DECLINED"] {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+.workflow-need-card, .workflow-screen .invitation-card {
+  padding: var(--space-6);
+}
+.workflow-details {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-4);
+}
+.workflow-details summary {
+  min-height: 44px;
+  padding: var(--space-3) 0;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.workflow-details + .actions {
+  margin-top: var(--space-3);
+}
+.workflow-form > fieldset {
+  gap: var(--space-6);
+}
+.workflow-form-section {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.workflow-form-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.workflow-form-section h2 {
+  margin: 0;
+}
+.workflow-form-section .hint {
+  margin-top: var(--space-2);
+}
+.workflow-form-section fieldset.skills {
+  border-radius: var(--radius-control);
+  gap: var(--space-2);
+}
+.need-skill-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.workflow-form-section fieldset.skills > .hint {
+  grid-column: 1 / -1;
+}
+.workflow-form-section .need-skills-required {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+.workflow-form-section .need-skills-preferred {
+  background: var(--brand-light);
+}
+.workflow-form-section .checkbox {
+  min-height: 44px;
+  min-width: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-control);
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.workflow-form-section .checkbox:has(input:checked) {
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.workflow-form-section .checkbox:has(input:disabled) {
+  color: var(--color-muted);
+}
+.workflow-form-section .checkbox input {
+  margin-top: 0;
+}
+.invitation-position {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted);
+}
+.invitation-contacts {
+  border-left: 3px solid var(--color-success);
+  border-radius: var(--radius-control);
+  background: var(--color-success-soft);
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  overflow-wrap: anywhere;
+}
+.invitation-contacts h3 {
+  margin: 0;
+}
+.invitation-contacts dl:last-child {
+  margin-bottom: 0;
+}
+.workflow-screen .actions > a:not(.button) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .grade-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -832,5 +1003,37 @@ dd {
   }
   .assessment-option {
     padding: 0.75rem;
+  }
+  .workflow-screen {
+    gap: var(--space-4);
+  }
+  .workflow-need-card, .workflow-screen .invitation-card {
+    padding: var(--space-4);
+  }
+  .workflow-heading > .actions {
+    width: 100%;
+  }
+  .workflow-status {
+    font-size: 0.875rem;
+  }
+  .workflow-facts {
+    gap: var(--space-1);
+  }
+  .workflow-facts dd {
+    margin-bottom: var(--space-2);
+  }
+  .workflow-form-section {
+    padding-top: var(--space-4);
+  }
+  .workflow-form-section fieldset.skills {
+    padding: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  .workflow-form-section .checkbox {
+    gap: var(--space-2);
+    padding: var(--space-1);
+  }
+  .need-skill-groups {
+    grid-template-columns: 1fr;
   }
 }
