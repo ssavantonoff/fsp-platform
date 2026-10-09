@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app import question_bank
+from app.assessment_bank_config import LEGACY_BACKEND_BLUEPRINT
 from app.assessment_validation import (
     AssessmentValidationCategory as Category,
 )
@@ -16,7 +17,7 @@ from app.assessment_validation import (
     AssessmentValidationFinding,
     validate_source_bank,
 )
-from app.models import Difficulty, Grade
+from app.models import Difficulty, Grade, Specialization
 from app.question_bank import SeedQuestion, load_bank
 
 
@@ -463,7 +464,7 @@ def test_loader_reads_parses_and_validates_once(
     path = temporary_source(raw_source_bank)
     expected = [SeedQuestion.model_validate(item) for item in raw_source_bank]
     read_calls = []
-    original_read = Path.read_text
+    original_read = Path.read_bytes
 
     def read_once(source, *args, **kwargs):
         read_calls.append(source)
@@ -480,7 +481,7 @@ def test_loader_reads_parses_and_validates_once(
 
     parse_question = Mock(wraps=parse_record)
     validate = Mock(wraps=validate_source_bank)
-    monkeypatch.setattr(Path, "read_text", read_once)
+    monkeypatch.setattr(Path, "read_bytes", read_once)
     monkeypatch.setattr(json, "loads", parse_json)
     monkeypatch.setattr(SeedQuestion, "model_validate", parse_question)
     monkeypatch.setattr(question_bank, "validate_source_bank", validate)
@@ -490,7 +491,11 @@ def test_loader_reads_parses_and_validates_once(
     assert read_calls == [path]
     assert parse_json.call_count == 1
     assert parse_question.call_count == 120
-    validate.assert_called_once_with(actual)
+    validate.assert_called_once_with(
+        actual,
+        specialization=Specialization.BACKEND,
+        blueprint=LEGACY_BACKEND_BLUEPRINT,
+    )
     assert validate.call_args.args[0] is actual
     assert all(item is parsed[i] for i, item in enumerate(actual))
     assert fingerprint(actual) == fingerprint(expected)

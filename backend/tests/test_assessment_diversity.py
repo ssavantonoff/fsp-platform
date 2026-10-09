@@ -405,7 +405,10 @@ def test_predecessor_exposure_inherits_through_v1_v2_v3_without_history_edits(
     b1 = frozen_bank("assessment-bank-p3-b1.json", B1_HASH)
     seed_fixed_bank(db_factory, baseline, monkeypatch)
     monkeypatch.setattr(assessments.random, "SystemRandom", IncludeLegacy)
-    first = start(client)
+    # This first form predates P8 publication gating; later starts use the gate.
+    with monkeypatch.context() as patch:
+        patch.setattr(assessments, "bank_is_published", lambda db, spec: True)
+        first = start(client)
     lineage = "backend-middle-databases-4"
     assert lineage in families(db_factory, first)
     if outcome == "passed":
@@ -456,7 +459,9 @@ def test_75_to_120_seed_preserves_every_existing_row_and_attempt(
 ):
     setup_unseeded(client, account, candidate_data, db_factory)
     seed_fixed_bank(db_factory, pre_p5_bank, monkeypatch)
-    attempt = start(client)
+    with monkeypatch.context() as patch:
+        patch.setattr(assessments, "bank_is_published", lambda db, spec: True)
+        attempt = start(client)
     if finished:
         finish(client, attempt)
     before_read = client.get(f"{BASE}/{attempt['id']}").json()["questions"]

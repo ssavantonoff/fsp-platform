@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from app.assessment_bank_config import (
+    COMPETENCIES,
+    EXPANDED_BLUEPRINT,
+    LEGACY_BACKEND_BLUEPRINT,
+    SourceBlueprint,
+)
 from app.models import Difficulty, Grade, Specialization
-from app.services.assessments import COMPETENCIES
 
 if TYPE_CHECKING:
     from app.question_bank import SeedQuestion
@@ -25,6 +30,7 @@ class AssessmentValidationCategory(StrEnum):
     INVALID_GRADE = "INVALID_GRADE"
     INVALID_DIFFICULTY = "INVALID_DIFFICULTY"
     INVALID_COMPETENCY = "INVALID_COMPETENCY"
+    INVALID_SPECIALIZATION = "INVALID_SPECIALIZATION"
     INVALID_VERSION = "INVALID_VERSION"
     INVALID_SUPERSEDES = "INVALID_SUPERSEDES"
     SUPERSEDES_CYCLE = "SUPERSEDES_CYCLE"
@@ -39,17 +45,30 @@ class AssessmentValidationFinding:
 
 def validate_source_bank(
     questions: Sequence[SeedQuestion],
+    *,
+    specialization: Specialization = Specialization.BACKEND,
+    blueprint: SourceBlueprint | None = None,
 ) -> list[AssessmentValidationFinding]:
-    """Validate parsed Backend source structure without reading or changing state."""
+    """Validate one explicitly bound source without reading or changing state."""
     category = AssessmentValidationCategory
-    competencies = COMPETENCIES[Specialization.BACKEND]
+    if not isinstance(specialization, Specialization):
+        return [
+            AssessmentValidationFinding(
+                category.INVALID_SPECIALIZATION, None, "Unsupported specialization."
+            )
+        ]
+    competencies = COMPETENCIES[specialization]
     grades = tuple(Grade)
     difficulties = tuple(Difficulty)
-    expected_mix = {
-        Difficulty.BASIC: 2,
-        Difficulty.APPLIED: 4,
-        Difficulty.ADVANCED: 2,
-    }
+    if blueprint is None:
+        blueprint = (
+            LEGACY_BACKEND_BLUEPRINT
+            if specialization == Specialization.BACKEND
+            else EXPANDED_BLUEPRINT
+        )
+    expected_mix = blueprint.mix
+    expected_grade_count = len(competencies) * sum(expected_mix.values())
+    expected_total = len(grades) * expected_grade_count
     grade_counts: Counter[Grade] = Counter()
     bucket_counts: Counter[tuple[Grade, str, Difficulty]] = Counter()
     code_counts = Counter(q.code for q in questions)
@@ -114,7 +133,7 @@ def validate_source_bank(
             (
                 valid_competency,
                 category.INVALID_COMPETENCY,
-                "Competency is not a Backend competency.",
+                "Competency does not belong to the bank specialization.",
             ),
             (
                 valid_version,
@@ -132,21 +151,21 @@ def validate_source_bank(
             bucket_counts[question.grade, question.competency, question.difficulty] += 1
 
     findings = []
-    if len(questions) != 120:
+    if len(questions) != expected_total:
         findings.append(
             AssessmentValidationFinding(
                 category.INVALID_TOTAL,
                 None,
-                f"Expected 120 source records; found {len(questions)}.",
+                f"Expected {expected_total} source records; found {len(questions)}.",
             )
         )
     for grade in grades:
-        if grade_counts[grade] != 40:
+        if grade_counts[grade] != expected_grade_count:
             findings.append(
                 AssessmentValidationFinding(
                     category.INVALID_GRADE_COUNT,
                     None,
-                    f"{grade}: expected 40 source records; "
+                    f"{grade}: expected {expected_grade_count} source records; "
                     f"found {grade_counts[grade]}.",
                 )
             )
@@ -167,6 +186,50 @@ def validate_source_bank(
     findings.extend(record_findings)
     findings.extend(_supersedes_findings(questions, code_counts))
     return findings
+
+
+def validate_source_banks(
+    banks: Mapping[Specialization, Sequence[SeedQuestion]],
+    *,
+    blueprints: Mapping[Specialization, SourceBlueprint] | None = None,
+) -> list[AssessmentValidationFinding]:
+    """Validate all source inventories and their shared identity namespace."""
+    findings = []
+    owners: dict[str, Specialization] = {}
+    questions: list[SeedQuestion] = []
+    for specialization, bank in banks.items():
+        blueprint = (blueprints or {}).get(specialization, EXPANDED_BLUEPRINT)
+        findings.extend(
+            validate_source_bank(
+                bank, specialization=specialization, blueprint=blueprint
+            )
+        )
+        for question in bank:
+            owner = owners.get(question.code)
+            if owner is not None and owner != specialization:
+                findings.append(
+                    AssessmentValidationFinding(
+                        AssessmentValidationCategory.DUPLICATE_CODE,
+                        question.code,
+                        "Source code is shared by different specializations.",
+                    )
+                )
+            owners[question.code] = specialization
+        questions.extend(bank)
+    for specialization, bank in banks.items():
+        for question in bank:
+            owner = owners.get(question.supersedes) if question.supersedes else None
+            if owner is not None and owner != specialization:
+                findings.append(
+                    AssessmentValidationFinding(
+                        AssessmentValidationCategory.INVALID_SUPERSEDES,
+                        question.code,
+                        "Predecessor belongs to a different specialization.",
+                    )
+                )
+    findings.extend(_supersedes_findings(questions, Counter(q.code for q in questions)))
+    # One-bank graph findings are also part of the collection graph.
+    return list(dict.fromkeys(findings))
 
 
 def _supersedes_findings(
