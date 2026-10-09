@@ -75,54 +75,72 @@ function CandidateContent({ edit }: { edit: boolean }) {
         </Link>
       </section>
     );
+  return <CandidateProfileView profile={profile} />;
+}
+
+export function CandidateProfileView({ profile }: { profile: CandidateProfile }) {
   return (
-    <section className="card">
-      <h1>
-        {profile.first_name} {profile.last_name}
-      </h1>
-      <dl>
-        <dt>Специализация</dt>
-        <dd>{specializationLabels[profile.specialization]}</dd>
-        <dt>Заявленный уровень</dt>
-        <dd>{gradeLabels[profile.declared_grade]}</dd>
-        <dt>Подтверждённый уровень</dt>
-        <dd>
-          {profile.verified_grade
-            ? gradeLabels[profile.verified_grade]
-            : "не подтверждён"}
-        </dd>
-        <dt>Результат assessment</dt>
-        <dd>
-          {profile.normalized_assessment_score === null
-            ? "не подтверждён"
-            : `${profile.normalized_assessment_score} / 100`}
-        </dd>
-        <dt>Дата подтверждения</dt>
-        <dd>{dateLabel(profile.assessment_verified_at)}</dd>
-        <dt>Навыки</dt>
-        <dd>{profile.skills.map((s) => s.name).join(", ") || "Не указаны"}</dd>
-        <dt>Город</dt>
-        <dd>{profile.city || "Не указан"}</dd>
-        <dt>О себе</dt>
-        <dd>{profile.about || "Не указано"}</dd>
-        <dt>Опыт, лет</dt>
-        <dd>{profile.years_of_experience ?? "Не указан"}</dd>
-        <dt>FSP ID</dt>
-        <dd>{profile.fsp_id || "Не указан"}</dd>
-        <dt>Согласие на обработку данных</dt>
-        <dd>{profile.personal_data_consent ? "Дано" : "Не дано"}</dd>
-      </dl>
-      <FspProfile key={profile.id} />
-      <div className="actions">
-        <Link className="button secondary" href="/candidate/invitations">Приглашения от работодателей</Link>
-        <Link className="button" href="/candidate/edit">
-          Редактировать профиль
-        </Link>
-        <Link className="button secondary" href="/candidate/assessment">
-          Подтвердить уровень
-        </Link>
+    <div className="profile-screen">
+      <section className="card profile-hero">
+        <div className="profile-identity">
+          <span className="profile-avatar" aria-hidden="true">
+            {profile.first_name.slice(0, 1)}{profile.last_name.slice(0, 1)}
+          </span>
+          <div>
+            <span className="eyebrow">Профиль кандидата</span>
+            <h1>{profile.first_name} {profile.last_name}</h1>
+            <span className="badge badge-primary">{specializationLabels[profile.specialization]}</span>
+          </div>
+        </div>
+        <div className="actions">
+          <Link className="button" href="/candidate/edit">Редактировать профиль</Link>
+          <Link className="button secondary" href="/candidate/assessment">Подтвердить уровень</Link>
+          <Link href="/candidate/invitations">Приглашения от работодателей</Link>
+        </div>
+      </section>
+      <div className="profile-grid">
+        <div className="profile-main">
+          <section className="card" aria-label="Квалификация">
+            <div className="section-heading">
+              <h2>Квалификация</h2>
+              <span className={`badge ${profile.verified_grade ? "badge-success" : "badge-neutral"}`}>
+                {profile.verified_grade ? "Подтверждена assessment" : "Пока не подтверждена"}
+              </span>
+            </div>
+            <div className="qualification-metrics">
+              <div className="metric metric-primary">
+                <span className="metric-label">Подтверждённый уровень</span>
+                <strong className="metric-value">{profile.verified_grade ? gradeLabels[profile.verified_grade] : "—"}</strong>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Assessment score</span>
+                <strong className="metric-value">{profile.normalized_assessment_score === null ? "—" : <>{profile.normalized_assessment_score} <small>/ 100</small></>}</strong>
+              </div>
+            </div>
+            <p className="hint">Дата подтверждения: {dateLabel(profile.assessment_verified_at)}</p>
+          </section>
+          <section className="card" aria-label="Самостоятельно указанные навыки">
+            <div className="section-heading">
+              <h2>Навыки</h2>
+              <span className="badge badge-neutral">Указаны кандидатом</span>
+            </div>
+            {profile.skills.length ? <ul className="skill-chips">{profile.skills.map((skill) => <li key={skill.id}>{skill.name}</li>)}</ul> : <p>Навыки не указаны.</p>}
+            <p className="hint">Этот список заполнен самостоятельно. Подтверждённая квалификация показана отдельно, по результатам assessment.</p>
+          </section>
+          <section className="card" aria-label="О кандидате">
+            <h2>О кандидате</h2>
+            <p className="profile-about">{profile.about || "Информация о себе не указана."}</p>
+            <dl>
+              <dt>Город</dt><dd>{profile.city || "Не указан"}</dd>
+              <dt>Опыт, лет</dt><dd>{profile.years_of_experience ?? "Не указан"}</dd>
+              <dt>Заявленный уровень</dt><dd>{gradeLabels[profile.declared_grade]}</dd>
+              <dt>Согласие на обработку данных</dt><dd>{profile.personal_data_consent ? "Дано" : "Не дано"}</dd>
+            </dl>
+          </section>
+        </div>
+        <FspProfile key={profile.id} />
       </div>
-    </section>
+    </div>
   );
 }
 

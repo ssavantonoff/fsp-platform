@@ -85,13 +85,23 @@ test("matching preserves ranked candidate order", async () => {
 });
 test("matching renders effective breakdown and excluded factors", async () => {
   const html = await card();
-  assert.match(html, /Соответствие: 76\.0 \/ 100/);
+  assert.match(html, /aria-label="Professional Fit"[\s\S]*76\.0 \/ 100/);
   assert.match(html, /60\.0 \/ 70\.0/);
   assert.match(html, /16\.0 \/ 30\.0/);
   assert.equal((html.match(/Не участвует в расчёте/g) ?? []).length, 2);
   assert.doesNotMatch(html, /0\.0 \/ 0\.0|45\.0|25\.0/);
   assert.match(html, /<details/);
   assert.match(html, /<summary>Почему такой результат<\/summary>/);
+});
+test("matching separates server Professional Fit, Ranking Score and FSP bonus without recalculating", async () => {
+  const html = await card({ professional_fit_score: 76, ranking_score: 81, fsp_verified: true,
+    fsp_bonus: 4, fsp_achievement_score: 80, competition_count: 1, best_result_level: "WINNER" });
+  assert.match(html, /class="metric metric-primary" aria-label="Professional Fit"[\s\S]*?76\.0 \/ 100/);
+  assert.match(html, /class="metric metric-ranking" aria-label="Ranking Score"[\s\S]*?81\.0 \/ 100/);
+  assert.equal((html.match(/Ranking Score/g) ?? []).length, 2);
+  assert.match(html, /Вклад ФСП: 4\.0 \/ 5/);
+  assert.match(html, /MOCK \/ прототип/);
+  assert.doesNotMatch(html, /76\.2 \/ 100|вероятность|Шанс найма/i);
 });
 test("matching renders assessment verification date", async () => {
   assert.match(await card(), /Компетенция подтверждена: 18\.09\.2026/);

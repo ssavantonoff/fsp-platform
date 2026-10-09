@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -62,6 +63,7 @@ export function useAuth() {
 export function Header() {
   const { user, loading, refresh } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function logout() {
@@ -78,10 +80,12 @@ export function Header() {
     }
   }
   return (
-    <header>
+    <header className="site-header">
       <nav aria-label="Основная навигация">
-        <Link href="/" className="brand">
-          FSP Platform
+        <Link href="/" className="brand" aria-label="ФСП — платформа ИТ-подбора">
+          <Image className="brand-full" src="/brand/fsp-full-dark.svg" width={1232} height={154} alt="Федерация спортивного программирования России" priority />
+          <Image className="brand-compact" src="/brand/fsp-compact-dark.svg" width={599} height={202} alt="" aria-hidden="true" priority />
+          <span className="brand-caption">Платформа ИТ-подбора</span>
         </Link>
         <div className="nav-links">
           {!loading &&
@@ -89,21 +93,22 @@ export function Header() {
               <>
                 <Link
                   href={user.role === "CANDIDATE" ? "/candidate" : "/employer"}
+                  aria-current={pathname === "/candidate" || pathname === "/candidate/edit" || pathname === "/employer" || pathname === "/employer/edit" ? "page" : undefined}
                 >
                   Мой профиль
                 </Link>
                 {needsNavigationVisible(user.role) && (
-                  <Link href="/employer/needs">Потребности</Link>
+                  <Link href="/employer/needs" aria-current={pathname.startsWith("/employer/needs") ? "page" : undefined}>Потребности</Link>
                 )}
-                {user.role === "CANDIDATE" && <Link href="/candidate/invitations">Приглашения от работодателей</Link>}
+                {user.role === "CANDIDATE" && <Link href="/candidate/invitations" aria-current={pathname === "/candidate/invitations" ? "page" : undefined}>Приглашения от работодателей</Link>}
                 <button className="secondary" disabled={busy} onClick={logout}>
                   {busy ? "Выходим…" : "Выйти"}
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login">Вход</Link>
-                <Link href="/register">Регистрация</Link>
+                <Link href="/login" aria-current={pathname === "/login" ? "page" : undefined}>Вход</Link>
+                <Link href="/register" aria-current={pathname === "/register" ? "page" : undefined}>Регистрация</Link>
               </>
             ))}
         </div>
