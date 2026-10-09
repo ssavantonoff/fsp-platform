@@ -1,0 +1,1139 @@
+{
+  "name": "matching-v2-validation-v1",
+  "version": 1,
+  "status": "P6A_REVIEW_CHECKPOINT",
+  "synthetic": true,
+  "source_base": "f5d460f9888b8bfe94a90e495254974a0d2043e7",
+  "skill_catalog": [
+    "Python",
+    "Django",
+    "FastAPI",
+    "PostgreSQL",
+    "React",
+    "TypeScript",
+    "SQL"
+  ],
+  "fsp_provider": "MockFspRegistryProvider",
+  "needs": [
+    {
+      "id": "N1",
+      "position_title": "Python API / Junior",
+      "specialization": "BACKEND",
+      "required_grade": "JUNIOR",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "Python",
+        "FastAPI"
+      ],
+      "nice_to_have_skills": [
+        "SQL"
+      ],
+      "target_experience_years": 1,
+      "salary_from": "90000.00",
+      "salary_to": "140000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Поддержка Python API под наставничеством.",
+      "rationale": "Python и FastAPI нужны для API; SQL желателен; один год опыта — мягкий ориентир.",
+      "catalog_limited": false,
+      "limitation": null
+    },
+    {
+      "id": "N2",
+      "position_title": "Python Django / Middle",
+      "specialization": "BACKEND",
+      "required_grade": "MIDDLE",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "Python",
+        "Django"
+      ],
+      "nice_to_have_skills": [
+        "PostgreSQL",
+        "SQL"
+      ],
+      "target_experience_years": 3,
+      "salary_from": "180000.00",
+      "salary_to": "260000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Самостоятельная разработка Django-сервисов.",
+      "rationale": "Python/Django — обязательный стек; реляционные данные — желательное дополнение.",
+      "catalog_limited": false,
+      "limitation": null
+    },
+    {
+      "id": "N3",
+      "position_title": "Java / Senior",
+      "specialization": "BACKEND",
+      "required_grade": "SENIOR",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "SQL",
+        "PostgreSQL"
+      ],
+      "nice_to_have_skills": [],
+      "target_experience_years": 6,
+      "salary_from": "280000.00",
+      "salary_to": "400000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Синтетическая роль Java с проверкой только навыков реляционного слоя.",
+      "rationale": "Senior и навыки SQL/PostgreSQL характеризуют доступную часть требований к данным; Java отсутствует в каталоге.",
+      "catalog_limited": true,
+      "limitation": "Не проверяет владение Java. Совпадение SQL/PostgreSQL не является доказательством владения Java."
+    },
+    {
+      "id": "N4",
+      "position_title": "React / Junior",
+      "specialization": "FRONTEND",
+      "required_grade": "JUNIOR",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "React"
+      ],
+      "nice_to_have_skills": [
+        "TypeScript"
+      ],
+      "target_experience_years": 1,
+      "salary_from": "80000.00",
+      "salary_to": "130000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Поддержка React-интерфейсов под наставничеством.",
+      "rationale": "React обязателен; TypeScript — мягкое предпочтение; допускается adjacent Middle.",
+      "catalog_limited": false,
+      "limitation": null
+    },
+    {
+      "id": "N5",
+      "position_title": "Next.js / Middle",
+      "specialization": "FRONTEND",
+      "required_grade": "MIDDLE",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "nice_to_have_skills": [],
+      "target_experience_years": 3,
+      "salary_from": "180000.00",
+      "salary_to": "280000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Синтетическая Next.js роль, ограниченная доступными React/TypeScript навыками.",
+      "rationale": "React/TypeScript описывают доступную часть frontend-стека; Next.js отсутствует в каталоге.",
+      "catalog_limited": true,
+      "limitation": "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+    },
+    {
+      "id": "N6",
+      "position_title": "Frontend / Senior",
+      "specialization": "FRONTEND",
+      "required_grade": "SENIOR",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "nice_to_have_skills": [],
+      "target_experience_years": 6,
+      "salary_from": "280000.00",
+      "salary_to": "420000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Самостоятельная разработка frontend-приложений на React/TypeScript.",
+      "rationale": "Проверяется Senior и общий существующий frontend-стек; архитектурные компетенции не выводятся из общего стажа.",
+      "catalog_limited": false,
+      "limitation": null
+    },
+    {
+      "id": "N7",
+      "position_title": "ML Engineer / Middle",
+      "specialization": "DATA_ML",
+      "required_grade": "MIDDLE",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "Python",
+        "SQL"
+      ],
+      "nice_to_have_skills": [
+        "PostgreSQL"
+      ],
+      "target_experience_years": 3,
+      "salary_from": "200000.00",
+      "salary_to": "300000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Синтетическая ML роль с проверкой только Python и работы с табличными данными.",
+      "rationale": "Python/SQL обязательны для доступной части обработки данных; PostgreSQL желателен; ML-frameworks отсутствуют.",
+      "catalog_limited": true,
+      "limitation": "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+    },
+    {
+      "id": "N8",
+      "position_title": "ML Platform / Senior",
+      "specialization": "DATA_ML",
+      "required_grade": "SENIOR",
+      "status": "ACTIVE",
+      "must_have_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "nice_to_have_skills": [],
+      "target_experience_years": 6,
+      "salary_from": "300000.00",
+      "salary_to": "450000.00",
+      "salary_currency": "RUB",
+      "salary_basis": "GROSS",
+      "description": "Синтетическая ML platform роль, ограниченная доступным стеком обработки и хранения данных.",
+      "rationale": "Python/SQL/PostgreSQL описывают доступную инфраструктурную часть; Senior и опыт не доказывают специальные ML-компетенции.",
+      "catalog_limited": true,
+      "limitation": "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C01",
+      "specialization": "BACKEND",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "FastAPI",
+        "SQL"
+      ],
+      "years_of_experience": 2,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Strong qualification without FSP; contrast with C02 is reserved for P6-B."
+    },
+    {
+      "id": "C02",
+      "specialization": "BACKEND",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 70,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "FastAPI",
+        "SQL"
+      ],
+      "years_of_experience": 1,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-MULTI",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": [
+          {
+            "external_id": "m1",
+            "competition_id": "cup-1",
+            "competition_name": "Кубок прототипа",
+            "discipline": "Программирование",
+            "year": 2025,
+            "event_date": null,
+            "result_level": "WINNER",
+            "placement": 1,
+            "scope": "INDIVIDUAL"
+          },
+          {
+            "external_id": "m2",
+            "competition_id": "cup-2",
+            "competition_name": "Командный турнир",
+            "discipline": "Кибербезопасность",
+            "year": 2024,
+            "event_date": null,
+            "result_level": "PARTICIPANT",
+            "placement": null,
+            "scope": "TEAM"
+          },
+          {
+            "external_id": "m3",
+            "competition_id": "cup-3",
+            "competition_name": "Турнир данных",
+            "discipline": "Анализ данных",
+            "year": 2023,
+            "event_date": null,
+            "result_level": "FINALIST",
+            "placement": null,
+            "scope": "INDIVIDUAL"
+          }
+        ]
+      },
+      "design_note": "Lower assessment than C01 with three verified competitions; no ranking label."
+    },
+    {
+      "id": "C03",
+      "specialization": "BACKEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "FastAPI"
+      ],
+      "years_of_experience": 0.5,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-WINNER",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Declared SENIOR, verified JUNIOR; entered known mock ID is not evidence."
+    },
+    {
+      "id": "C04",
+      "specialization": "BACKEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 90,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 3,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C05",
+      "specialization": "BACKEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 4,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Same qualification inputs as C06, without FSP."
+    },
+    {
+      "id": "C06",
+      "specialization": "BACKEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 4,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-PARTICIPANT",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": [
+          {
+            "external_id": "p1",
+            "competition_id": "cup-1",
+            "competition_name": "Кубок прототипа",
+            "discipline": "Программирование",
+            "year": 2025,
+            "event_date": null,
+            "result_level": "PARTICIPANT",
+            "placement": null,
+            "scope": "INDIVIDUAL"
+          }
+        ]
+      },
+      "design_note": "Same qualification inputs as C05, verified participant."
+    },
+    {
+      "id": "C07",
+      "specialization": "BACKEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 75,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "Django"
+      ],
+      "years_of_experience": 1,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C08",
+      "specialization": "BACKEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 7,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C09",
+      "specialization": "BACKEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 88,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 6,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C10",
+      "specialization": "BACKEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 80,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 8,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-FINALIST",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": [
+          {
+            "external_id": "f1",
+            "competition_id": "cup-1",
+            "competition_name": "Кубок прототипа",
+            "discipline": "Программирование",
+            "year": 2025,
+            "event_date": null,
+            "result_level": "FINALIST",
+            "placement": null,
+            "scope": "INDIVIDUAL"
+          }
+        ]
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C11",
+      "specialization": "BACKEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 95,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "SQL"
+      ],
+      "years_of_experience": 3,
+      "personal_data_consent": false,
+      "personal_data_consent_at": null,
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-MISSING",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Consent is false despite strong canonical qualification."
+    },
+    {
+      "id": "C12",
+      "specialization": "BACKEND",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 90,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Django",
+        "SQL"
+      ],
+      "years_of_experience": 1,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Missing Python for Python API; grade is independently incompatible with Middle."
+    },
+    {
+      "id": "C13",
+      "specialization": "FRONTEND",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 95,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 2,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C14",
+      "specialization": "FRONTEND",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 80,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React"
+      ],
+      "years_of_experience": 1,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C15",
+      "specialization": "FRONTEND",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "TypeScript"
+      ],
+      "years_of_experience": 2,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-TEAM",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": [
+          {
+            "external_id": "t1",
+            "competition_id": "team-1",
+            "competition_name": "Командный турнир",
+            "discipline": "Кибербезопасность",
+            "year": 2020,
+            "event_date": null,
+            "result_level": "WINNER",
+            "placement": 1,
+            "scope": "TEAM"
+          }
+        ]
+      },
+      "design_note": "Assessment 100 and verified team win, but React must-have is absent."
+    },
+    {
+      "id": "C16",
+      "specialization": "FRONTEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 90,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 4,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C17",
+      "specialization": "FRONTEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 3,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Same qualification inputs as C18, without FSP."
+    },
+    {
+      "id": "C18",
+      "specialization": "FRONTEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 3,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-PRIZE",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": [
+          {
+            "external_id": "r1",
+            "competition_id": "cup-1",
+            "competition_name": "Кубок прототипа",
+            "discipline": "Программирование",
+            "year": 2025,
+            "event_date": null,
+            "result_level": "PRIZE_WINNER",
+            "placement": 2,
+            "scope": "INDIVIDUAL"
+          }
+        ]
+      },
+      "design_note": "Declared SENIOR, verified MIDDLE; verified prize winner."
+    },
+    {
+      "id": "C19",
+      "specialization": "FRONTEND",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 70,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React"
+      ],
+      "years_of_experience": 1,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-FINALIST",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C20",
+      "specialization": "FRONTEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 7,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C21",
+      "specialization": "FRONTEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 88,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 0.8,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Declared SENIOR, verified JUNIOR; declared grade cannot satisfy Middle/Senior."
+    },
+    {
+      "id": "C22",
+      "specialization": "FRONTEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 90,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 6,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-WINNER",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": [
+          {
+            "external_id": "w1",
+            "competition_id": "cup-1",
+            "competition_name": "Кубок прототипа",
+            "discipline": "Программирование",
+            "year": 2025,
+            "event_date": null,
+            "result_level": "WINNER",
+            "placement": 1,
+            "scope": "INDIVIDUAL"
+          }
+        ]
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C23",
+      "specialization": "FRONTEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 95,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 8,
+      "personal_data_consent": false,
+      "personal_data_consent_at": null,
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Consent is false despite Senior verification."
+    },
+    {
+      "id": "C24",
+      "specialization": "FRONTEND",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 75,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "React",
+        "TypeScript"
+      ],
+      "years_of_experience": 5,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-MULTI",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C25",
+      "specialization": "DATA_ML",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 5,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C26",
+      "specialization": "DATA_ML",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL"
+      ],
+      "years_of_experience": 3,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-PARTICIPANT",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C27",
+      "specialization": "DATA_ML",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 4,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Assessment 100, missing Python for both ML Needs."
+    },
+    {
+      "id": "C28",
+      "specialization": "DATA_ML",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 80,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 2,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C29",
+      "specialization": "DATA_ML",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 100,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 8,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C30",
+      "specialization": "DATA_ML",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 85,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 6,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C31",
+      "specialization": "DATA_ML",
+      "declared_grade": "JUNIOR",
+      "verified_grade": "JUNIOR",
+      "normalized_assessment_score": 95,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 1,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Verified JUNIOR is incompatible with Middle/Senior ML Needs."
+    },
+    {
+      "id": "C32",
+      "specialization": "DATA_ML",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 75,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL"
+      ],
+      "years_of_experience": null,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-MISSING",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C33",
+      "specialization": "DATA_ML",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 90,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 7,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Verified SENIOR, missing SQL for both ML Needs."
+    },
+    {
+      "id": "C34",
+      "specialization": "DATA_ML",
+      "declared_grade": "MIDDLE",
+      "verified_grade": "MIDDLE",
+      "normalized_assessment_score": 90,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 4,
+      "personal_data_consent": false,
+      "personal_data_consent_at": null,
+      "fsp": {
+        "state": "NONE",
+        "fsp_id": null,
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Consent is false despite exact Middle grade and complete ML catalog skills."
+    },
+    {
+      "id": "C35",
+      "specialization": "DATA_ML",
+      "declared_grade": "SENIOR",
+      "verified_grade": "SENIOR",
+      "normalized_assessment_score": 82,
+      "assessment_verified_at": "2026-10-08T12:00:00Z",
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 10,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "ENTERED_UNVERIFIED",
+        "fsp_id": "MOCK-TEAM",
+        "verified_at": null,
+        "synced_at": null,
+        "achievements": []
+      },
+      "design_note": "Synthetic coverage of qualification, skill and experience combinations; no relevance/ranking label."
+    },
+    {
+      "id": "C36",
+      "specialization": "DATA_ML",
+      "declared_grade": "SENIOR",
+      "verified_grade": null,
+      "normalized_assessment_score": null,
+      "assessment_verified_at": null,
+      "self_declared_skills": [
+        "Python",
+        "SQL",
+        "PostgreSQL"
+      ],
+      "years_of_experience": 3,
+      "personal_data_consent": true,
+      "personal_data_consent_at": "2026-10-08T10:00:00Z",
+      "fsp": {
+        "state": "VERIFIED",
+        "fsp_id": "MOCK-EMPTY",
+        "verified_at": "2026-10-09T00:00:00Z",
+        "synced_at": "2026-10-09T00:00:00Z",
+        "achievements": []
+      },
+      "design_note": "All three canonical Assessment fields null; mock verified-empty FSP is independent."
+    }
+  ]
+}
