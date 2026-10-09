@@ -141,7 +141,7 @@ export function RoleGate({
   if (loading) return <p role="status">Загрузка аккаунта…</p>;
   if (error)
     return (
-      <div role="alert">
+      <div className="card auth-screen" role="alert">
         <p className="error">{error}</p>
         <button onClick={() => void refresh()}>Повторить</button>
       </div>
@@ -151,8 +151,8 @@ export function RoleGate({
     <>
       {!user.email_verified && (
         <aside className="notice">
-          Email пока не подтверждён. Откройте ссылку из письма. В локальной
-          среде ссылка находится в журнале backend.{" "}
+          Email пока не подтверждён. Откройте ссылку из письма, чтобы
+          подтвердить email.{" "}
           <Link href="/verify-email">Подтверждение email</Link>
         </aside>
       )}

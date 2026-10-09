@@ -18,7 +18,7 @@ import type { AssessmentQuestion, Attempt, AttemptSummary } from "../src/assessm
 import { AssessmentQuestion as QuestionView } from "../src/components/assessment-question";
 import { AssessmentResult, CurrentQualification } from "../src/components/assessment-result";
 import { AssessmentDashboardSummary } from "../src/components/assessment-dashboard";
-import { AssessmentHistoryList } from "../src/components/assessment-history";
+import { AssessmentHistoryList, AssessmentHistoryView } from "../src/components/assessment-history";
 import type { CandidateProfile } from "../src/types";
 
 const question: AssessmentQuestion = {
@@ -72,7 +72,7 @@ const fullScores = {
   TESTING_SECURITY_DEBUGGING: 100,
 };
 function semanticSection(html: string, label: string) {
-  const match = html.match(new RegExp(`<section aria-label="${label}">([\\s\\S]*?)</section>`));
+  const match = html.match(new RegExp(`<section aria-label="${label}"[^>]*>([\\s\\S]*?)</section>`));
   assert.ok(match, `Missing section: ${label}`);
   return match[1];
 }
@@ -178,7 +178,7 @@ test("failed result shows threshold and weak competency without correct answers"
     createElement(AssessmentResult, { attempt: result }),
   );
   assert.match(html, /80 \/ 100/);
-  assert.match(html, /FAILED/);
+  assert.match(html, /Попытка не пройдена/);
   assert.match(html, /70\/100/);
   assert.match(html, /50%/);
   assert.match(html, /Базы данных/);
@@ -202,7 +202,7 @@ test("passed result shows aggregate score and next attempt date", () => {
     }),
   );
   assert.match(html, /Попытка успешно пройдена/);
-  assert.match(html, /PASSED/);
+  assert.doesNotMatch(html, /PASSED/);
   assert.match(html, /Следующая попытка/);
   assert.ok(!html.includes("Блоки ниже порога"));
   assertConditions(semanticSection(html, "Результат попытки"), "Выполнено", "Выполнено");
@@ -217,7 +217,7 @@ test("G3 result explains failed overall and fulfilled competency condition", () 
     attempt: { ...result, normalized_assessment_score: 65, competency_scores: g3Scores },
   }));
   const attempt = semanticSection(html, "Результат попытки");
-  assert.match(attempt, /FAILED/);
+  assert.match(attempt, /Попытка не пройдена/);
   assert.match(attempt, /65 \/ 100/);
   assertConditions(attempt, "Не выполнено", "Выполнено");
 });
@@ -232,7 +232,7 @@ test("failed Senior attempt and current Middle qualification have separate score
   const attempt = semanticSection(html, "Результат попытки");
   const current = semanticSection(html, "Текущая подтверждённая квалификация");
   assert.match(attempt, /Backend \/ Senior/);
-  assert.match(attempt, /FAILED/);
+  assert.match(attempt, /Попытка не пройдена/);
   assert.match(attempt, /65 \/ 100/);
   assert.match(attempt, /07\.10\.2026, 09:25:00 UTC/);
   assert.doesNotMatch(attempt, /Middle|80 \/ 100|09:10:00/);
@@ -281,8 +281,8 @@ test("server FAILED remains authoritative even when both aggregate conditions ar
     attempt: { ...result, normalized_assessment_score: 100, competency_scores: fullScores },
   }));
   const attempt = semanticSection(html, "Результат попытки");
-  assert.match(attempt, /FAILED/);
-  assert.doesNotMatch(attempt, /PASSED/);
+  assert.match(attempt, /Попытка не пройдена/);
+  assert.doesNotMatch(attempt, /Попытка успешно пройдена/);
   assertConditions(attempt, "Выполнено", "Выполнено");
 });
 test("server PASSED remains authoritative even when aggregate conditions are not fulfilled", () => {
@@ -290,8 +290,8 @@ test("server PASSED remains authoritative even when aggregate conditions are not
     attempt: { ...result, status: "PASSED", normalized_assessment_score: 0, competency_scores: null },
   }));
   const attempt = semanticSection(html, "Результат попытки");
-  assert.match(attempt, /PASSED/);
-  assert.doesNotMatch(attempt, /FAILED/);
+  assert.match(attempt, /Попытка успешно пройдена/);
+  assert.doesNotMatch(attempt, /Попытка не пройдена/);
   assertConditions(attempt, "Не выполнено", "Не выполнено");
 });
 for (const [label, scores] of [
@@ -314,7 +314,7 @@ test("historical Backend Middle PASS does not substitute for current Frontend Se
   }));
   const attempt = semanticSection(html, "Результат попытки");
   assert.match(attempt, /Backend \/ Middle/);
-  assert.match(attempt, /PASSED/);
+  assert.match(attempt, /Попытка успешно пройдена/);
   assert.match(attempt, /100 \/ 100/);
   const current = semanticSection(html, "Текущая подтверждённая квалификация");
   assert.match(current, /Frontend/);
@@ -338,9 +338,10 @@ test("historical PASS describes an attempt with all aggregate scores and UTC dat
   }));
   assert.ok(html.includes(historyCopy));
   assert.match(html, /Попытка: Backend \/ Middle/);
-  assert.match(html, /PASSED · 100 \/ 100 · Завершено кандидатом/);
+  assert.match(html, /Попытка успешно пройдена/);
+  assert.match(html, /Оценка: 100 \/ 100 · Завершено кандидатом/);
   for (const label of ["Программирование", "HTTP и API", "Базы данных", "Архитектура", "Тестирование, безопасность и отладка"]) {
-    assert.ok(html.includes(`${label}: 100%`));
+    assert.ok(html.includes(`<dt>${label}</dt><dd>100%</dd>`));
   }
   assert.match(html, /Начало: 01\.01\.2026, 00:00:00 UTC/);
   assert.match(html, /Завершение: 01\.01\.2026, 00:30:00 UTC/);
@@ -351,9 +352,10 @@ test("historical FAILED retains its own score, timeout reason and weak competenc
   const html = renderToStaticMarkup(createElement(AssessmentHistoryList, { attempts: [result] }));
   assert.ok(html.includes(historyCopy));
   assert.match(html, /Попытка: Backend \/ Middle/);
-  assert.match(html, /FAILED · 80 \/ 100 · Время вышло/);
-  assert.match(html, /Базы данных: 25%/);
-  assert.doesNotMatch(html, /PASSED|Оценка подтверждения/);
+  assert.match(html, /Попытка не пройдена/);
+  assert.match(html, /Оценка: 80 \/ 100 · Время вышло/);
+  assert.match(html, /Базы данных<\/dt><dd>25%/);
+  assert.doesNotMatch(html, /Попытка успешно пройдена|Оценка подтверждения/);
 });
 test("IN_PROGRESS history remains in progress with continue navigation and absent result", () => {
   const html = renderToStaticMarkup(createElement(AssessmentHistoryList, {
@@ -361,10 +363,11 @@ test("IN_PROGRESS history remains in progress with continue navigation and absen
       competency_scores: null, completion_reason: null, finished_at: null, available_at: null }],
   }));
   assert.ok(html.includes(historyCopy));
-  assert.match(html, /IN_PROGRESS · В процессе · Оценка: —/);
+  assert.match(html, /Тестирование не завершено/);
+  assert.match(html, /В процессе · Оценка: —/);
   assert.match(html, /Завершение: —/);
   assert.match(html, /href="\/candidate\/assessment\/attempt"[^>]*>Продолжить/);
-  assert.doesNotMatch(html, /PASSED|FAILED|80 \/ 100|Время вышло|Завершено кандидатом/);
+  assert.doesNotMatch(html, /Попытка успешно пройдена|Попытка не пройдена|80 \/ 100|Время вышло|Завершено кандидатом/);
 });
 test("history dates normalize offset timestamps across UTC calendar days", () => {
   const html = renderToStaticMarkup(createElement(AssessmentHistoryList, {
@@ -381,6 +384,102 @@ test("history ignores injected profile and answer fields instead of fabricating 
   assert.ok(html.includes(historyCopy));
   assert.doesNotMatch(html, /Текущая подтверждённая квалификация|Оценка подтверждения|Дата подтверждения|09:10:00|Senior|PRIVATE_HISTORY_KEY|Первый вариант|verified_grade/);
 });
+
+test("results visually separate the historical attempt, current qualification and declared level", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, { attempt: result, verification }));
+  const attempt = semanticSection(html, "Результат попытки");
+  const current = semanticSection(html, "Текущая подтверждённая квалификация");
+  const declared = semanticSection(html, "Заявленный уровень");
+  assert.match(attempt, /Попытка не пройдена/);
+  assert.match(current, /Подтверждённый уровень<\/dt><dd>Middle/);
+  assert.match(declared, /Senior/);
+  assert.match(declared, /Указан вами в профиле/);
+  assert.doesNotMatch(declared, /Оценка подтверждения|Дата подтверждения|Middle/);
+  assert.doesNotMatch(current, /Заявленный уровень|Senior/);
+  assert.match(html, /assessment-summary/);
+  assert.match(html, /assessment-current/);
+  assert.match(html, /assessment-declared/);
+  assert.doesNotMatch(html, /PASSED|FAILED|IN_PROGRESS|MOCK|сертификат/);
+});
+
+test("qualification and result keep genuine zero scores visible instead of empty placeholders", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, normalized_assessment_score: 0, competency_scores: { PROGRAMMING: 0 } },
+    verification: { ...verification, normalized_assessment_score: 0 },
+  }));
+  assert.match(semanticSection(html, "Результат попытки"), /Оценка попытки<\/dt><dd>0 \/ 100/);
+  assert.match(semanticSection(html, "Результат попытки"), /Программирование<\/dt><dd>0%/);
+  assert.match(semanticSection(html, "Текущая подтверждённая квалификация"), /Оценка подтверждения<\/dt><dd>0 \/ 100/);
+});
+
+test("unverified result keeps the declared grade separate and offers existing navigation", () => {
+  const profile = { ...verification, verified_grade: null, normalized_assessment_score: null, assessment_verified_at: null };
+  const html = renderToStaticMarkup(createElement(AssessmentResult, { attempt: result, verification: profile }));
+  const current = semanticSection(html, "Текущая подтверждённая квалификация");
+  assert.match(current, /Подтверждённой квалификации пока нет/);
+  assert.match(current, /Подтверждённый уровень<\/dt><dd>—/);
+  assert.match(current, /Оценка подтверждения<\/dt><dd>—/);
+  assert.match(current, /Дата подтверждения<\/dt><dd>—/);
+  assert.doesNotMatch(current, /Senior|Middle/);
+  assert.match(semanticSection(html, "Заявленный уровень"), /Senior/);
+  for (const route of ["/candidate/assessment", "/candidate/assessment/history", "/candidate"])
+    assert.ok(html.includes(`href="${route}"`), route);
+  assert.equal((html.match(/class="button(?: secondary)?"/g) ?? []).length, 3);
+});
+
+test("results never label an unfinished attempt as failed or fabricate its next-attempt date", () => {
+  const html = renderToStaticMarkup(createElement(AssessmentResult, {
+    attempt: { ...result, status: "IN_PROGRESS", normalized_assessment_score: null, competency_scores: null,
+      completion_reason: null, finished_at: null, available_at: null },
+  }));
+  const attempt = semanticSection(html, "Результат попытки");
+  assert.match(attempt, /Тестирование не завершено/);
+  assert.doesNotMatch(attempt, /Попытка не пройдена|Попытка успешно пройдена/);
+  assert.doesNotMatch(html, /не ранее —|Время вышло/);
+  assert.match(html, /Доступность следующей попытки указана на странице выбора уровня/);
+});
+
+test("history loading and error states hide stale attempts and preserve retry navigation", () => {
+  const loading = renderToStaticMarkup(createElement(AssessmentHistoryView, {
+    attempts: [result], loading: true, error: new Error("Недоступно"), onRetry: () => {},
+  }));
+  assert.match(loading, /role="status">Загрузка истории/);
+  assert.match(loading, /href="\/candidate\/assessment"/);
+  assert.doesNotMatch(loading, /Попытка:|Недоступно|Повторить|У вас пока нет попыток/);
+  const error = renderToStaticMarkup(createElement(AssessmentHistoryView, {
+    attempts: [result], loading: false, error: new Error("Недоступно"), onRetry: () => {},
+  }));
+  assert.match(error, /role="alert"/);
+  assert.match(error, /Недоступно/);
+  assert.match(error, /<button[^>]*>Повторить<\/button>/);
+  assert.doesNotMatch(error, /Попытка:|У вас пока нет попыток/);
+});
+
+test("history preserves zero or absent scores and makes competency details secondary", () => {
+  const zero = renderToStaticMarkup(createElement(AssessmentHistoryList, {
+    attempts: [{ ...result, normalized_assessment_score: 0, competency_scores: { PROGRAMMING: 0 } }],
+  }));
+  assert.match(zero, /Оценка: 0 \/ 100/);
+  assert.match(zero, /<details class="workflow-details"><summary>Результаты по компетенциям<\/summary>/);
+  assert.match(zero, /Программирование<\/dt><dd>0%/);
+  assert.match(zero, /class="button secondary" href="\/candidate\/assessment\/attempt"/);
+  const absent = renderToStaticMarkup(createElement(AssessmentHistoryList, {
+    attempts: [{ ...result, normalized_assessment_score: null, competency_scores: null }],
+  }));
+  assert.match(absent, /Оценка: —/);
+  assert.doesNotMatch(absent, /null \/ 100|<details/);
+});
+
+test("result and history escape unexpected competency metadata without leaking injected answers", () => {
+  const injected = { ...result, competency_scores: { "<script>unsafe</script>": 0 },
+    answer_key: "PRIVATE_ANSWERS", correct_option_index: 1, explanation: "PRIVATE_ANSWERS" };
+  for (const view of [createElement(AssessmentResult, { attempt: injected }), createElement(AssessmentHistoryList, { attempts: [injected] })]) {
+    const html = renderToStaticMarkup(view);
+    assert.match(html, /&lt;script&gt;unsafe&lt;\/script&gt;/);
+    assert.doesNotMatch(html, /<script>|PRIVATE_ANSWERS|answer_key|correct_option_index/);
+  }
+});
+
 test("answer save sends only selected option and returns canonical response", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async (url, init) => {

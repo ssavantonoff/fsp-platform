@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/api";
 import { useAuth } from "@/components/auth";
-import { Feedback } from "@/components/feedback";
+import { VerifyEmailView } from "@/components/verify-email-form";
 
 export default function VerifyEmail() {
   const [token, setToken] = useState("");
@@ -41,44 +40,5 @@ export default function VerifyEmail() {
       setBusy(false);
     }
   }
-  return (
-    <section className="card narrow">
-      <h1>Подтверждение email</h1>
-      {success ? (
-        <>
-          <p role="status" className="success">
-            Email подтверждён.
-          </p>
-          <Link href="/login">Перейти ко входу</Link>
-        </>
-      ) : (
-        <>
-          <p>
-            Откройте ссылку из письма или вставьте токен. В локальной среде
-            ссылка доступна в журнале backend. Ссылка действует один час при
-            стандартных настройках.
-          </p>
-          <form onSubmit={submit}>
-            <fieldset disabled={busy}>
-              <label>
-                Токен подтверждения
-                <input
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  required
-                  minLength={32}
-                  maxLength={128}
-                  autoComplete="off"
-                />
-              </label>
-              <Feedback error={error} />
-              <button disabled={busy} type="submit">
-                {busy ? "Подтверждаем…" : "Подтвердить"}
-              </button>
-            </fieldset>
-          </form>
-        </>
-      )}
-    </section>
-  );
+  return <VerifyEmailView token={token} busy={busy} success={success} error={error} onTokenChange={setToken} onSubmit={submit} />;
 }

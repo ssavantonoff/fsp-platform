@@ -106,6 +106,9 @@ nav {
   flex-wrap: wrap;
 }
 .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--brand-light);
   text-decoration: none;
   padding: 0.5rem 0.75rem;
@@ -831,7 +834,7 @@ dd {
 }
 .question-number {
   padding: 0.5rem;
-  min-width: 2.5rem;
+  min-width: 44px;
   color: var(--color-primary);
   background: var(--color-surface);
 }
@@ -844,8 +847,206 @@ dd {
   color: #fff;
   background: var(--color-primary);
 }
-.assessment-result dl {
+.auth-screen, .assessment-screen {
+  display: grid;
+  gap: var(--space-6);
+}
+.auth-screen > h1, .auth-heading h1, .assessment-heading h1,
+.assessment-result-heading h1 {
+  margin: 0;
+}
+.auth-heading, .assessment-heading, .assessment-result-heading {
+  display: grid;
+  gap: var(--space-3);
+}
+.auth-screen p:last-child, .assessment-heading p:last-child,
+.assessment-result-heading p:last-child {
+  margin-bottom: 0;
+}
+.auth-fields {
+  gap: var(--space-6);
+}
+.auth-footer {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.auth-screen .hint, .assessment-screen .hint,
+.assessment-screen .eyebrow, .assessment-screen .badge {
+  font-size: 0.875rem;
+}
+.auth-screen .actions > a:not(.button),
+.assessment-screen .actions > a:not(.button) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+.auth-form [aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+.assessment-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.assessment-current, .assessment-declared, .assessment-grade-card {
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.assessment-current {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.assessment-declared {
+  background: var(--brand-light);
+}
+.assessment-grade-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.assessment-grade-card h2, .assessment-grade-card p {
+  margin: 0;
+}
+.assessment-grade-card button {
+  margin-top: auto;
+}
+.assessment-grade-card[data-selected="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.assessment-rules {
+  padding: var(--space-6);
+}
+.assessment-rules ul {
+  margin: var(--space-4) 0;
+  padding-left: var(--space-6);
+}
+.assessment-rules li + li {
+  margin-top: var(--space-2);
+}
+.assessment-question-screen {
+  max-width: 960px;
+  margin: auto;
+  gap: var(--space-4);
+}
+.assessment-screen .grade-cards, .assessment-screen .assessment-options,
+.assessment-screen .assessment-controls {
+  margin: 0;
+}
+.assessment-progress {
+  display: grid;
+  gap: var(--space-2);
+}
+.assessment-progress p {
+  margin: 0;
+}
+.assessment-progress progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--color-primary);
+}
+.assessment-timer {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--brand-digital);
+  background: var(--color-primary-soft);
+  margin: 0;
+}
+.assessment-timer > span {
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+.assessment-options legend {
+  margin-bottom: var(--space-3);
+}
+.question-prompt {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.assessment-option {
+  min-height: 44px;
+  cursor: pointer;
+}
+.assessment-option:has(input:disabled) {
+  cursor: not-allowed;
+}
+.assessment-save {
+  margin: 0;
+}
+.assessment-save[data-state="saved"] {
+  color: var(--color-success);
+}
+.assessment-save[data-state="error"] {
+  color: var(--color-error);
+}
+.assessment-screen .question-navigator {
+  padding: 0;
+  margin: 0;
+}
+.assessment-confirm {
+  margin-top: var(--space-4);
+}
+.assessment-score-grid {
   display: block;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+.assessment-score-grid .score-row {
+  margin: 0;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.assessment-score-grid .score-row:last-child {
+  border-bottom: 0;
+}
+.assessment-thresholds {
+  padding: var(--space-4);
+  background: var(--brand-light);
+  border-radius: var(--radius-control);
+}
+.assessment-outcome {
+  font-weight: 700;
+}
+.assessment-result > .assessment-summary {
+  grid-template-columns: 1fr;
+}
+.assessment-result > .assessment-summary h2,
+.assessment-result > .assessment-summary h3,
+.assessment-result > .assessment-summary p,
+.assessment-result > .assessment-summary dl {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.assessment-heading h1 + p {
+  margin-top: var(--space-3);
+}
+.assessment-heading > .badge {
+  justify-self: start;
+}
+.auth-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.attempt-history .assessment-history-card {
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  margin-top: var(--space-4);
+}
+.assessment-history-card:first-child {
+  margin-top: 0;
+}
+.assessment-history-card .workflow-details {
+  margin-bottom: var(--space-4);
 }
 .score-row {
   display: grid;
@@ -1003,6 +1204,27 @@ dd {
   }
   .assessment-option {
     padding: 0.75rem;
+  }
+  .auth-screen, .assessment-screen {
+    gap: var(--space-4);
+  }
+  .auth-form input, .auth-form select {
+    font-size: 1rem;
+  }
+  .assessment-summary {
+    grid-template-columns: 1fr;
+  }
+  .assessment-rules, .assessment-history-card {
+    padding: var(--space-4);
+  }
+  .assessment-controls > button, .auth-form button[type="submit"] {
+    flex: 1 1 auto;
+  }
+  .assessment-timer {
+    font-size: 1.125rem;
+  }
+  .question-prompt {
+    font-size: 1rem;
   }
   .workflow-screen {
     gap: var(--space-4);

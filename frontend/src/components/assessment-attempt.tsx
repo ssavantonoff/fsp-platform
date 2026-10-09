@@ -16,6 +16,11 @@ import { Feedback } from "./feedback";
 import { AssessmentQuestion } from "./assessment-question";
 import { AssessmentResult } from "./assessment-result";
 
+type AnswerSaves = Record<
+  string,
+  { option: string; state: "saving" | "saved" | "error"; error?: unknown }
+>;
+
 export function AssessmentAttemptScreen({ id }: { id: string }) {
   return (
     <RoleGate role="CANDIDATE">
@@ -33,12 +38,7 @@ function AttemptContent({ id }: { id: string }) {
   const [saving, setSaving] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const [saves, setSaves] = useState<
-    Record<
-      string,
-      { option: string; state: "saving" | "saved" | "error"; error?: unknown }
-    >
-  >({});
+  const [saves, setSaves] = useState<AnswerSaves>({});
   const timeoutRequested = useRef(false);
   const load = useCallback(
     () =>
@@ -106,22 +106,53 @@ function AttemptContent({ id }: { id: string }) {
       setSaving(false);
     }
   }
-  if (loading) return <p role="status">Загрузка теста…</p>;
+  return <AssessmentAttemptView
+    attempt={attempt}
+    left={left}
+    loading={loading}
+    error={error}
+    index={index}
+    saves={saves}
+    saving={saving}
+    finishing={finishing}
+    confirm={confirm}
+    onRetry={() => {
+      setLoading(true);
+      void load();
+    }}
+    onFinish={() => void finish()}
+    onSave={(questionId, optionId) => void save(questionId, optionId)}
+    onIndexChange={setIndex}
+    onConfirmChange={setConfirm} />;
+}
+
+export function AssessmentAttemptView({ attempt, left, loading, error, index, saves, saving, finishing, confirm, onRetry, onFinish, onSave, onIndexChange, onConfirmChange }: {
+  attempt: Attempt | null;
+  left: number;
+  loading: boolean;
+  error: unknown;
+  index: number;
+  saves: AnswerSaves;
+  saving: boolean;
+  finishing: boolean;
+  confirm: boolean;
+  onRetry: () => void;
+  onFinish: () => void;
+  onSave: (questionId: string, optionId: string) => void;
+  onIndexChange: (index: number) => void;
+  onConfirmChange: (confirm: boolean) => void;
+}) {
+  if (loading) return <p className="assessment-loading" role="status">Загрузка теста…</p>;
   if (!attempt)
     return (
-      <section className="card">
+      <section className="card assessment-screen">
         <h1>Тестирование</h1>
         <Feedback error={error} />
-        <button
-          onClick={() => {
-            setLoading(true);
-            void load();
-          }}
-        >
+        <button onClick={onRetry}>
           Повторить
         </button>
         <p>
-          <Link href="/candidate/assessment">Выбор уровня</Link>
+          <Link className="button secondary" href="/candidate/assessment">Выбор уровня</Link>
         </p>
       </section>
     );
@@ -136,19 +167,22 @@ function AttemptContent({ id }: { id: string }) {
   ).length;
   const unsaved = Object.values(saves).some((value) => value.state === "error");
   const blocked = saving || finishing || left === 0;
+  const answered = attempt.questions.length - unanswered;
   return (
-    <section className="card">
+    <section className="card assessment-screen assessment-question-screen">
       <div className="assessment-top">
-        <h1>
-          Вопрос {index + 1} / {attempt.questions.length}
-        </h1>
-        <p
-          className="assessment-timer"
-          role="timer"
-          aria-label="Осталось времени"
-        >
-          {timerLabel(left)}
-        </p>
+        <div>
+          <p className="eyebrow">Assessment</p>
+          <h1>Вопрос {index + 1} / {attempt.questions.length}</h1>
+        </div>
+        <div className="assessment-timer">
+          <span>Осталось времени</span>
+          <strong role="timer" aria-label="Осталось времени" aria-live="off">{timerLabel(left)}</strong>
+        </div>
+      </div>
+      <div className="assessment-progress">
+        <p>Ответы сохранены: <strong>{answered} из {attempt.questions.length}</strong></p>
+        <progress value={answered} max={attempt.questions.length} aria-label="Сохранённые ответы" />
       </div>
       {left === 0 && (
         <p className="notice">
@@ -157,7 +191,7 @@ function AttemptContent({ id }: { id: string }) {
       )}
       <Feedback error={error} />
       {Boolean(error) && (
-        <button disabled={finishing} onClick={() => void finish()}>
+        <button disabled={finishing} onClick={onFinish}>
           Повторить завершение
         </button>
       )}
@@ -169,9 +203,9 @@ function AttemptContent({ id }: { id: string }) {
             : question.selected_option_id
         }
         disabled={blocked}
-        onSelect={(option) => void save(question.attempt_question_id, option)}
+        onSelect={(option) => onSave(question.attempt_question_id, option)}
       />
-      <p role="status">
+      <p className="assessment-save" data-state={state?.state ?? (question.selected_option_id ? "saved" : "unanswered")} role="status">
         {state?.state === "saving"
           ? "Сохраняем…"
           : state?.state === "error"
@@ -186,9 +220,7 @@ function AttemptContent({ id }: { id: string }) {
           <button
             className="secondary"
             disabled={blocked}
-            onClick={() =>
-              void save(question.attempt_question_id, state.option)
-            }
+            onClick={() => onSave(question.attempt_question_id, state.option)}
           >
             Повторить сохранение
           </button>
@@ -198,7 +230,7 @@ function AttemptContent({ id }: { id: string }) {
         <button
           className="secondary"
           disabled={index === 0 || finishing}
-          onClick={() => setIndex(index - 1)}
+          onClick={() => onIndexChange(index - 1)}
         >
           Назад
         </button>
@@ -206,12 +238,12 @@ function AttemptContent({ id }: { id: string }) {
           <button
             className="secondary"
             disabled={finishing}
-            onClick={() => setIndex(index + 1)}
+            onClick={() => onIndexChange(index + 1)}
           >
             Далее
           </button>
         ) : (
-          <button disabled={blocked} onClick={() => setConfirm(true)}>
+          <button disabled={blocked} onClick={() => onConfirmChange(true)}>
             Завершить тест
           </button>
         )}
@@ -224,24 +256,25 @@ function AttemptContent({ id }: { id: string }) {
             aria-current={position === index ? "step" : undefined}
             aria-label={`Вопрос ${position + 1}, ${q.selected_option_id ? "ответ сохранён" : "без ответа"}`}
             disabled={finishing}
-            onClick={() => setIndex(position)}
+            onClick={() => onIndexChange(position)}
           >
             {position + 1}
+            {q.selected_option_id && <span className="question-saved-marker" aria-hidden="true"> ✓</span>}
           </button>
         ))}
       </nav>
       <p className="hint">
-        Синий — текущий вопрос; зелёный — ответ сохранён; белый — без ответа.
+        Галочка — ответ сохранён. Выделенный номер — текущий вопрос.
         Таймер продолжает идти при закрытии страницы.
       </p>
       {confirm && (
         <div
-          className="notice"
+          className="notice assessment-confirm"
           role="region"
           aria-label="Подтверждение завершения"
         >
           <h2>Завершить тест?</h2>
-          {unanswered > 0 && <p>У вас {unanswered} вопросов без ответа.</p>}
+          {unanswered > 0 && <p>Вопросов без ответа: {unanswered}.</p>}
           {unsaved && (
             <p>
               Есть несохранённые изменения. В результат войдут только ответы,
@@ -253,11 +286,11 @@ function AttemptContent({ id }: { id: string }) {
             <button
               className="secondary"
               disabled={finishing}
-              onClick={() => setConfirm(false)}
+              onClick={() => onConfirmChange(false)}
             >
               Вернуться к вопросам
             </button>
-            <button disabled={blocked} onClick={() => void finish()}>
+            <button disabled={blocked} onClick={onFinish}>
               {finishing ? "Завершаем…" : "Завершить тест"}
             </button>
           </div>
