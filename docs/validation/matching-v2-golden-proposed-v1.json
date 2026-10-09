@@ -1,0 +1,1486 @@
+{
+  "name": "matching-v2-golden-proposed-v1",
+  "version": 1,
+  "status": "PROPOSED",
+  "human_reviewed": false,
+  "dataset_reference": {
+    "name": "matching-v2-validation-v1",
+    "path": "docs/validation/matching-v2-dataset-v1.json",
+    "sha256": "ef362631fc3104c50f29bca301b1fc9368b74a3a1ae95d2c0ba1e491ced0add5",
+    "freeze_commit": "a7590b79227f31abc9dba3e639d567cc0553138d"
+  },
+  "provenance": {
+    "author_type": "AI_PROPOSED",
+    "requirements": "Sava approved P6-B1 specification supplied by user, 2026-10-09 19:36 Europe/Moscow; execution instructions supplemental",
+    "production_ranking_observed": false,
+    "production_scoring_used": false,
+    "ranking_metrics_computed": false
+  },
+  "labels": [
+    {
+      "need_id": "N1",
+      "candidate_id": "C01",
+      "relevance_grade": 3,
+      "rationale": "Strong Junior API proposal: Python/FastAPI and optional SQL are present; synthetic Junior Assessment 100 and two years support the stated mentored role.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "JUNIOR is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, FastAPI.",
+        "nice_to_have": "Present preferred tags: SQL; requested: SQL.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 2,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N1",
+      "candidate_id": "C02",
+      "relevance_grade": 2,
+      "rationale": "Good Junior API proposal: the complete stated stack and one year align with the role; synthetic Assessment 70 leaves more uncertainty about depth.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "JUNIOR is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, FastAPI.",
+        "nice_to_have": "Present preferred tags: SQL; requested: SQL.",
+        "assessment_evidence": {
+          "normalized_score": 70,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 1,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N1",
+      "candidate_id": "C03",
+      "relevance_grade": 1,
+      "rationale": "Partial API proposal within the eligible pool: Python/FastAPI are present, but SQL is absent and half a year gives limited experience evidence despite Assessment 85.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "JUNIOR is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, FastAPI.",
+        "nice_to_have": "Present preferred tags: none; requested: SQL.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 0.5,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N1",
+      "candidate_id": "C04",
+      "relevance_grade": 3,
+      "rationale": "Very good available API evidence: compatible Middle, the full stated stack, Assessment 90 and three years support API delivery; adjacent grade does not automatically reduce relevance.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, FastAPI.",
+        "nice_to_have": "Present preferred tags: SQL; requested: SQL.",
+        "assessment_evidence": {
+          "normalized_score": 90,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 3,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N2",
+      "candidate_id": "C05",
+      "relevance_grade": 3,
+      "rationale": "Very good Django proposal: verified Middle, Python/Django plus both relational preferences, Assessment 85 and four years form a coherent fit for independent service work.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, Django.",
+        "nice_to_have": "Present preferred tags: PostgreSQL, SQL; requested: PostgreSQL, SQL.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 4,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N2",
+      "candidate_id": "C06",
+      "relevance_grade": 3,
+      "rationale": "Very good Django proposal: verified Middle, Python/Django plus both relational preferences, Assessment 85 and four years form a coherent fit for independent service work.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, Django.",
+        "nice_to_have": "Present preferred tags: PostgreSQL, SQL; requested: PostgreSQL, SQL.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 4,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N2",
+      "candidate_id": "C07",
+      "relevance_grade": 1,
+      "rationale": "Partial Django proposal: mandatory stack and compatible Middle are present, but both relational preferences are absent and one year offers limited evidence for independent Middle work.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, Django.",
+        "nice_to_have": "Present preferred tags: none; requested: PostgreSQL, SQL.",
+        "assessment_evidence": {
+          "normalized_score": 75,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 1,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N2",
+      "candidate_id": "C08",
+      "relevance_grade": 3,
+      "rationale": "Very good Django proposal: compatible Senior, the complete requested stack, Assessment 100 and seven years support service work; no salary or retention assumptions are made.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, Django.",
+        "nice_to_have": "Present preferred tags: PostgreSQL, SQL; requested: PostgreSQL, SQL.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 7,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N2",
+      "candidate_id": "C10",
+      "relevance_grade": 2,
+      "rationale": "Good Django proposal: compatible Senior, the full stack and eight years support the role; Assessment 80 and lack of task-level evidence leave uncertainty about depth, without treating tenure as proof.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, Django.",
+        "nice_to_have": "Present preferred tags: PostgreSQL, SQL; requested: PostgreSQL, SQL.",
+        "assessment_evidence": {
+          "normalized_score": 80,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 8,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N3",
+      "candidate_id": "C08",
+      "relevance_grade": 2,
+      "rationale": "Good evidence for the relational proxy only: Senior, SQL/PostgreSQL, Assessment 100 and seven years support the observable slice. Java proficiency is unknown.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: SQL, PostgreSQL.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 7,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "Не проверяет владение Java. Совпадение SQL/PostgreSQL не является доказательством владения Java."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N3",
+      "candidate_id": "C09",
+      "relevance_grade": 2,
+      "rationale": "Good evidence for the relational proxy only: Senior, SQL/PostgreSQL, Assessment 88 and six years support the observable slice. Absence of Python/Django is irrelevant here; Java proficiency is unknown.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: SQL, PostgreSQL.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 88,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 6,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "Не проверяет владение Java. Совпадение SQL/PostgreSQL не является доказательством владения Java."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N3",
+      "candidate_id": "C10",
+      "relevance_grade": 2,
+      "rationale": "Good evidence for the relational proxy only: Senior, SQL/PostgreSQL, Assessment 80 and eight years support the observable slice. Java proficiency is unknown; extra tenure does not resolve that gap.",
+      "factors_considered": {
+        "specialization": "BACKEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: SQL, PostgreSQL.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 80,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 8,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "Не проверяет владение Java. Совпадение SQL/PostgreSQL не является доказательством владения Java."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C13",
+      "relevance_grade": 3,
+      "rationale": "Very good React Junior proposal: React and preferred TypeScript, synthetic Junior Assessment 95 and two years support the mentored UI role.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "JUNIOR is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: TypeScript; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 95,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 2,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C14",
+      "relevance_grade": 2,
+      "rationale": "Good React Junior proposal: React, compatible Junior, Assessment 80 and one year align with the role; absent TypeScript limits breadth but does not exclude.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "JUNIOR is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: none; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 80,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 1,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C16",
+      "relevance_grade": 3,
+      "rationale": "Very good available React evidence: compatible Middle, React/TypeScript, Assessment 90 and four years support UI delivery. Adjacent grade is allowed and is not an automatic penalty.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: TypeScript; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 90,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 4,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C17",
+      "relevance_grade": 3,
+      "rationale": "Very good available React evidence: compatible Middle, React/TypeScript, Assessment 85 and three years support the mentored UI role.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: TypeScript; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 3,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C18",
+      "relevance_grade": 3,
+      "rationale": "Very good available React evidence: compatible Middle, React/TypeScript, Assessment 85 and three years support the mentored UI role.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: TypeScript; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 3,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C19",
+      "relevance_grade": 1,
+      "rationale": "Partial React proposal: compatible Middle and React satisfy admission, but TypeScript is absent; Assessment 70 and one year give limited additional support.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: none; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 70,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 1,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N4",
+      "candidate_id": "C21",
+      "relevance_grade": 2,
+      "rationale": "Good React Junior proposal: React/TypeScript and synthetic Junior Assessment 88 support the role; 0.8 years gives slightly limited experience evidence, without becoming a hard filter.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "JUNIOR is compatible with JUNIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React.",
+        "nice_to_have": "Present preferred tags: TypeScript; requested: TypeScript.",
+        "assessment_evidence": {
+          "normalized_score": 88,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 0.8,
+          "soft_target_years": 1,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N5",
+      "candidate_id": "C16",
+      "relevance_grade": 2,
+      "rationale": "Good React/TypeScript proxy evidence: Middle, Assessment 90 and four years support the observable frontend slice. No evidence establishes Next.js routing, rendering or framework proficiency.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 90,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 4,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N5",
+      "candidate_id": "C17",
+      "relevance_grade": 2,
+      "rationale": "Good React/TypeScript proxy evidence: Middle, Assessment 85 and three years align with the observable slice. Next.js competence remains unknown.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 3,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N5",
+      "candidate_id": "C18",
+      "relevance_grade": 2,
+      "rationale": "Good React/TypeScript proxy evidence: Middle, Assessment 85 and three years align with the observable slice. Next.js competence remains unknown.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 3,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N5",
+      "candidate_id": "C20",
+      "relevance_grade": 2,
+      "rationale": "Good React/TypeScript proxy evidence: compatible Senior, Assessment 100 and seven years support the observable slice. Neither seniority nor the score establishes Next.js competence.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 7,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N5",
+      "candidate_id": "C22",
+      "relevance_grade": 2,
+      "rationale": "Good React/TypeScript proxy evidence: compatible Senior, Assessment 90 and six years support the observable slice. Next.js competence remains unknown.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 90,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 6,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N5",
+      "candidate_id": "C24",
+      "relevance_grade": 1,
+      "rationale": "Partial React/TypeScript proxy evidence: compatible Senior and required skill tags satisfy admission; five years provide soft experience evidence, but Assessment 75 and absent task-level evidence leave uncertainty; Next.js is also unobserved.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 75,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 5,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение Next.js. Совпадение React/TypeScript не является доказательством владения Next.js."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N6",
+      "candidate_id": "C20",
+      "relevance_grade": 3,
+      "rationale": "Very good available Senior frontend evidence: React/TypeScript, synthetic Senior Assessment 100 and seven years support independent frontend work; architecture and ownership are not established.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 7,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Architecture, technical leadership and ownership are not established by the available fields."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N6",
+      "candidate_id": "C22",
+      "relevance_grade": 3,
+      "rationale": "Very good available Senior frontend evidence: React/TypeScript, synthetic Senior Assessment 90 and six years support independent frontend work; architecture and ownership are not established.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 90,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 6,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Architecture, technical leadership and ownership are not established by the available fields."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N6",
+      "candidate_id": "C24",
+      "relevance_grade": 2,
+      "rationale": "Good but less certain Senior frontend proposal: React/TypeScript and five years support the role; Assessment 75 and experience slightly below the six-year soft target leave depth uncertain.",
+      "factors_considered": {
+        "specialization": "FRONTEND matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: React, TypeScript.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 75,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 5,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Architecture, technical leadership and ownership are not established by the available fields."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": []
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C25",
+      "relevance_grade": 2,
+      "rationale": "Good data-processing proxy evidence: Middle, Python/SQL plus preferred PostgreSQL, Assessment 100 and five years support the observable slice. Model development and deployment skills remain unknown.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: PostgreSQL; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 5,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C26",
+      "relevance_grade": 1,
+      "rationale": "Partial data-processing proxy evidence: Middle, Python/SQL, Assessment 85 and three years support part of the role; preferred PostgreSQL is absent and specialized ML evidence is unavailable.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: none; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 3,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C28",
+      "relevance_grade": 1,
+      "rationale": "Partial data-processing proxy evidence: Middle and Python/SQL/PostgreSQL support the observable stack, but Assessment 80 and two years leave depth uncertain for independent Middle work; ML evidence is unavailable.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: PostgreSQL; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 80,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 2,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C29",
+      "relevance_grade": 2,
+      "rationale": "Good data-processing proxy evidence: compatible Senior, complete stated stack, Assessment 100 and eight years support the observable slice. These inputs do not establish ML engineering capability.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: PostgreSQL; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 8,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C30",
+      "relevance_grade": 2,
+      "rationale": "Good data-processing proxy evidence: compatible Senior, complete stated stack, Assessment 85 and six years support the observable slice. Specialized ML capability is unknown.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: PostgreSQL; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 6,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C32",
+      "relevance_grade": 1,
+      "rationale": "Partial data-processing proxy evidence: Middle and Python/SQL satisfy admission, but PostgreSQL is absent, experience is unknown and Assessment 75 gives limited support. Unknown experience is not zero; ML capability is unknown.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "MIDDLE is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: none; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 75,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": null,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию.",
+        "Relevant experience is unknown; no zero-year value is imputed."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N7",
+      "candidate_id": "C35",
+      "relevance_grade": 2,
+      "rationale": "Good data-processing proxy evidence: compatible Senior, complete stated stack, Assessment 82 and ten years support the observable slice. Long tenure neither establishes ML competence nor guarantees superiority.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with MIDDLE; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL.",
+        "nice_to_have": "Present preferred tags: PostgreSQL; requested: PostgreSQL.",
+        "assessment_evidence": {
+          "normalized_score": 82,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 10,
+          "soft_target_years": 3,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N8",
+      "candidate_id": "C29",
+      "relevance_grade": 2,
+      "rationale": "Good platform data-stack proxy evidence: Senior, Python/SQL/PostgreSQL, Assessment 100 and eight years support the observable slice. Specialized ML platform and operational skills remain unobserved.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL, PostgreSQL.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 100,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 8,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N8",
+      "candidate_id": "C30",
+      "relevance_grade": 2,
+      "rationale": "Good platform data-stack proxy evidence: Senior, Python/SQL/PostgreSQL, Assessment 85 and six years support the observable slice. Specialized ML platform and operational skills remain unobserved.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL, PostgreSQL.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 85,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 6,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    },
+    {
+      "need_id": "N8",
+      "candidate_id": "C35",
+      "relevance_grade": 2,
+      "rationale": "Good platform data-stack proxy evidence: Senior, Python/SQL/PostgreSQL, Assessment 82 and ten years support the observable slice. Tenure does not resolve absent ML platform evidence.",
+      "factors_considered": {
+        "specialization": "DATA_ML matches the stated direction.",
+        "verified_grade": "SENIOR is compatible with SENIOR; declared grade is ignored.",
+        "must_have": "Present self-declared tags: Python, SQL, PostgreSQL.",
+        "nice_to_have": "Present preferred tags: none; requested: none.",
+        "assessment_evidence": {
+          "normalized_score": 82,
+          "verified_at": "2026-10-08T12:00:00Z",
+          "provenance": "SYNTHETIC_CANONICAL_FIXTURE"
+        },
+        "relevant_experience": {
+          "years": 10,
+          "soft_target_years": 6,
+          "provenance": "SELF_DECLARED_GENERAL_TENURE; ROLE_RELEVANCE_UNCONFIRMED"
+        }
+      },
+      "limitations": [
+        "Fully synthetic fixture; skill tags and years are self-declared, without projects, references or task-level evidence.",
+        "Assessment grade/score/date are synthetic canonical inputs, not observed test performance; scores are not psychometrically comparable across grades or disciplines.",
+        "General years of experience do not establish experience with this exact role or individual contribution.",
+        "FRONTEND/DATA_ML canonical Assessment is offline fixture evidence; the base has no corresponding production question bank.",
+        "Не проверяет владение ML-фреймворками и специальными ML-компетенциями. Вспомогательные навыки не доказывают ML-квалификацию."
+      ],
+      "uncertainty": [
+        "AI-proposed holistic ordinal judgment; human review may revise the grade.",
+        "No validated confidence probability or project-level professional evidence."
+      ],
+      "flags": [
+        "CATALOG_PROXY"
+      ]
+    }
+  ],
+  "fsp_expectations": [
+    {
+      "scenario": "NONE",
+      "candidate_id": "C05",
+      "verified": false,
+      "distinct_competition_count": 0,
+      "best_result_level": null,
+      "expected_achievement_score": 0,
+      "expected_bonus": 0,
+      "rationale": "No verified evidence; zero contribution."
+    },
+    {
+      "scenario": "ENTERED_UNVERIFIED",
+      "candidate_id": "C03",
+      "verified": false,
+      "distinct_competition_count": 0,
+      "best_result_level": null,
+      "expected_achievement_score": 0,
+      "expected_bonus": 0,
+      "rationale": "An entered identifier is not verified evidence; zero contribution."
+    },
+    {
+      "scenario": "VERIFIED_EMPTY",
+      "candidate_id": "C36",
+      "verified": true,
+      "distinct_competition_count": 0,
+      "best_result_level": null,
+      "expected_achievement_score": 0,
+      "expected_bonus": 0,
+      "rationale": "Verified link with no achievements; no qualification or bonus is supplied."
+    },
+    {
+      "scenario": "PARTICIPANT",
+      "candidate_id": "C06",
+      "verified": true,
+      "distinct_competition_count": 1,
+      "best_result_level": "PARTICIPANT",
+      "expected_achievement_score": 10,
+      "expected_bonus": 0.5,
+      "rationale": "One verified participation: 10 participation points and zero result-quality points."
+    },
+    {
+      "scenario": "FINALIST",
+      "candidate_id": "C10",
+      "verified": true,
+      "distinct_competition_count": 1,
+      "best_result_level": "FINALIST",
+      "expected_achievement_score": 45,
+      "expected_bonus": 2.25,
+      "rationale": "One verified finalist: 10 participation points plus 35 quality points."
+    },
+    {
+      "scenario": "PRIZE_WINNER",
+      "candidate_id": "C18",
+      "verified": true,
+      "distinct_competition_count": 1,
+      "best_result_level": "PRIZE_WINNER",
+      "expected_achievement_score": 66,
+      "expected_bonus": 3.3,
+      "rationale": "One verified prize: 10 participation points plus 56 quality points."
+    },
+    {
+      "scenario": "WINNER",
+      "candidate_id": "C22",
+      "verified": true,
+      "distinct_competition_count": 1,
+      "best_result_level": "WINNER",
+      "expected_achievement_score": 80,
+      "expected_bonus": 4,
+      "rationale": "One verified individual win: 10 participation points plus 70 quality points."
+    },
+    {
+      "scenario": "MULTIPLE_COMPETITIONS",
+      "candidate_id": "C02",
+      "verified": true,
+      "distinct_competition_count": 3,
+      "best_result_level": "WINNER",
+      "expected_achievement_score": 100,
+      "expected_bonus": 5,
+      "rationale": "Three distinct competitions with mixed results/scopes: capped participation 30 and best quality 70."
+    },
+    {
+      "scenario": "TEAM_ACHIEVEMENT",
+      "candidate_id": "C15",
+      "verified": true,
+      "distinct_competition_count": 1,
+      "best_result_level": "WINNER",
+      "expected_achievement_score": 80,
+      "expected_bonus": 4,
+      "rationale": "One verified team win receives the same rule contribution as an individual win; no individual competence is inferred."
+    }
+  ],
+  "controlled_comparisons": [
+    {
+      "candidate_ids": [
+        "C05",
+        "C06"
+      ],
+      "need_ids": [
+        "N2"
+      ],
+      "professional_inputs_equal": true,
+      "expected_professional_fit_relation": "EQUAL_NOT_COMPUTED",
+      "expected_relevance_relation": "EQUAL",
+      "expected_bonuses": [
+        0,
+        0.5
+      ],
+      "rationale": "Same specialization, verified canonical Assessment, skills and experience; differing FSP evidence is evaluated separately."
+    },
+    {
+      "candidate_ids": [
+        "C17",
+        "C18"
+      ],
+      "need_ids": [
+        "N4",
+        "N5"
+      ],
+      "professional_inputs_equal": true,
+      "expected_professional_fit_relation": "EQUAL_NOT_COMPUTED",
+      "expected_relevance_relation": "EQUAL",
+      "expected_bonuses": [
+        0,
+        3.3
+      ],
+      "rationale": "Same professional inputs; differing declared grade is ignored and FSP evidence is evaluated separately."
+    }
+  ],
+  "negative_cases": [
+    {
+      "candidate_id": "C15",
+      "need_ids": [
+        "N4",
+        "N5",
+        "N6"
+      ],
+      "required_exclusion": "must_have",
+      "expected_eligible": false,
+      "rationale": "React is missing despite Assessment 100 and verified team-win evidence; no eligible pair may be created by FSP."
+    },
+    {
+      "candidate_id": "C27",
+      "need_ids": [
+        "N7",
+        "N8"
+      ],
+      "required_exclusion": "must_have",
+      "expected_eligible": false,
+      "rationale": "Python is missing despite Assessment 100; a high Assessment does not replace must-have."
+    },
+    {
+      "candidate_id": "C36",
+      "need_ids": [
+        "N7",
+        "N8"
+      ],
+      "required_exclusion": "unverified_assessment",
+      "expected_eligible": false,
+      "rationale": "All canonical Assessment fields are null; verified-empty FSP cannot create qualification."
+    }
+  ]
+}
