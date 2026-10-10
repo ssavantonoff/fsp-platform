@@ -344,9 +344,6 @@ def test_matching_preview_exact_allowlist(
         "fsp_id",
         "personal_data_consent_at",
         "declared_grade",
-        "verified_grade",
-        "normalized_assessment_score",
-        "assessment_verified_at",
         "created_at",
         "updated_at",
     ):
@@ -465,17 +462,13 @@ def test_matching_ranks_before_pagination(client, active_need, matching_candidat
     assert matches(client, active_need, offset=99)["items"] == []
 
 
-@pytest.mark.parametrize(
-    "count,provider_queries,max_queries", [(5, 1, 8), (50, 1, 8), (501, 2, 11)]
-)
+@pytest.mark.parametrize("count", [5, 50, 501])
 def test_matching_batches_queries(
     client,
     active_need,
     matching_candidate,
     database,
     count,
-    provider_queries,
-    max_queries,
 ):
     for _ in range(count):
         matching_candidate()
@@ -483,19 +476,19 @@ def test_matching_batches_queries(
         page = matches(client, active_need)
     assert page["total"] == count
     assert len(page["items"]) == 20 if count > 20 else len(page["items"]) == count
-    assert len(statements) <= max_queries
+    assert len(statements) <= 4
     provider_reads = [
         sql
         for sql in statements
         if "candidate_profiles.normalized_assessment_score" in sql
     ]
-    assert len(provider_reads) == provider_queries
+    assert len(provider_reads) == 1
     assert all(" in (" in sql for sql in provider_reads)
-    # P4 adds one aggregate evidence query per 500 profiles, never one per candidate.
+    # Qualification, skills and FSP must share this single statement snapshot.
     fsp_reads = [sql for sql in statements if "fsp_achievements.competition_id" in sql]
-    assert len(fsp_reads) == provider_queries
-    skill_reads = [sql for sql in statements if "join candidate_skills" in sql]
-    assert len(skill_reads) == (2 if count > 500 else 1)
+    assert fsp_reads == provider_reads
+    skill_reads = [sql for sql in statements if "from candidate_skills" in sql]
+    assert skill_reads == provider_reads
 
 
 def test_matching_is_read_only(

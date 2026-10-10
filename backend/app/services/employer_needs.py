@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.errors import ApiError
 from app.models import (
@@ -29,19 +29,21 @@ def _skills(db: Session, data: NeedWrite) -> dict[str, Skill]:
     return skills
 
 
-def _commit(db: Session, need: EmployerNeed) -> EmployerNeed:
+def _commit(db: Session, need: EmployerNeed) -> NeedOut:
     try:
+        db.flush()
+        db.refresh(need)
+        result = need_out(need)
         db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise ApiError(
             409, "need_conflict", "Не удалось сохранить потребность."
         ) from exc
-    db.refresh(need)
-    return need
+    return result
 
 
-def create_need(db: Session, user: User, data: NeedWrite) -> EmployerNeed:
+def create_need(db: Session, user: User, data: NeedWrite) -> NeedOut:
     profile = employer_profile(db, user)
     skills = _skills(db, data)
     need = EmployerNeed(employer_id=profile.id, **data.model_dump(exclude=SKILL_FIELDS))
@@ -69,13 +71,20 @@ def get_need(
         statement = statement.with_for_update().execution_options(
             populate_existing=True
         )
-    need = db.scalar(statement)
+    else:
+        # Keep the mutation lock/selectin path unchanged; GET reads one snapshot.
+        statement = statement.options(
+            joinedload(EmployerNeed.skill_requirements).joinedload(
+                EmployerNeedSkill.skill
+            )
+        )
+    need = db.scalars(statement).unique().one_or_none()
     if need is None:
         raise ApiError(404, "need_not_found", "Потребность не найдена.")
     return need
 
 
-def update_need(db: Session, user: User, need_id: str, data: NeedWrite) -> EmployerNeed:
+def update_need(db: Session, user: User, need_id: str, data: NeedWrite) -> NeedOut:
     need = get_need(db, user, need_id, for_update=True)
     if need.status == NeedStatus.CLOSED:
         raise ApiError(
@@ -108,7 +117,7 @@ def update_need(db: Session, user: User, need_id: str, data: NeedWrite) -> Emplo
 
 def _transition(
     db: Session, user: User, need_id: str, source: NeedStatus, target: NeedStatus
-) -> EmployerNeed:
+) -> NeedOut:
     need = get_need(db, user, need_id, for_update=True)
     if need.status != source:
         raise ApiError(
@@ -119,11 +128,11 @@ def _transition(
     return _commit(db, need)
 
 
-def activate_need(db: Session, user: User, need_id: str) -> EmployerNeed:
+def activate_need(db: Session, user: User, need_id: str) -> NeedOut:
     return _transition(db, user, need_id, NeedStatus.DRAFT, NeedStatus.ACTIVE)
 
 
-def close_need(db: Session, user: User, need_id: str) -> EmployerNeed:
+def close_need(db: Session, user: User, need_id: str) -> NeedOut:
     return _transition(db, user, need_id, NeedStatus.ACTIVE, NeedStatus.CLOSED)
 
 
@@ -137,7 +146,12 @@ def list_needs(db: Session, user: User, *, limit: int, offset: int) -> NeedPage:
         .order_by(EmployerNeed.created_at.desc(), EmployerNeed.id.asc())
         .limit(limit)
         .offset(offset)
-    )
+        .options(
+            joinedload(EmployerNeed.skill_requirements).joinedload(
+                EmployerNeedSkill.skill
+            )
+        )
+    ).unique()
     return NeedPage(
         items=[need_out(need) for need in needs],
         total=total,
