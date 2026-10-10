@@ -368,7 +368,15 @@ def test_active_update_persistence_failure_rolls_back(
 
     def fail_after_flush(session, *args, **kwargs):
         nonlocal fired
-        if not fired and any(isinstance(item, EmployerNeed) for item in session.dirty):
+        # A service may explicitly flush before commit/DTO construction. Locate
+        # the intended write by its values, so a clean identity map still injects
+        # the same post-flush failure and exercises rollback.
+        if not fired and any(
+            isinstance(item, EmployerNeed)
+            and item.id == need_id
+            and item.position_title == "Changed"
+            for item in session.identity_map.values()
+        ):
             fired = True
             if failure == "flush":
                 original(session, *args, **kwargs)

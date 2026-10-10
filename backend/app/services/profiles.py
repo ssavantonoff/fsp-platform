@@ -1,16 +1,22 @@
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.errors import ApiError
 from app.models import CandidateProfile, EmployerProfile, Skill, User, utcnow
-from app.schemas import CandidateWrite, EmployerWrite
+from app.schemas import CandidateOut, CandidateWrite, EmployerWrite
 from app.services import assessments, fsp
 
 
 def candidate_profile(db: Session, user: User) -> CandidateProfile:
-    profile = db.scalar(
-        select(CandidateProfile).where(CandidateProfile.user_id == user.id)
+    profile = (
+        db.scalars(
+            select(CandidateProfile)
+            .where(CandidateProfile.user_id == user.id)
+            .options(joinedload(CandidateProfile.skills))
+        )
+        .unique()
+        .one_or_none()
     )
     if profile is None:
         raise ApiError(404, "profile_not_found", "Создайте профиль кандидата.")
@@ -28,7 +34,7 @@ def employer_profile(db: Session, user: User) -> EmployerProfile:
 
 def save_candidate(
     db: Session, user: User, data: CandidateWrite, *, create: bool
-) -> CandidateProfile:
+) -> CandidateOut:
     profile = db.scalar(
         select(CandidateProfile)
         .where(CandidateProfile.user_id == user.id)
@@ -39,7 +45,11 @@ def save_candidate(
         raise ApiError(409, "profile_exists", "Профиль уже создан.")
     if not create and profile is None:
         raise ApiError(404, "profile_not_found", "Сначала создайте профиль.")
-    skills = list(db.scalars(select(Skill).where(Skill.id.in_(data.skill_ids))))
+    skills = list(
+        db.scalars(
+            select(Skill).where(Skill.id.in_(data.skill_ids)).order_by(Skill.name)
+        )
+    )
     if len(skills) != len(data.skill_ids):
         raise ApiError(422, "unknown_skill", "Выбран неизвестный навык.")
     if profile is None:
@@ -58,15 +68,29 @@ def save_candidate(
         profile.personal_data_consent_at = utcnow()
     elif not data.personal_data_consent:
         profile.personal_data_consent_at = None
+    # FSP evidence deletion can autoflush: align the consent pair before any SQL.
+    profile.personal_data_consent = data.personal_data_consent
     if not create and data.fsp_id != profile.fsp_id:
         fsp.clear_verification(db, profile)
     for key, value in data.model_dump(exclude={"skill_ids"}).items():
         setattr(profile, key, value)
     profile.skills = skills
     profile.updated_at = utcnow()
-    commit_profile(db)
-    db.refresh(profile)
-    return profile
+    try:
+        # Copy scalars and relationships while the write lock still protects them.
+        # The DTO is returned only after commit succeeds, even with expiration on.
+        db.flush()
+        # Preserve database timestamp representation and relationship ordering
+        # while the write lock still protects this version.
+        db.refresh(profile)
+        result = CandidateOut.model_validate(profile)
+        commit_profile(db)
+    except IntegrityError as exc:
+        db.rollback()
+        raise ApiError(
+            409, "profile_conflict", "Профиль уже создан. Обновите страницу."
+        ) from exc
+    return result
 
 
 def save_employer(

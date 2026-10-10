@@ -1,19 +1,18 @@
 from collections.abc import Iterable
+from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import TypedDict
 
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session, load_only, selectinload
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.errors import ApiError
 from app.models import (
-    CandidateProfile,
     EmployerNeed,
     EmployerNeedSkill,
     FspResultLevel,
     NeedSkillKind,
     NeedStatus,
-    Skill,
     User,
 )
 from app.need_schemas import (
@@ -28,8 +27,8 @@ from app.schemas import SkillOut
 from app.services.candidate_assessments import (
     CandidateAssessment,
     CandidateAssessmentProvider,
+    ProfileAssessmentProvider,
 )
-from app.services.fsp import load_signals
 from app.services.fsp_rules import UNVERIFIED, FspSignal
 from app.services.matching_rules import (
     CandidateMatchInput,
@@ -40,6 +39,7 @@ from app.services.matching_rules import (
     eligible_candidate,
     score_professional_fit,
 )
+from app.services.matching_snapshot import SnapshotProfile, load_matching_snapshot
 from app.services.profiles import employer_profile
 
 
@@ -135,55 +135,31 @@ def match_need(
 ) -> MatchesPage:
     with db.no_autoflush:
         criteria = load_need_criteria(db, user, need_id)
-        pool = db.execute(
-            select(CandidateProfile, func.substr(CandidateProfile.last_name, 1, 1))
-            .options(
-                load_only(
-                    CandidateProfile.id,
-                    CandidateProfile.first_name,
-                    CandidateProfile.specialization,
-                    CandidateProfile.personal_data_consent,
-                    CandidateProfile.years_of_experience,
-                    raiseload=True,
-                ),
-                selectinload(CandidateProfile.skills).load_only(
-                    Skill.id, Skill.name, raiseload=True
-                ),
+        snapshot = load_matching_snapshot(db, criteria)
+        context = (
+            provider.matching_snapshot(snapshot.assessments)
+            if isinstance(provider, ProfileAssessmentProvider)
+            else nullcontext()
+        )
+        with context:
+            assessments = provider.get_assessments(
+                [profile.candidate.candidate_id for profile in snapshot.profiles]
             )
-            .order_by(CandidateProfile.id)
-        ).all()
-        assessments = provider.get_assessments([profile.id for profile, _ in pool])
-        fsp_signals = load_signals(db, [profile.id for profile, _ in pool])
-        catalog = {
-            row.id: SkillOut(id=row.id, name=row.name)
-            for row in db.execute(
-                select(Skill.id, Skill.name).where(
-                    Skill.id.in_(
-                        criteria.must_have_skill_ids | criteria.nice_to_have_skill_ids
-                    )
-                )
-            )
-        }
         ranked = []
         profiles = {}
-        for profile, surname_initial in pool:
-            candidate = CandidateMatchInput(
-                candidate_id=profile.id,
-                specialization=profile.specialization,
-                personal_data_consent=profile.personal_data_consent,
-                skill_ids=frozenset(skill.id for skill in profile.skills),
-                years_of_experience=profile.years_of_experience,
-            )
+        for profile in snapshot.profiles:
+            candidate = profile.candidate
+            candidate_id = candidate.candidate_id
             evaluation = evaluate_candidate(
                 criteria,
                 candidate,
-                assessments.get(profile.id),
-                fsp=fsp_signals.get(profile.id, FspSignal()),
+                assessments.get(candidate_id),
+                fsp=snapshot.fsp_signals.get(candidate_id, FspSignal()),
             )
             if evaluation is None:
                 continue
             ranked.append(evaluation)
-            profiles[profile.id] = (profile, surname_initial)
+            profiles[candidate_id] = (profile, profile.surname_initial)
         ordered = rank_evaluations(ranked)
         return MatchesPage(
             items=[
@@ -191,7 +167,7 @@ def match_need(
                     item,
                     *profiles[item.eligible.candidate.candidate_id],
                     criteria,
-                    catalog,
+                    snapshot.catalog,
                 )
                 for item in ordered[offset : offset + limit]
             ],
@@ -265,7 +241,7 @@ def _factor(factor: FactorContribution) -> FactorBreakdown:
 
 def _preview(
     item: EvaluatedCandidate,
-    profile: CandidateProfile,
+    profile: SnapshotProfile,
     surname_initial: str,
     criteria: NeedCriteria,
     catalog: dict[str, SkillOut],
