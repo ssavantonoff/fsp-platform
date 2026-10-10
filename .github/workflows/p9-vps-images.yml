@@ -1,0 +1,46 @@
+name: P9 VPS images
+on:
+  push:
+    branches: [codex/p9-d1-vps-images]
+    paths: [.github/workflows/p9-vps-images.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: p9-vps-images
+  cancel-in-progress: false
+env:
+  APP_SHA: bce395a8c102491f4cf9ac26106b7263d08ad515
+jobs:
+  images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        component: [backend, frontend]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: bce395a8c102491f4cf9ac26106b7263d08ad515
+          persist-credentials: false
+      - name: Build immutable application image
+        env:
+          COMPONENT: ${{ matrix.component }}
+        run: |
+          set -euo pipefail
+          image="fsp-${COMPONENT}:${APP_SHA}"
+          docker build --platform linux/amd64 --pull --label "org.opencontainers.image.source=https://github.com/ssavantonoff/fsp-platform" --label "org.opencontainers.image.revision=${APP_SHA}" --tag "$image" "./${COMPONENT}"
+          mkdir -p release
+          docker image inspect "$image" --format '{{.Id}}' > "release/${COMPONENT}.image-id"
+          printf '%s\n' "$APP_SHA" > release/source-sha.txt
+          docker save "$image" | gzip -1 > "release/${COMPONENT}.tar.gz"
+          (cd release && sha256sum "${COMPONENT}.tar.gz" > "${COMPONENT}.tar.gz.sha256")
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: fsp-${{ matrix.component }}-bce395a8c102
+          path: release/
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
