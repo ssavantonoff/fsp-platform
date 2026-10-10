@@ -1,0 +1,439 @@
+{
+  "source": "isolated Docker access logs; supplementary to real browser observations; includes health checks and fixture/API comparison requests",
+  "requests": [
+    {
+      "method": "DELETE",
+      "path": "/candidate/fsp/verification",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 200,
+      "count": 40
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 401,
+      "count": 15
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/assessments/7bdafc47-9dea-4780-8b17-57275d93cbf5",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/assessments/availability",
+      "status": 200,
+      "count": 6
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/assessments/availability",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a",
+      "status": 200,
+      "count": 4
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/assessments/history",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/fsp",
+      "status": 200,
+      "count": 16
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/invitations",
+      "status": 200,
+      "count": 7
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/profile",
+      "status": 200,
+      "count": 20
+    },
+    {
+      "method": "GET",
+      "path": "/candidate/profile",
+      "status": 404,
+      "count": 3
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs",
+      "status": 200,
+      "count": 11
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/00000000-0000-4000-8000-000000000000",
+      "status": 404,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6",
+      "status": 200,
+      "count": 6
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6/invitations",
+      "status": 200,
+      "count": 3
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6/matches",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/9933fe48-6754-465e-a439-62838438d365",
+      "status": 200,
+      "count": 5
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/9933fe48-6754-465e-a439-62838438d365/invitations",
+      "status": 200,
+      "count": 3
+    },
+    {
+      "method": "GET",
+      "path": "/employer/needs/9933fe48-6754-465e-a439-62838438d365/matches",
+      "status": 200,
+      "count": 5
+    },
+    {
+      "method": "GET",
+      "path": "/employer/profile",
+      "status": 200,
+      "count": 6
+    },
+    {
+      "method": "GET",
+      "path": "/employer/profile",
+      "status": 404,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "status": 200,
+      "count": 352
+    },
+    {
+      "method": "GET",
+      "path": "/skills",
+      "status": 200,
+      "count": 32
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "count": 11
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 401,
+      "count": 3
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "status": 204,
+      "count": 8
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 201,
+      "count": 3
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 409,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "status": 422,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/auth/verify-email",
+      "status": 204,
+      "count": 2
+    },
+    {
+      "method": "POST",
+      "path": "/auth/verify-email",
+      "status": 400,
+      "count": 4
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/assessments",
+      "status": 201,
+      "count": 2
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/assessments/7bdafc47-9dea-4780-8b17-57275d93cbf5/submit",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/submit",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/fsp/verify",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/invitations/3a53527d-2fa9-4df3-9cde-d30ab9571932/decline",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/invitations/3a53527d-2fa9-4df3-9cde-d30ab9571932/view",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/invitations/44ea767b-9651-435d-889a-fe4dd77f3260/accept",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/invitations/44ea767b-9651-435d-889a-fe4dd77f3260/view",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/candidate/profile",
+      "status": 201,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/employer/needs",
+      "status": 201,
+      "count": 2
+    },
+    {
+      "method": "POST",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6/activate",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6/close",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6/invitations",
+      "status": 201,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/employer/needs/9933fe48-6754-465e-a439-62838438d365/activate",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/employer/needs/9933fe48-6754-465e-a439-62838438d365/invitations",
+      "status": 201,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/employer/profile",
+      "status": 201,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/02faa0de-300c-41ce-b711-dad8c700f38e",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/076b812a-dfaf-4434-8aee-91fb54fed5ba",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/0c84c5af-5e54-4fb0-9057-ed8f2e7b9482",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/32f3befe-4bd8-4ba8-9a68-cc8ef7f843e7",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/4efffa3b-caad-4055-b04a-e99572b990f2",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/58cbc1af-ebe9-4444-bf70-bae8cad8b566",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/658bbdee-b7b6-402f-89db-c735483af020",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/68f3e3f0-d8b6-4cb9-8390-15da1b9a2ee0",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/7f4cbb09-f7a7-4c41-8592-c69777a9f103",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/88eaa31b-b91e-4915-9beb-852236cec822",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/9884f762-7d3f-4dc1-8db4-e3cbc6f7a4b5",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/98fcff3b-70d5-4e69-a924-e3d71457b488",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/a0448be4-51d7-4ee8-b679-883c3c6c5f5e",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/a465adb5-9a3f-4932-b4e1-3ee459bf474f",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/b29c7a33-afb5-43e0-ab8e-652b996bad49",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/cf345bd2-b4ea-4d41-88b5-3c25148e1fc0",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/dab34350-ab7e-4ce5-80dc-a4ea531505cf",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/e1552ee4-2318-494a-9c35-09d6d14f20a3",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/ec03e9ff-1956-43d4-a82c-9bcb089f0397",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/assessments/b36cf705-f67a-4a71-a5bf-269f50e3404a/answers/f33100af-155c-4e78-9f4a-4eb93b076a1d",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/candidate/profile",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/employer/needs/16f1ee33-4c8d-486e-90f7-1681a2f8e9e6",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/employer/needs/9933fe48-6754-465e-a439-62838438d365",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "PUT",
+      "path": "/employer/profile",
+      "status": 200,
+      "count": 1
+    }
+  ],
+  "frontendErrorMarkers": {},
+  "rawLogsPublished": false
+}

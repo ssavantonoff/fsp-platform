@@ -1,0 +1,807 @@
+{
+  "baseline": "bce395a8c102491f4cf9ac26106b7263d08ad515",
+  "browser": "Codex In-app Browser",
+  "date": "2026-10-10",
+  "journal": [
+    {
+      "id": "A1",
+      "result": "registered; invalid email and short password rejected by browser validation"
+    },
+    {
+      "id": "A1-duplicate",
+      "result": "same email registration returns visible server error; password preserved"
+    },
+    {
+      "id": "A4-no-profile",
+      "result": "CTA create profile, no crash"
+    },
+    {
+      "id": "A2-invalid",
+      "result": "invalid token visible error"
+    },
+    {
+      "id": "A2-valid",
+      "result": "email verified via real development link; token removed from URL"
+    },
+    {
+      "id": "A2-reuse",
+      "result": "used token rejected; same-document hash navigation needed reload (review separately)"
+    },
+    {
+      "id": "A3",
+      "result": "all fields saved; declared Senior separated from unverified; Assessment requires consent"
+    },
+    {
+      "id": "A3-edit-FSP",
+      "result": "consent/ID persisted after reload; MOCK-MULTI verification real UI, current declared grade remains unverified"
+    },
+    {
+      "id": "A4-reload",
+      "result": "1 saved answer retained; timer decreased after reload"
+    },
+    {
+      "id": "A4-A5",
+      "result": "real Junior PASS 100/100, all five competency percentages100, 20 answers saved, double-click finish gave one completed attempt; verified Junior and declared Senior remain distinct",
+      "attemptPath": "/candidate/assessment/b36cf705-f67a-4a71-a5bf-269f50e3404a"
+    },
+    {
+      "id": "A4-cooldown",
+      "result": "Junior disabled until 08.01.2027; real success cooldown90days visible"
+    },
+    {
+      "id": "A6-role",
+      "result": "candidate Employer-only route redirects to candidate; own invitation inbox empty"
+    },
+    {
+      "id": "A6-logout",
+      "result": "logout then protected candidate URL redirected to login; desktop/tablet/mobile profile displayed original logo with no overflow"
+    },
+    {
+      "id": "B1-registration",
+      "result": "new Employer registered through UI on375px"
+    },
+    {
+      "id": "A2-expired",
+      "result": "expired synthetic token rejected with clear message; expiry prepared only on helper account"
+    },
+    {
+      "id": "F01",
+      "result": "same-document navigation to new verification fragment did not populate cleared token field; reload required",
+      "codeLoaded": false
+    },
+    {
+      "id": "B1-profile",
+      "result": "company created, reloaded, edited and displayed; email verified"
+    },
+    {
+      "id": "B2-validation",
+      "result": "empty required fields/must-have, reversed salary, negative salary and experience disable submit with field messages; entered values preserved"
+    },
+    {
+      "id": "B3-B5",
+      "result": "DRAFT edited then ACTIVE;6 matching cards; single Ranking V2 explanation; individual FSP contributions visible; first and Middle candidate detailed breakdown opened"
+    },
+    {
+      "id": "B6-SENT",
+      "result": "double-click send produced one invitation; SENT has salary/message, FSP snapshot5, no contacts"
+    },
+    {
+      "id": "A5-VIEWED",
+      "result": "company/position/description/salary/message visible; status VIEWED; contacts absent"
+    },
+    {
+      "id": "A5-ACCEPTED",
+      "result": "double-click accept succeeded once; employer contact displayed after ACCEPTED"
+    },
+    {
+      "id": "FSP-unlink",
+      "result": "current FSP verification removed through UI, no current bonus; verified Junior preserved"
+    },
+    {
+      "id": "B7-ACCEPTED-snapshot",
+      "result": "employer sees full candidate contact after ACCEPTED; invitation FSP snapshot still bonus5/ranking100 after unlink"
+    },
+    {
+      "scenario": "B4 empty matching",
+      "status": "PASS",
+      "need": "16f1ee33-4c8d-486e-90f7-1681a2f8e9e6",
+      "count": 0
+    },
+    {
+      "scenario": "B3 ACTIVE edit refresh",
+      "status": "PASS",
+      "need": "16f1ee33-4c8d-486e-90f7-1681a2f8e9e6",
+      "before": 0,
+      "after": 6
+    },
+    {
+      "scenario": "A5 decline separate invitation",
+      "status": "PASS",
+      "invitation": "3a53527d-2fa9-4df3-9cde-d30ab9571932",
+      "contacts": false
+    },
+    {
+      "scenario": "B7 DECLINED contact locked employer",
+      "status": "PASS",
+      "contactBlock": false
+    },
+    {
+      "scenario": "B3 ACTIVE to CLOSED",
+      "status": "PASS",
+      "need": "16f1ee33-4c8d-486e-90f7-1681a2f8e9e6",
+      "nativeConfirm": "human-assisted"
+    },
+    {
+      "scenario": "B3 CLOSED edit and matching",
+      "status": "PASS",
+      "edit": "read-only",
+      "matching": "error with navigation"
+    },
+    {
+      "scenario": "C nonexistent Need",
+      "status": "FAIL",
+      "detail": "404 boundary and return link work; presentation defect F02 P3"
+    },
+    {
+      "scenario": "A6 Employer wrong-role candidate route",
+      "status": "PASS"
+    },
+    {
+      "finding": "F02",
+      "severity": "P3",
+      "scenario": "unknown Need edit",
+      "heading": "Новая потребность",
+      "errorRepeated": 2
+    },
+    {
+      "scenario": "C isolated API outage",
+      "status": "PASS",
+      "visible": "Сервер недоступен. Попробуйте позже.",
+      "recovery": "completed through Повторить after backend restart"
+    },
+    {
+      "scenario": "C API outage recovery",
+      "status": "PASS",
+      "method": "Повторить restores own Needs and session"
+    },
+    {
+      "scenario": "C expired own session",
+      "status": "PASS",
+      "fixture": "only own QA session expiry changed",
+      "result": "login redirect"
+    },
+    {
+      "scenario": "A6 other owned synthetic candidate inbox",
+      "status": "PASS",
+      "actual": "empty; original candidate invitations absent"
+    },
+    {
+      "scenario": "A4 failed separate Middle attempt",
+      "status": "PASS",
+      "attempt": "7bdafc47-9dea-4780-8b17-57275d93cbf5",
+      "answers": 0,
+      "score": 0,
+      "qualification": "previous Junior100 preserved",
+      "cooldownUntil": "2026-10-17T12:41:45Z"
+    },
+    {
+      "scenario": "A4 history and failure cooldown",
+      "status": "PASS",
+      "historyCount": 2,
+      "middleDisabled": true,
+      "juniorDisabled": true
+    },
+    {
+      "scenario": "FSP reverify after snapshot audit",
+      "status": "PASS",
+      "result": "MOCK-MULTI restored through UI for demo; no profile qualification changed"
+    },
+    {
+      "finding": "F01-safe-reproduction",
+      "input": "deliberately invalid literal; no active token",
+      "sameDocumentFieldEmpty": true,
+      "reloadFieldPopulated": true,
+      "fragmentRemovedAfterReload": true
+    },
+    {
+      "id": "A1-login-feedback",
+      "result": "Earlier browser check: incorrect password showed Неверный email или пароль; correcting credentials allowed login."
+    },
+    {
+      "id": "A4-dashboard-resume",
+      "result": "Earlier active Junior browser check: leaving to profile then dashboard showed active attempt; all new level starts disabled; Продолжить тест resumed saved attempt."
+    },
+    {
+      "id": "B2-create-double-click",
+      "result": "Earlier browser check: double-click Создать потребность created one primary Need, list total1 before intentional second Need."
+    },
+    {
+      "id": "C-keyboard-observation",
+      "result": "Browser key actions: Tab from skip link focused logo link with solid outline; Enter on skip link changed hash to main-content. Focus transfer to main not asserted."
+    }
+  ],
+  "layouts": [
+    {
+      "minButtonHeight": 44,
+      "page": "assessment-attempt",
+      "scrollWidth": 768,
+      "viewport": 768
+    },
+    {
+      "minButtonHeight": 44,
+      "page": "assessment-attempt",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        }
+      ],
+      "page": "candidate-profile",
+      "scrollWidth": 1440,
+      "viewport": 1440
+    },
+    {
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        }
+      ],
+      "page": "candidate-profile",
+      "scrollWidth": 768,
+      "viewport": 768
+    },
+    {
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "page": "candidate-profile",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "minButtonHeight": 50.75,
+      "page": "need-form",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "minButtonHeight": 49.09375,
+      "page": "need-form",
+      "scrollWidth": 768,
+      "viewport": 768
+    },
+    {
+      "minButtonHeight": 49.09375,
+      "page": "need-form",
+      "scrollWidth": 1440,
+      "viewport": 1440
+    },
+    {
+      "cards": 6,
+      "minButtonHeight": 49.09375,
+      "page": "matching",
+      "scrollWidth": 1440,
+      "viewport": 1440
+    },
+    {
+      "cards": 6,
+      "minButtonHeight": 49.09375,
+      "page": "matching",
+      "scrollWidth": 768,
+      "viewport": 768
+    },
+    {
+      "cards": 6,
+      "minButtonHeight": 50.75,
+      "page": "matching",
+      "scrollWidth": 375,
+      "viewport": 375
+    },
+    {
+      "screen": "candidate invitations 375",
+      "buttons": [
+        {
+          "h": 50.75,
+          "text": "Выйти"
+        },
+        {
+          "h": 50.75,
+          "text": "Обновить"
+        },
+        {
+          "h": 50.75,
+          "text": "Скрыть подробности"
+        },
+        {
+          "h": 50.75,
+          "text": "Открыть"
+        },
+        {
+          "h": 50.75,
+          "text": "Назад"
+        },
+        {
+          "h": 50.75,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "15px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 375,
+      "width": 375
+    },
+    {
+      "screen": "candidate invitations 768",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Обновить"
+        },
+        {
+          "h": 49.09375,
+          "text": "Открыть"
+        },
+        {
+          "h": 49.09375,
+          "text": "Открыть"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "14px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 768,
+      "width": 768
+    },
+    {
+      "screen": "candidate invitations 1440",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Обновить"
+        },
+        {
+          "h": 49.09375,
+          "text": "Открыть"
+        },
+        {
+          "h": 49.09375,
+          "text": "Открыть"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "14px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    {
+      "screen": "employer invitations 1440",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Обновить"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "14px",
+        "12px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    {
+      "screen": "employer invitations 768",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Обновить"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "14px",
+        "12px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 768,
+      "width": 768
+    },
+    {
+      "screen": "employer invitations 375",
+      "buttons": [
+        {
+          "h": 50.75,
+          "text": "Выйти"
+        },
+        {
+          "h": 50.75,
+          "text": "Обновить"
+        },
+        {
+          "h": 50.75,
+          "text": "Назад"
+        },
+        {
+          "h": 50.75,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "15px",
+        "14px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 375,
+      "width": 375
+    },
+    {
+      "screen": "need list 375",
+      "buttons": [
+        {
+          "h": 50.75,
+          "text": "Выйти"
+        },
+        {
+          "h": 50.75,
+          "text": "Закрыть"
+        },
+        {
+          "h": 50.75,
+          "text": "Закрыть"
+        },
+        {
+          "h": 50.75,
+          "text": "Назад"
+        },
+        {
+          "h": 50.75,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "14px",
+        "15px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 375,
+      "width": 375
+    },
+    {
+      "screen": "need list 768",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Закрыть"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "12px",
+        "14px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 768,
+      "width": 768
+    },
+    {
+      "screen": "need list 1440",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Закрыть"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        }
+      ],
+      "fonts": [
+        "12px",
+        "14px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    {
+      "screen": "assessment attempt 1440",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        }
+      ],
+      "fonts": [
+        "14px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 1440,
+      "width": 1440
+    },
+    {
+      "screen": "assessment attempt loaded 1440",
+      "buttons": [
+        {
+          "h": 49.09375,
+          "text": "Выйти"
+        },
+        {
+          "h": 49.09375,
+          "text": "Назад"
+        },
+        {
+          "h": 49.09375,
+          "text": "Далее"
+        },
+        {
+          "h": 44,
+          "text": "1"
+        },
+        {
+          "h": 44,
+          "text": "2"
+        },
+        {
+          "h": 44,
+          "text": "3"
+        },
+        {
+          "h": 44,
+          "text": "4"
+        },
+        {
+          "h": 44,
+          "text": "5"
+        },
+        {
+          "h": 44,
+          "text": "6"
+        },
+        {
+          "h": 44,
+          "text": "7"
+        },
+        {
+          "h": 44,
+          "text": "8"
+        },
+        {
+          "h": 44,
+          "text": "9"
+        },
+        {
+          "h": 44,
+          "text": "10"
+        },
+        {
+          "h": 44,
+          "text": "11"
+        },
+        {
+          "h": 44,
+          "text": "12"
+        },
+        {
+          "h": 44,
+          "text": "13"
+        },
+        {
+          "h": 44,
+          "text": "14"
+        },
+        {
+          "h": 44,
+          "text": "15"
+        },
+        {
+          "h": 44,
+          "text": "16"
+        },
+        {
+          "h": 44,
+          "text": "17"
+        },
+        {
+          "h": 44,
+          "text": "18"
+        },
+        {
+          "h": 44,
+          "text": "19"
+        },
+        {
+          "h": 44,
+          "text": "20"
+        }
+      ],
+      "fonts": [
+        "14px",
+        "18px"
+      ],
+      "logos": [
+        {
+          "loaded": true,
+          "src": "/brand/fsp-full-dark.svg"
+        },
+        {
+          "loaded": true,
+          "src": "/brand/fsp-compact-dark.svg"
+        }
+      ],
+      "scrollWidth": 1440,
+      "width": 1440
+    }
+  ],
+  "verificationHashObservation": {
+    "codeLoaded": false
+  }
+}
