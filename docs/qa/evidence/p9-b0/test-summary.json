@@ -1,0 +1,56 @@
+{
+  "baseline": "bce395a8c102491f4cf9ac26106b7263d08ad515",
+  "runs": [
+    {
+      "name": "required",
+      "tests": 47,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 45.168,
+      "per_file": {
+        "tests.test_fsp_matching": 10,
+        "tests.test_invitation_matching": 1,
+        "tests.test_invitation_privacy": 8,
+        "tests.test_p8_matching_snapshot": 11,
+        "tests.test_p8_profile_atomic": 8,
+        "tests.test_p8_response_snapshot": 9
+      }
+    },
+    {
+      "name": "controls",
+      "tests": 306,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 249.023,
+      "per_file": {
+        "tests.test_assessment_bank_remediation": 1,
+        "tests.test_assessments": 66,
+        "tests.test_auth": 5,
+        "tests.test_fsp": 20,
+        "tests.test_fsp_rules": 11,
+        "tests.test_invitation_concurrency": 7,
+        "tests.test_invitations": 68,
+        "tests.test_matching": 16,
+        "tests.test_matching_rules": 112
+      }
+    },
+    {
+      "name": "publication",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 7.422,
+      "per_file": {
+        "tests.test_question_banks": 12
+      }
+    }
+  ],
+  "tests": 365,
+  "passed": 365,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0
+}

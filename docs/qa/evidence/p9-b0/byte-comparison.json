@@ -1,0 +1,58 @@
+[
+  {
+    "path": "docs/validation/matching-v2-dataset-v1.json",
+    "canonical_sha256": "ef362631fc3104c50f29bca301b1fc9368b74a3a1ae95d2c0ba1e491ced0add5",
+    "checkout_sha256": "ef362631fc3104c50f29bca301b1fc9368b74a3a1ae95d2c0ba1e491ced0add5",
+    "canonical_bytes": 36851,
+    "checkout_matches": true,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  },
+  {
+    "path": "docs/validation/matching-v2-golden-proposed-v1.json",
+    "canonical_sha256": "111e1a06f2a57e6c1194ce1dd5cf75e3f275cefda38de662d0bb7a0b2d6dd6ed",
+    "checkout_sha256": "3209c67bc3fcdfce35f7700ff2e4a791d7ffcd2e73b91ae5d78a5375c6403f6e",
+    "canonical_bytes": 77777,
+    "checkout_matches": false,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  },
+  {
+    "path": "docs/validation/matching-v2-golden-methodology.md",
+    "canonical_sha256": "305aab18f5a5c9253686c658c380e935b92c1760eba7b011b0c9b18c481cdc92",
+    "checkout_sha256": "e38e56f37c13f280d5b98865e45756a8318648a38cf92b1f30459ba8aedf82e1",
+    "canonical_bytes": 24878,
+    "checkout_matches": false,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  },
+  {
+    "path": "docs/validation/review/matching-v2-human-review-guide.md",
+    "canonical_sha256": "58a274469ecb825fa62a21fa4558d0eac1407ac1bd7b32febb5a1a9bcfb139f0",
+    "checkout_sha256": "c71b6c1a465cc8a4702d3c0226a866100f73a372705141b20d7aea398b60c1d7",
+    "canonical_bytes": 21865,
+    "checkout_matches": false,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  },
+  {
+    "path": "docs/validation/review/matching-v2-human-review-input-v1.csv",
+    "canonical_sha256": "16db6fa9ee14b502cefb3e8550fab5c9c9f8e1a5a5fc41b2925a92d5e0924a83",
+    "checkout_sha256": "44ac01f6968344e23ad50dd6b134153899dd96e28a7eb85c0e8d131b77cef625",
+    "canonical_bytes": 14680,
+    "checkout_matches": false,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  },
+  {
+    "path": "docs/validation/review/matching-v2-human-review-template-v1.csv",
+    "canonical_sha256": "488738084e1e0155550602b04167af8abad4e12a38a46c2e0209c9bbb62b7fbb",
+    "checkout_sha256": "d9a94f4500617ffb8864fad8ae828558ba8477ae65bd4e2962b8e2fe68c819fb",
+    "canonical_bytes": 846,
+    "checkout_matches": false,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  },
+  {
+    "path": "backend/app/content/backend_questions.json",
+    "canonical_sha256": "76cda12d6358f14da84cce0ac584035ab189ae7a2f43e18d1e3cfed41276023c",
+    "checkout_sha256": "146904321bc170382bfc3c22a6d4345ca7d8d657c76323f4c4cc6f02d8e206d4",
+    "canonical_bytes": 170219,
+    "checkout_matches": false,
+    "checkout_equals_canonical_after_in_memory_crlf_to_lf": true
+  }
+]
