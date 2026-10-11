@@ -1,71 +1,246 @@
 # FSP Platform
 
-Технический фундамент хакатон-платформы: аккаунты кандидатов и работодателей,
-подтверждение email, серверная авторизация, профили и справочник навыков.
+Веб-платформа для ИТ-подбора с подтверждением квалификации кандидатов через
+Assessment, объяснимым Matching и обратной механикой найма. Работодатель создаёт
+потребность, получает подходящих кандидатов и самостоятельно направляет
+приглашение. Контакты открываются после его принятия.
 
-## Приглашения MVP
+Это конкурсный MVP команды **CodexTeam** для хакатона
+**«Лидеры цифровой трансформации — 2026»**, специального трека **ФСП**.
+Состояние описано на 11 октября 2026 года.
 
-Работодатель открывает подбор по активной потребности и отправляет кандидату
-приглашение с необязательным текстовым сообщением. Кандидат видит приглашение
-в разделе «Приглашения от работодателей» и принимает или отклоняет его.
-Контакты обеих сторон открываются только после принятия (ACCEPTED).
-История приглашений доступна работодателю и после закрытия потребности.
-Email-уведомления и чат в этом MVP не реализованы.
+- **Публичный прототип:** [codexteam-fsp.fvds.ru](https://codexteam-fsp.fvds.ru).
+- **Исходный код:** [ssavantonoff/fsp-platform](https://github.com/ssavantonoff/fsp-platform).
 
-## Стек и структура
+Исходный код доступен публично на GitHub. Лицензия в репозитории не указана;
+публичный доступ сам по себе не означает наличие open-source лицензии.
 
-Next.js 16.3.8 / React 19.3 / TypeScript / App Router / CSS;
-Python 3.13+ / FastAPI / Pydantic 2 / SQLAlchemy 2 / Alembic;
-PostgreSQL 17; Docker Compose.
+## Основные возможности
+
+**Кандидат:**
+
+- Регистрация и подтверждение email.
+- Создание и редактирование профиля, указание специализации и навыков.
+- Прохождение Assessment, получение подтверждённого грейда и просмотр истории.
+- Привязка FSP ID к MOCK-реестру и просмотр демонстрационных достижений.
+- Просмотр приглашений работодателей, принятие или отклонение приглашения.
+- Получение контактов работодателя после `ACCEPTED`.
+
+**Работодатель:**
+
+- Регистрация и заполнение профиля компании.
+- Создание и управление Employer Needs.
+- Matching подходящих кандидатов и просмотр объяснения рейтинга.
+- Отправка приглашений и просмотр их статусов.
+- Получение контактов кандидата после `ACCEPTED`.
+
+**Employer Need — внутренняя потребность работодателя, а не опубликованная
+вакансия.** Её жизненный цикл: `DRAFT → ACTIVE → CLOSED`. Подбор доступен для
+`ACTIVE`; закрытую потребность нельзя редактировать или повторно открыть.
+Глобальный каталог вакансий в MVP не реализован.
+
+## Assessment
+
+Опубликован банк из **120 вопросов BACKEND: 40 Junior, 40 Middle, 40 Senior**.
+Пять компетенций: программирование, HTTP/API, базы данных, архитектура,
+тестирование/безопасность/отладка. В банке на каждую пару «грейд × компетенция»
+приходится **2 BASIC + 4 APPLIED + 2 ADVANCED**.
+
+Правила одной попытки:
+
+- **20 вопросов, 30 минут**, по четыре вопроса на компетенцию:
+  **1 BASIC + 2 APPLIED + 1 ADVANCED**.
+- Четыре варианта с одним правильным ответом; верный ответ даёт 5 баллов.
+- Ответы сохраняются на сервере. После перезагрузки восстанавливаются тот же
+  набор вопросов, порядок вариантов и сохранённые ответы; таймер продолжается.
+- **PASS:** минимум **70/100** и минимум **50% по каждой компетенции**.
+- Повторная попытка для той же специализации и грейда: **90 дней после PASS**,
+  **7 дней после FAIL**. Более высокий грейд имеет отдельный cooldown.
+- Нужны профиль, подтверждённый email и согласие на обработку данных.
+  Одновременно возможна только одна активная попытка; уровни ниже уже
+  подтверждённого недоступны.
+- Истечение времени завершает попытку по сохранённым ответам.
+  Повторный submit не создаёт второй результат.
+
+Подтверждённый грейд устанавливается **только сервером** после успешного
+Assessment. **Declared Grade не является Verified Grade.** Неуспешная попытка не
+понижает существующее подтверждение. История сохраняется; смена специализации
+восстанавливает её подтверждение из успешных попыток по новой специализации.
+
+Выборка учитывает предыдущие показы вопросов и предпочитает менее встречавшиеся
+семейства, включая историю их версий. Правильные ответы не выдаются через
+Assessment API; завершённая попытка показывает агрегированный результат.
+
+**Frontend и Data/ML существуют как специализации, но опубликованных полноценных
+банков для них пока нет, поэтому тестирование по ним недоступно.** Инфраструктура
+нескольких банков требует явной публикации прошедшего проверку источника;
+добавление JSON само по себе не открывает тестирование.
+
+Seed сохраняет существующие вопросы и историю. Изменение опубликованного
+вопроса требует нового кода/версии; несовпадение прежнего содержания вызывает
+ошибку. Подробнее: [методика разнообразия банка](docs/assessment-bank-diversity.md)
+и [инфраструктура расширения](docs/assessment-bank-expansion-infrastructure.md).
+
+## Matching V2
+
+Сначала backend проверяет обязательные условия: специализацию, наличие
+подтверждённого грейда и валидной оценки Assessment, совместимость грейдов,
+**все MUST_HAVE skills** и согласие кандидата. Высокий балл или достижения ФСП
+не компенсируют отказ по обязательному условию.
+
+| Требуемый грейд | Verified Junior | Verified Middle | Verified Senior |
+| --- | --- | --- | --- |
+| Junior | Допуск, Grade Fit 1.0 | Допуск, Grade Fit 0.75 | Исключён |
+| Middle | Исключён | Допуск, Grade Fit 1.0 | Допуск, Grade Fit 0.75 |
+| Senior | Исключён | Исключён | Допуск, Grade Fit 1.0 |
+
+Для допущенных кандидатов рассчитывается **Professional Fit**:
+
+| Фактор | Базовый вес | Соответствие |
+| --- | ---: | --- |
+| Assessment | 45% | Подтверждённая оценка / 100 |
+| Grade Fit | 25% | 1.0 для точного грейда; 0.75 для допустимого более высокого |
+| Nice-to-have | 15% | Доля совпавших желательных навыков |
+| Relevant Experience | 15% | Опыт относительно целевого, максимум 1.0 |
+
+Если желательные навыки не заданы или целевой опыт отсутствует, соответствующие
+optional-факторы исключаются, а активные веса нормализуются до 100%.
+Если целевой опыт задан, отсутствие опыта у кандидата даёт нулевой вклад,
+а не исключает фактор; целевой опыт 0 даёт полное соответствие.
 
 ```text
-backend/
-  app/routes/       HTTP endpoints и зависимости авторизации
-  app/services/     операции авторизации и сохранения профилей
-  app/models.py     SQLAlchemy-модели
-  app/schemas.py    Pydantic-контракты чтения и записи
-  app/mail.py       adapters: локальный журнал / SMTP
-  app/seed.py       skills и необязательные demo-аккаунты
-  alembic/          миграции схемы БД
-  tests/            API, роли, владение, миграции и seed
-frontend/
-  src/app/          страницы и серверный /api proxy
-  src/components/   формы и отображение профилей
-  src/api.ts        единый клиентский API
-  src/backend-proxy.ts      передача cookie и Origin в FastAPI
-  tests/            Node tests API-клиента и proxy
-compose.yaml
-.env.example
+Ranking Score = 0.95 × Professional Fit + FSP Bonus
+FSP Bonus ∈ [0, 5]
+```
+
+**Professional Fit — показатель соответствия требованиям, а не вероятность
+найма.** Достижения ФСП не изменяют Professional Fit или eligibility.
+В интерфейсе доступны объяснения факторов, совпавшие навыки и индивидуальный
+вклад ФСП.
+
+Фактическая серверная сортировка: **Ranking Score DESC → Professional Fit DESC →
+Assessment score DESC → candidate_id ASC**. Сравниваются неокруглённые значения;
+пагинация применяется после сортировки. Frontend сохраняет серверный порядок,
+округляя показатели только для отображения. Редактирование активной потребности
+учитывается следующим запросом подбора.
+
+## Интеграция ФСП
+
+Используется **MOCK-адаптер** тестового реестра. Реализованы привязка FSP ID,
+проверка по тестовому реестру, загрузка демонстрационных достижений, расчёт
+FSP Bonus, обновление и удаление связи. Уже отправленные приглашения сохраняют
+исторический FSP snapshot, в том числе после удаления связи.
+
+**Реальная интеграция с официальным реестром ФСП в MVP отсутствует.
+MOCK-подтверждение не является проверкой личности реального участника ФСП.**
+Демонстрационные достижения не выдаются за официально подтверждённые.
+
+## Приглашения и приватность
+
+```text
+Employer → Invitation → Candidate → ACCEPTED / DECLINED
+```
+
+Контакты открываются **обеим сторонам только после `ACCEPTED`**. Ограничение
+реализовано на backend, а не только через скрытие элементов интерфейса.
+Matching preview не содержит контактов: имя маскируется до имени и инициала
+фамилии; email, полная фамилия и FSP ID не возвращаются.
+
+Отправленные приглашения сохраняют snapshots потребности, кандидата, показателей
+Matching и ФСП на момент отправки. Последующие изменения профиля, требований или
+ФСП-связи не переписывают эту историю. История доступна после закрытия потребности.
+Email-уведомления о приглашениях и чат в MVP отсутствуют.
+
+## Технологический стек
+
+| Слой | Технологии |
+| --- | --- |
+| Frontend | Next.js **16.3.8**, React **19.3**, TypeScript, App Router, CSS |
+| Backend | Python **3.13+**, FastAPI, Pydantic 2, SQLAlchemy 2, Alembic |
+| База данных | PostgreSQL **17**; SQLite используется в части тестов |
+| Контейнеры | Docker, Docker Compose |
+| Публичное размещение | FirstVDS, Ubuntu **24.04 LTS**, Caddy, HTTPS / Let's Encrypt |
+| Email | SMTP / STARTTLS; в публичной среде — Яндекс SMTP |
+
+Публичное окружение использует PostgreSQL **17.11**, `APP_ENV=production`,
+`COOKIE_SECURE=true`, HTTPS frontend URL и ограниченный `ALLOWED_ORIGINS`.
+Frontend доступен публично по HTTPS; backend и PostgreSQL находятся во внутренней
+контейнерной сети. Это описание развёртывания P9-D1; корневой `compose.yaml`
+предназначен для локального запуска и не содержит production-конфигурацию Caddy.
+
+## Архитектура
+
+```text
+Browser
+   ↓
+Next.js (UI и серверный /api proxy)
+   ↓
+FastAPI (модульный монолит)
+   ↓
+PostgreSQL
+```
+
+Ключевые модули backend: **Auth, Profiles, Assessment, Employer Needs, Matching,
+FSP, Invitations**. Это модульный монолит, не микросервисная архитектура.
+Клиент использует общий API-слой; серверный proxy передаёт cookie и исходный Origin.
+
+```text
+backend/app/routes/      HTTP endpoints и авторизация
+backend/app/services/    операции предметной области
+backend/app/models.py   SQLAlchemy-модели
+backend/app/content/    Assessment bank и MOCK-реестр ФСП
+backend/alembic/        миграции
+backend/tests/          API, правила, приватность, миграции и конкурентные сценарии
+frontend/src/app/       страницы и /api proxy
+frontend/src/components/ интерфейс
+frontend/tests/         тесты API-клиента, proxy и интерфейсной логики
 .github/workflows/checks.yml
 ```
 
-## Запуск через Docker Compose
+## Локальный запуск
 
-Требуется работающий Docker Engine и Compose v2+. Порты 3000, 8000, 5432 должны
-быть свободны. Команды выполняются из корня репозитория:
+Все команды ниже выполняются **только в отдельном локальном development-окружении**
+из корня репозитория, если явно не указано другое. Они не предназначены для VPS
+или production БД.
+
+### Docker Compose
+
+Требуются Git, Docker Engine и Compose v2+ с поддержкой `--wait`. По умолчанию
+локальные порты 3000, 8000 и 5432 должны быть свободны.
 
 ```sh
+git clone https://github.com/ssavantonoff/fsp-platform.git
+cd fsp-platform
 cp .env.example .env
-# Перед запуском настройте пароли в .env для своей среды.
-docker compose up --build -d --wait
-# Skills и два demo-аккаунта:
-docker compose exec backend python -m app.seed --demo
 ```
 
-Backend применяет `alembic upgrade head` перед запуском API. Для создания только
-skills используйте `docker compose exec backend python -m app.seed`.
+Перед запуском настройте локальный `.env`: оставьте `APP_ENV=development`,
+задайте собственный пароль локальной PostgreSQL и согласуйте его с локальным
+`DATABASE_URL`. Compose подключает backend к сервису `postgres`; для запуска
+backend вне контейнера используется `localhost`. Не переносите сюда production
+credentials. `.env` не коммитится; унаследованные переменные окружения имеют
+приоритет над файлом, поэтому проверьте, что они относятся к локальной среде.
 
-- UI: <http://localhost:3000>
-- API: <http://localhost:8000>
-- Swagger: <http://localhost:8000/docs>
-- OpenAPI: <http://localhost:8000/openapi.json>
-- API/DB health: <http://localhost:8000/health>
+```sh
+docker compose up --build -d --wait
+docker compose exec backend python -m app.seed
+```
 
-Demo candidate: `candidate@example.com`; demo employer: `employer@example.com`.
-Пароль — `DEMO_PASSWORD` в `.env` (в примере `local-demo-password`). Demo email
-подтверждены. Candidate: Backend / заявленный Middle / Python, Django,
-PostgreSQL / `verified_grade = null`. Seed можно повторять: существующие
-аккаунты, профили и пароли сохраняются. Demo запрещены в production.
+Backend автоматически выполняет `alembic upgrade head` перед запуском API.
+Обычный seed добавляет справочник навыков и опубликованный банк вопросов,
+без demo-аккаунтов. Повторный seed сохраняет опубликованные записи и историю.
+Проверка локальных миграций:
+
+```sh
+docker compose exec backend alembic current
+docker compose exec backend alembic check
+```
+
+- UI: [localhost:3000](http://localhost:3000).
+- API: [localhost:8000](http://localhost:8000).
+- Swagger: [localhost:8000/docs](http://localhost:8000/docs).
+- OpenAPI: [localhost:8000/openapi.json](http://localhost:8000/openapi.json).
+- API/DB health: [localhost:8000/health](http://localhost:8000/health).
 
 ```sh
 docker compose ps
@@ -73,79 +248,55 @@ docker compose logs -f backend
 docker compose down
 ```
 
-`down` сохраняет БД в volume. `docker compose down -v` **удаляет локальные данные**;
-используйте только когда действительно нужна пустая БД.
+`docker compose down` сохраняет БД в volume.
+**`docker compose down -v` удаляет локальные Docker volumes и данные БД.**
+Эта команда не нужна для обычной остановки.
 
-## Подтверждение email
+### Переменные и подтверждение email
 
-Development по умолчанию использует `MAIL_BACKEND=log`. После регистрации найдите
-ссылку в приватном журнале backend:
-
-```sh
-docker compose logs backend
-```
-
-Откройте `http://localhost:3000/verify-email#token=...` и нажмите «Подтвердить».
-Фрагмент удаляется из адресной строки после открытия формы; подтверждение
-выполняется POST body, не GET. Токен хранится в БД только как SHA-256 hash,
-истекает через час по умолчанию и атомарно используется только один раз.
-API регистрации не возвращает токен. Истёкший, неверный и повторный token — HTTP 400.
-
-Вход и профили доступны до подтверждения; UI показывает статус ожидания.
-ТЗ первого этапа не требует блокировать эти действия до подтверждения email.
-
-SMTP adapter подключается через `MAIL_BACKEND=smtp`, `SMTP_HOST`, `SMTP_FROM` и
-остальные SMTP variables. Ошибка отправки откатывает регистрацию (HTTP 503),
-запрос можно повторить. Другой mail provider может реализовать тот же
-`VerificationMailer.send(email, token)` без изменения API.
-Production-конфигурация требует HTTPS, `COOKIE_SECURE=true` и SMTP.
-Очередь email и endpoint повторной отправки истёкшей ссылки пока не реализованы.
-
-## Environment variables
-
-Backend читает корневой `.env`, затем `.env` рабочей директории; environment
-variables имеют приоритет. Frontend локально читает `frontend/.env.local`.
-Compose передаёт переменные контейнерам явно.
-
-| Переменная | Назначение / пример |
+| Переменные | Назначение |
 | --- | --- |
-| `APP_ENV` | `development`, `test`, `production` |
-| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | БД и credentials |
-| `POSTGRES_PORT`, `BACKEND_PORT`, `FRONTEND_PORT` | `5432`, `8000`, `3000` |
-| `DATABASE_URL` | SQLAlchemy URL; Compose использует host `postgres` |
-| `FRONTEND_URL` | Публичный URL UI для verification links |
-| `ALLOWED_ORIGINS` | JSON array: `["http://localhost:3000"]` |
-| `COOKIE_SECURE` | `false` локально; `true` для HTTPS production |
-| `SESSION_TTL_SECONDS` | `604800` (7 дней) |
-| `VERIFICATION_TTL_SECONDS` | `3600` (час) |
-| `MAIL_BACKEND` | `log` или `smtp` |
-| `SMTP_HOST`, `SMTP_PORT` | SMTP host и порт (`587`) |
-| `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` | SMTP credentials и отправитель |
-| `SMTP_STARTTLS` | `true` для SMTP с STARTTLS |
-| `DEMO_PASSWORD` | Пароль новых demo users, 10–128 символов |
-| `API_INTERNAL_URL` | Server frontend → backend: локально `http://localhost:8000`, Compose `http://backend:8000` |
-| `TEST_DATABASE_URL` | PostgreSQL для backend tests; без него временная SQLite |
+| `APP_ENV` | `development` локально, `test` для тестов, `production` на VPS |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DATABASE_URL` | Только настройки соответствующей локальной или тестовой БД |
+| `POSTGRES_PORT`, `BACKEND_PORT`, `FRONTEND_PORT` | Локальные порты |
+| `FRONTEND_URL`, `ALLOWED_ORIGINS` | URL интерфейса и JSON-массив разрешённых Origin |
+| `COOKIE_SECURE` | `false` для локального HTTP, `true` для публичного HTTPS |
+| `MAIL_BACKEND`, `SMTP_*` | `log` локально либо SMTP; значения credentials не публикуются |
+| `SESSION_TTL_SECONDS`, `VERIFICATION_TTL_SECONDS` | Срок сессии и email-токена |
+| `API_INTERNAL_URL` | Backend для frontend: `localhost:8000` локально, `backend:8000` в Compose |
+| `DEMO_PASSWORD` | Собственный локальный пароль для создания synthetic fixtures |
+| `TEST_DATABASE_URL` | URL отдельной локальной PostgreSQL тестовой БД |
 
-При смене порта UI также измените `FRONTEND_URL` и `ALLOWED_ORIGINS`. Спецсимволы
-пароля в SQLAlchemy URL нужно URL-encode; для локальной Compose-среды используйте
-URL-safe пароль. `.env` не коммитится.
+При смене порта UI обновите `FRONTEND_URL` и `ALLOWED_ORIGINS`.
+Спецсимволы пароля в SQLAlchemy URL требуют URL-encoding.
+Backend читает корневой `.env` и `.env` рабочей директории; frontend при запуске
+вне Docker использует `frontend/.env.local`.
 
-## Локальная разработка
+В development по умолчанию используется `MAIL_BACKEND=log`: ссылка подтверждения
+попадает в приватный локальный журнал backend. После регистрации найдите её
+через `docker compose logs backend` и откройте в браузере. Не публикуйте журнал
+или токен. Подтверждение выполняется POST, токен хранится в БД как hash и
+используется однократно. При SMTP-доставке письмо отправляет соответствующий
+адаптер; ошибка отправки откатывает регистрацию. Production требует SMTP,
+HTTPS и Secure cookie. Повторная отправка истёкшей ссылки и очередь email пока
+не реализованы.
 
-Требуется Python 3.13+, Node.js 22+ и PostgreSQL. Можно запускать только БД в Docker:
+### Разработка вне контейнеров
+
+Дополнительно требуются Python 3.13+ и Node.js 22+.
+Настройте локальный `.env`, затем из корня запустите БД и backend:
 
 ```sh
-cp .env.example .env
 docker compose up -d postgres
 python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements-dev.txt
 cd backend
 ../.venv/bin/alembic upgrade head
-../.venv/bin/python -m app.seed --demo
+../.venv/bin/python -m app.seed
 ../.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Другой терминал, из корня:
+В другом терминале, из корня:
 
 ```sh
 cd frontend
@@ -154,85 +305,78 @@ npm ci
 npm run dev
 ```
 
-Production frontend локально: `npm run build && npm start` из `frontend/`.
+Для проверки production-сборки frontend **локально** выполните `npm run build`,
+затем `npm start` из `frontend/`.
 
-## Миграции
+## Демо и тестирование
 
-Ревизия `0001` создаёт `users`, `auth_sessions`, `email_verifications`,
-`candidate_profiles`, `employer_profiles`, `skills`, `candidate_skills`.
-Email и user_id профилей уникальны. Skills связаны many-to-many с составным PK.
-Есть foreign keys с cascade delete, enum checks, ограничения опыта и
-согласованности consent/timestamp. Для новой специализации расширяется enum и
-check constraint отдельной миграцией. `create_all()` не используется.
+Демонстрация работающего решения доступна через
+[публичный прототип](https://codexteam-fsp.fvds.ru). Пароли, verification tokens и
+личные email публичных demo-аккаунтов здесь не публикуются.
 
-```sh
-docker compose exec backend alembic upgrade head
-docker compose exec backend alembic current
-docker compose exec backend alembic check
-```
+**Локальные synthetic fixtures не равны публичным demo-аккаунтам P9-D1.**
+В публичном демонстрационном окружении кандидаты прошли Assessment штатным
+способом по сценарию P9-D1.
 
-## API и права
-
-| Метод | Путь | Назначение |
-| --- | --- | --- |
-| POST | `/auth/register` | email, password, role → User, HTTP 201 |
-| POST | `/auth/verify-email` | token → HTTP 204 |
-| POST | `/auth/login` | User + HttpOnly session cookie |
-| POST | `/auth/logout` | Отзыв сессии и удаление cookie, HTTP 204 |
-| GET | `/auth/me` | Текущий User |
-| GET / POST / PUT | `/candidate/profile` | Свой профиль: read / create / replace |
-| GET / POST / PUT | `/employer/profile` | Свой профиль компании |
-| GET | `/skills` | Справочник skills |
-
-PUT требует полный набор обязательных полей, nullable-поля очищаются `null`.
-`skill_ids` заменяет список навыков; `[]` удаляет все связи.
-Роль берётся из User в БД, а профиль выбирается по авторизованному user_id.
-Endpoints для произвольного profile ID отсутствуют. Входные схемы запрещают
-`verified_grade`, `user_id`, `role`, `personal_data_consent_at` (HTTP 422).
-Заявленный уровень не копируется в подтверждённый. Consent timestamp задаётся
-сервером при false→true, сохраняется при повторном true и очищается при отзыве.
-
-Пароли — Argon2id. Random session tokens хранятся в БД только как hashes;
-cookie — HttpOnly / SameSite=Lax, Secure в production. Сессии переживают restart
-и отзываются при logout. LocalStorage не содержит authentication secrets.
-Cookie-authenticated mutations требуют доверенный Origin; proxy сохраняет
-исходный Origin. CLI с cookie тоже должен передавать Origin из `ALLOWED_ORIGINS`.
-Без cookie CLI может не отправлять Origin; любой переданный недоверенный Origin
-отклоняется. Для интерактивных mutation из Swagger локально добавьте
-`http://localhost:8000` в `ALLOWED_ORIGINS` (по умолчанию разрешён только UI).
-
-Ошибки: 400 token, 401 credentials/session, 403 role/Origin, 404 profile,
-409 duplicate, 422 validation, 503 registration/delivery. Формат:
-
-```json
-{"error":{"code":"validation_error","message":"Проверьте заполнение полей.","fields":[{"field":"first_name","message":"Field required"}]}}
-```
-
-В ответах ошибок нет паролей, токенов и внутренних исключений. Для публичного
-production deployment нужны HTTPS и отдельное решение по rate limiting.
-
-## Проверки
-
-В контейнере на PostgreSQL:
+Для отдельной локальной development-БД можно задать собственный `DEMO_PASSWORD`
+длиной 10–128 символов и выполнить:
 
 ```sh
-docker compose exec backend sh -c 'TEST_DATABASE_URL="$DATABASE_URL" pytest -q'
-docker compose exec backend ruff check .
-docker compose exec backend ruff format --check .
-docker compose exec backend mypy app
-docker compose exec backend alembic check
+docker compose exec backend python -m app.seed --demo
+docker compose exec backend python -m app.seed --matching-demo
 ```
 
-Локально:
+При запуске backend вне Docker эквивалентная команда из `backend/` —
+`python -m app.seed --demo` с активированным локальным виртуальным окружением.
+Оба demo-режима **запрещены при `APP_ENV=production` до открытия seed-сессии**.
+Обычный `--demo` создаёт базовые аккаунты; кандидат остаётся unverified.
+`--matching-demo` дополнительно создаёт фиксированные потребности и кандидатов
+для проверки подбора. Его verification values — **синтетические fixtures,
+не результаты реальных AssessmentAttempt**; история попыток ими не создаётся.
+Frontend fixture служит отрицательным примером специализации, а не доказательством
+доступности Frontend Assessment.
+
+Повторные demo seed сохраняют существующие профили, пароли, verification,
+редактирование и статусы потребностей. Они не сбрасывают локальную БД.
+
+## Проверки и подтверждённые результаты
+
+### Команды для разработчика
+
+Тесты запускаются только локально. Для SQLite из корня:
 
 ```sh
 cd backend
-../.venv/bin/pytest -q
-TEST_DATABASE_URL=postgresql+psycopg://fsp:local-dev-change-me@localhost:5432/fsp ../.venv/bin/pytest -q
+env -u TEST_DATABASE_URL APP_ENV=test DATABASE_URL=sqlite:// \
+  ../.venv/bin/python -m pytest -q
 ../.venv/bin/ruff check .
 ../.venv/bin/ruff format --check .
 ../.venv/bin/mypy app
-cd ../frontend
+```
+
+Без `TEST_DATABASE_URL` fixture создаёт отдельную временную SQLite БД для каждого
+теста. Конкурентные сценарии, требующие блокировок PostgreSQL, на SQLite пропускаются.
+
+Для PostgreSQL сначала создайте **отдельную локальную тестовую БД и пользователя**,
+не связанных с рабочей БД, и задайте её URL в `TEST_DATABASE_URL` в своём терминале.
+Проверьте адрес, пользователя и имя БД; не используйте production `DATABASE_URL`.
+Из `backend/`:
+
+```sh
+TEST_DATABASE_URL="${TEST_DATABASE_URL:?Задайте URL отдельной локальной тестовой БД}" \
+  APP_ENV=test DATABASE_URL="$TEST_DATABASE_URL" \
+  ../.venv/bin/python -m pytest -q
+```
+
+Тестовый пользователь должен иметь право `CREATE SCHEMA`: fixture создаёт и
+удаляет временные схемы `fsp_test_*` в указанной **тестовой** БД, включая миграции.
+Команда не берёт URL рабочей БД в качестве источника тестового подключения.
+
+Frontend, из корня:
+
+```sh
+cd frontend
+npm ci
 npm run lint
 npm run typecheck
 npm test
@@ -241,378 +385,74 @@ cd ..
 git diff --check
 ```
 
-PostgreSQL tests создают и удаляют собственные временные schemas `fsp_test_*`;
-тестовый пользователь должен иметь CREATE SCHEMA. SQLite — быстрый вариант:
-тест конкурентного token consumption выполняется только на PostgreSQL.
-Каждый тест использует миграции; проверяются upgrade→downgrade→upgrade и
-соответствие моделей схеме. Frontend tests используют встроенный Node test
-runner через `tsx`, без отдельной тяжёлой инфраструктуры.
+[GitHub CI](https://github.com/ssavantonoff/fsp-platform/actions) проверяет backend
+на отдельном PostgreSQL 17, Ruff, mypy, Alembic, frontend lint/typecheck/tests/build
+и Docker smoke, включая повторные demo seeds и наличие SVG-логотипов.
+Frontend tests используют встроенный Node test runner через `tsx`.
+Browser E2E — отдельная ручная проверка пользовательских сценариев.
 
-## Ручная проверка
+### Исторические проверки
 
-1. Зарегистрируйте Candidate, повторите тот же email: появится ошибка.
-2. Войдите, проверьте уведомление о неподтверждённом email. Подтвердите ссылку
-   из backend log; повторное подтверждение той же ссылки должно дать ошибку.
-3. Создайте профиль Backend / Middle со skills, FSP ID и consent. Профиль показывает
-   отдельно заявленный Middle и «Подтверждённый уровень: не подтверждён».
-4. Измените профиль и skills, перезагрузите страницу. `/employer` возвращает
-   кандидата к своему профилю; `/employer/profile` API возвращает 403.
-5. Выйдите, создайте Employer, заполните и измените компанию; candidate API даёт
-   403. После logout профиль требует нового входа.
-6. Проверьте узкий экран, required fields, disabled submit и ошибку с повтором
-   при недоступном backend.
+Это результаты конкретных этапов, а не новый прогон текущей документационной задачи:
 
-В scope фундамента (ТЗ №1) не входили тестирование кандидатов, matching, вакансии, invitations,
-рейтинг, реальная ФСП-интеграция и административная панель.
+| Этап | Подтверждённый результат |
+| --- | --- |
+| P8-B1 | **1073 backend PASS**, **184 frontend PASS** |
+| P9-B0 | **365/365 targeted PostgreSQL PASS**; 28 регрессий PR #18 **уже входят в 365** |
+| P9-A0 | Browser E2E выполнен; итог аудита **CONDITIONAL**, замечания P2/P3 остаются |
+| P9-D1 | Публичный E2E выполнен по отчёту проверки развёртывания |
+| Human Review | **NOT COMPLETED**; независимые экспертные оценки релевантности не получены |
 
-## Candidate Assessment Engine
+По P9-D1 проверены HTTPS, запуск компонентов, backend health, регистрация,
+SMTP-подтверждение email, Assessment, Matching, Invitations, Contact Unlock после
+`ACCEPTED` и сохранение данных после перезагрузки; подготовлено резервное
+копирование БД.
 
-Доступно в `/candidate/assessment`; история — `/candidate/assessment/history`.
-Тест запускается только явным POST после подтверждения правил. Нужны профиль
-кандидата, подтверждённый email и согласие на обработку данных. Согласие проверяется
-при старте: его отзыв не блокирует завершение уже начатой попытки или историю.
+Независимая ручная проверка капитана 11 октября подтвердила регистрацию,
+получение письма, кабинет работодателя, активную потребность, двух подходящих
+кандидатов, порядок Matching V2 и объяснение результата. Для демонстрационного
+сценария: Demo Alpha — Professional Fit 100, FSP Bonus 4, Ranking Score 99;
+Demo Beta — 87.5, 0.5 и 83.6 соответственно
+(`0.95 × 87.5 + 0.5 = 83.625`). Отправка и принятие нового приглашения в этой
+отдельной проверке не выполнялись; они проверены по P9-D1.
 
-### Правила
+NDCG, Precision@K и другие human relevance metrics не заявляются как измеренные.
+Эти проверки не доказывают отсутствие любых дефектов или полную безопасность.
 
-- 20 вопросов `SINGLE_CHOICE`, 4 варианта, 1 правильный; 30 минут по серверному UTC.
-- Пять компетенций Backend: программирование, HTTP/API, базы данных, архитектура,
-  тестирование/безопасность/отладка.
-- В каждой компетенции выбираются 1 BASIC + 2 APPLIED + 1 ADVANCED.
-- Правильный ответ = 5 баллов; без ответа = 0; общая оценка 0–100.
-- PASS: минимум 70/100 **и** минимум 50% (2 из 4 ответов) в каждом блоке.
-- Неуспех: повтор через 7 дней; успех: через 90 дней для той же пары
-  specialization + grade. Более высокий уровень доступен независимо от этого cooldown.
-- Уровни ниже подтверждённого запрещены. Declared grade не влияет на баллы и допуск.
-- Только одна активная попытка на кандидата. Паузы и продления таймера нет.
-- Истёкшая попытка лениво финализируется при чтении, сохранении, submit,
-  проверке доступности или новом старте. `finished_at = expires_at` для TIMEOUT;
-  cooldown отсчитывается от этого срока, даже если тест был открыт позднее.
-- Статусы: IN_PROGRESS / PASSED / FAILED; итоговая причина: SUBMITTED / TIMEOUT.
-  Timeout может дать PASS при достаточном числе уже сохранённых верных ответов.
-- Ответы сохраняются PUT сразу после выбора, их можно менять до завершения.
-  При ошибке показан явный повтор; учитывается последний успешный серверный ответ.
-- Submit идемпотентен, результат и verification сохраняются одной транзакцией.
-  Мутации сначала блокируют профиль, затем попытку; partial unique index
-  `uq_assessment_active_candidate` дополнительно запрещает второй IN_PROGRESS.
+## Ограничения MVP
 
-### Canonical verification и Matching
+- Опубликован только **Backend Assessment**; Frontend и Data/ML пока недоступны
+  для тестирования.
+- ФСП работает через **MOCK**, реального официального реестра и проверки личности нет.
+- Нет глобального каталога вакансий или кандидатов, обычного самостоятельного
+  отклика, регулярных заданий, ATS-интеграции и полноценного PDF-профиля.
+- Независимая **Human Review не завершена**.
+- **Встроенный rate limiting для `/auth/login` пока не реализован.**
+- Коммерческая production readiness и промышленная нагрузочная устойчивость
+  не подтверждены. HTTPS не является доказательством полной безопасности;
+  нужна дополнительная проверка соответствия требованиям 152-ФЗ.
 
-`CandidateProfile.verified_grade`, `normalized_assessment_score` (nullable int 0–100)
-и `assessment_verified_at` (nullable UTC timestamp) — единый серверный контракт.
-Либо все три поля NULL, либо все заполнены. CandidateWrite их не принимает.
-Matching должен читать эти поля, не добавляя второй источник score или grade.
+**Рабочий Assessment bank находится в публичном исходном коде.** Публикация
+ответов позволяет использовать их при прохождении теста. Это осознанное
+ограничение конкурсного прототипа: текущий Assessment нельзя позиционировать
+как защищённую промышленную сертификацию, даже при отсутствии правильных ответов
+в публичных API. Содержательный аудит банка также не заменяет независимую
+профессиональную и психометрическую валидацию.
 
-PASS на более высоком уровне повышает verification. Неуспех сохраняет её.
-Успешная пересдача того же уровня заменяет score последним успешным результатом,
-даже если он ниже прежнего. При смене specialization сервис берёт самый высокий
-успешный grade по новой specialization и последнюю успешную попытку этого grade;
-при отсутствии истории очищает три поля. Возврат к прежней specialization
-восстанавливает её verification. История сохраняется; срок действия verification
-не ограничен. Во время IN_PROGRESS смена specialization запрещена; остальные
-поля профиля доступны для редактирования.
+Пароли пользователей хранятся как Argon2id hashes, сессии — как hashes токенов;
+cookie имеет HttpOnly / SameSite=Lax и Secure в production. Backend проверяет
+владение данными и доверенный Origin для cookie-authenticated мутаций.
+Эти меры не означают, что полный security audit доказал безопасность платформы.
 
-### Модели и API
+## Команда
 
-`AssessmentQuestion` хранит код, specialization, grade, competency, difficulty,
-текст, version и is_active. `AssessmentOption` содержит текст и закрытый is_correct.
-`AssessmentAttempt` фиксирует specialization/grade, сроки и итоговый breakdown.
-`AssessmentAttemptQuestion` фиксирует 20 вопросов, позиции, перемешанный порядок
-вариантов и сохранённый ответ. Набор и порядок не регенерируются при reload.
-Связи загружаются пакетно через selectin; цикла запросов по каждому вопросу нет.
+**CodexTeam**, Наро-Фоминск.
+Оба участника учатся в **ГБПОУ «Наро-Фоминский техникум»**, в одной учебной группе.
 
-| Метод | Endpoint | Назначение |
-|---|---|---|
-| GET | `/candidate/assessments/availability` | Карточки уровней, причина отказа, available_at, active_attempt_id, verification и server_now |
-| POST | `/candidate/assessments` | Только `{ "target_grade": "MIDDLE" }`, возвращает новую попытку |
-| GET | `/candidate/assessments/current` | Активная попытка; 404, если её нет |
-| GET | `/candidate/assessments/{attempt_id}` | Только собственная попытка |
-| PUT | `/candidate/assessments/{attempt_id}/answers/{attempt_question_id}` | Только `{ "selected_option_id": "…" }` |
-| POST | `/candidate/assessments/{attempt_id}/submit` | Завершение или существующий результат |
-| GET | `/candidate/assessments/history` | Попытки по started_at DESC, включая итог и breakdown |
+- **Савелий Антонов** — капитан; продукт, требования, архитектура, контроль
+  разработки, ревью и интеграция. Telegram: [@svelxex](https://t.me/svelxex).
+- **Олег Перевалов** — backend, тестирование, технические аудиты, проверка
+  бизнес-логики и валидация технических решений.
+  Telegram: [@vicks1s](https://t.me/vicks1s).
 
-Ответ попытки содержит server_now/expires_at для таймера и текущую verification.
-История использует поле `id` как attempt ID. Завершённая попытка возвращает пустой
-массив questions: только агрегаты без разбора правильных вариантов.
-Правильные ответы, is_correct, solution и explanations не выдаются кандидату.
-Чужая попытка — 404; employer — 403; без сессии — 401.
-Все мутации используют существующую проверку доверенного Origin.
-
-Стабильные error codes: `email_not_verified`, `consent_required`,
-`assessment_unavailable`, `assessment_in_progress`, `assessment_grade_not_allowed`,
-`assessment_cooldown`, `assessment_finished`, `question_not_in_attempt`,
-`option_not_in_question`, `assessment_not_found`, `profile_not_found`.
-Ошибки используют общий `{ "error": { "code", "message", "fields" } }` формат.
-Availability reasons: EMAIL_NOT_VERIFIED, CONSENT_REQUIRED, IN_PROGRESS,
-LOWER_THAN_VERIFIED, UNAVAILABLE, COOLDOWN; null означает доступный уровень.
-
-### Банк и seed
-
-`backend/app/content/backend_questions.json`: 75 русских demo-вопросов BACKEND —
-25 Junior, 25 Middle, 25 Senior. По каждой компетенции/grade: 1 BASIC + 3 APPLIED +
-1 ADVANCED. FRONTEND и DATA_ML поддержаны в моделях и конфигурации компетенций,
-но пока без банка: старт возвращает `assessment_unavailable`.
-
-Обе существующие команды теперь заполняют вопросы:
-
-```bash
-docker compose exec backend python -m app.seed
-docker compose exec backend python -m app.seed --demo
-```
-
-Seed идемпотентен и проверяет четыре разных непустых варианта и один правильный.
-Он не изменяет вопросы с прежним code и сохраняет ручное is_active=false.
-Несовпадение содержания вызывает ошибку с требованием нового version/code;
-исторические вопросы нельзя удалять или изменять. Контент хранит явные
-code/version; supersedes деактивирует прежний вопрос, сохраняя его и историю. Новая версия добавляется новым
-кодом, прежнюю можно деактивировать. Demo candidate автоматически не получает
-verification: локальное подтверждение появляется только после успешного теста.
-
-При проверке технических формулировок использованы первичные справочники:
-[HTTP Semantics (RFC 9110)](https://www.rfc-editor.org/rfc/rfc9110.html),
-[PostgreSQL Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html),
-[Python asyncio tasks](https://docs.python.org/3/library/asyncio-task.html).
-Банк является demo-контентом; runtime LLM отсутствует.
-
-### Миграция 0002
-
-`0001` не изменена. `0002_assessment_engine` добавляет четыре таблицы, два поля
-профиля, ограничения consistency/score и partial unique index активных попыток.
-При upgrade старый `verified_grade` без score/assessment date сбрасывается в NULL:
-его невозможно считать подтверждённым assessment без доказательства. Остальные
-поля и сами профили сохранены. Score/date для прежних профилей остаются NULL.
-Downgrade удаляет assessment-таблицы и новые поля; история будет потеряна при
-явном downgrade, а прежний grade остаётся колонкой схемы 0001. Re-upgrade снова
-сбрасывает grade без assessment evidence. Перед downgrade нужен обычный backup БД.
-
-Автотесты проходят переходы 0001→0002→0001→0002, сохранение профиля, сброс
-неполного legacy verification и `alembic check`.
-
-### Ручная проверка assessment
-
-1. Выполнить миграции и seed; войти demo candidate либо новым candidate.
-2. Для нового candidate проверить запрет старта без профиля/email/consent;
-   подтвердить email существующим потоком и дать согласие в профиле.
-3. Открыть `/candidate/assessment`, выбрать Backend / Middle и прочитать правила.
-4. Нажать «Начать тест»: 20 вопросов, 30:00; второй старт запрещён.
-5. Выбрать ответ, увидеть «Ответ сохранён», перейти назад/вперёд и через номера.
-6. Reload: те же вопросы, порядок вариантов и ответы, таймер продолжает идти.
-7. Во время теста сменить declared grade: разрешено. Смена specialization: отказ.
-8. Отключить backend, выбрать ответ: ошибка сохранения, успешный статус не показан.
-   Включить backend и нажать «Повторить сохранение».
-9. На последнем вопросе проверить подтверждение и предупреждение о пропусках.
-10. Завершить PASS: проверить score, пять процентов, профиль и историю; Junior
-    запрещён, Middle на cooldown, Senior доступен. FAILED не понижает verification.
-11. На ширине 375 px проверить перенос вариантов/номеров, читаемый timer и кнопки.
-12. Для проверки timeout в отдельной тестовой БД дождаться срока или изменить
-    expires_at на прошедшее: GET/PUT/submit финализируют сохранённые ответы,
-    последующие ответы запрещены. Смена specialization очищает/восстанавливает
-    verification согласно истории.
-
-## Employer Needs & Matching
-
-Backend API для собственных потребностей работодателя и текущего подбора кандидатов.
-Employer UI доступен в `/employer/needs`; приглашения отправляются из подбора,
-а их история доступна в `/employer/needs/[id]/invitations`.
-Используются существующие session cookies и справочник `/skills`; отдельного auth
-или skill catalog нет.
-
-### Endpoints, права и контракт
-
-| Метод | Endpoint | Результат |
-|---|---|---|
-| GET | `/employer/needs` | Свои Needs, `{items, total, limit, offset}` |
-| POST | `/employer/needs` | Создать DRAFT, HTTP 201 |
-| GET | `/employer/needs/{need_id}` | Свой Need, HTTP 200 |
-| PUT | `/employer/needs/{need_id}` | Полностью заменить editable fields, HTTP 200 |
-| POST | `/employer/needs/{need_id}/activate` | DRAFT → ACTIVE, HTTP 200 |
-| POST | `/employer/needs/{need_id}/close` | ACTIVE → CLOSED, HTTP 200 |
-| GET | `/employer/needs/{need_id}/matches` | Текущий matching, `{items, total, limit, offset}` |
-
-Все семь endpoints требуют роль EMPLOYER. Без session — 401, Candidate — 403.
-Работодатель работает только со своими Needs: чужой и отсутствующий ID одинаково
-возвращают `404 need_not_found`; без employer profile — `404 profile_not_found`.
-Четыре mutation endpoints (create, PUT, activate, close) требуют trusted Origin
-через существующую cookie-auth CSRF protection. GET endpoints read-only; matching
-не меняет БД и не финализирует assessment attempts. Ответы имеют `Cache-Control: no-store`.
-
-Create/PUT принимают `position_title`, `specialization`, `required_grade`,
-`target_experience_years` (nullable), `salary_from`, `salary_to`, `description`,
-`additional_requirements` (nullable), `must_have_skill_ids`, `nice_to_have_skill_ids`.
-Owner и status определяются сервером; передавать их или calculated fields нельзя.
-Заголовок/описание непустые; salary — конечные неотрицательные Decimal с максимум
-12 цифрами и 2 знаками после точки, from ≤ to. В JSON ответа salary — строки.
-Target experience конечный и неотрицательный либо null. Требуется хотя бы один
-must-have; IDs из существующего каталога, без duplicates и пересечения must/nice.
-PUT заменяет и scalar fields, и обе skill lists атомарно.
-
-NeedOut содержит `id`, `employer_id`, scalar fields, `status`, `created_at`,
-`updated_at`, `must_have_skills` и `nice_to_have_skills` в формате `{id, name}`.
-Неизвестный skill — `422 unknown_skill`, неверный input/query — `422 validation_error`,
-недопустимое состояние — `409 need_state_conflict`, ошибка сохранения — `409 need_conflict`.
-Ошибки используют существующий `{error: {code, message, fields}}` envelope.
-Для list/matches: limit по умолчанию 20, диапазон 1–100, offset ≥0.
-List сортируется по created_at DESC, затем id ASC; total не равен размеру страницы.
-
-### Lifecycle и live recalculation
-
-| Status | Edit | Activate | Close | Matching |
-|---|---|---|---|---|
-| DRAFT | Да | Да | Нет | Недоступен, 409 |
-| ACTIVE | Да | Нет | Да | Доступен |
-| CLOSED | Нет, 409 | Нет | Нет | Недоступен, 409 |
-
-Единственная цепочка: DRAFT → ACTIVE → CLOSED. Reopen нет; повтор неподходящего
-transition возвращает 409. После закрытия сохраняются прежние поля и связи.
-
-ACTIVE Need можно редактировать. Следующий GET `/employer/needs/{need_id}/matches`
-после успешного commit читает актуальные committed criteria и заново вычисляет
-eligibility, score и ranking. Ranking не сохраняется в таблице или cache.
-Каждый invocation захватывает immutable criteria одним согласованным чтением;
-matching A, уже захвативший criteria, может завершиться по прежним значениям,
-пока update успешно коммитится. Следующий invocation видит новые criteria;
-rollback сохраняет прежние. Это in-memory input одной операции, не persisted snapshot.
-Matching GET не берёт mutation row lock; update/activate/close сохраняют свои locks.
-
-### Hard filters и grade matrix
-
-Перед scoring обязательны consent=true, exact specialization, canonical verified
-grade, совместимость grade, все must-have skills и валидный normalized assessment
-score (integer 0–100). Высокий score не компенсирует отказ hard filter.
-Declared grade, FSP и recency verification date не участвуют в eligibility или rank.
-
-| Required grade | Verified JUNIOR | Verified MIDDLE | Verified SENIOR |
-|---|---|---|---|
-| JUNIOR | GradeFit 1.0 | GradeFit 0.75 | Excluded |
-| MIDDLE | Excluded | GradeFit 1.0 | GradeFit 0.75 |
-| SENIOR | Excluded | Excluded | GradeFit 1.0 |
-
-### Professional Fit
-
-«Соответствие / Professional Fit» — детерминированный score 0–100 с объяснимыми
-вкладами, не probability или шанс найма. Frozen base weights:
-
-| Factor | Weight | Fit |
-|---|---|---|
-| Assessment | 45% | normalized_assessment_score / 100 |
-| Grade | 25% | 1.0 exact, 0.75 allowed overqualified |
-| Nice-to-have | 15% | matched nice / total nice |
-| Experience | 15% | min(candidate experience / target, 1) для positive target |
-
-Если nice list пуст, Nice factor исключается. Если target experience=null,
-Experience factor исключается. Оставшиеся active weights пропорционально
-renormalized до 100%; breakdown возвращает фактические `score`, `max`, `active`.
-Target=0 даёт ExperienceFit=1 даже при candidate experience=null. При positive
-target и отсутствующем опыте factor **активен**, Fit=0 и contribution=0.
-
-Сортировка серверная: unrounded Professional Fit DESC, normalized assessment score
-DESC, stable candidate_id ASC. Pagination применяется после полного ranking.
-Frontend должен сохранять серверный порядок; округление для отображения не меняет rank.
-
-### Privacy-safe preview
-
-Matching отдаёт только dedicated preview: `candidate_id`, masked `display_name`
-(имя и инициал фамилии), specialization, verified grade, **self-declared skills**
-(навыки, указанные кандидатом), years of experience, normalized assessment score,
-assessment verification date, Professional Fit, factor breakdown и списки
-matched must-have, matched nice-to-have, missing nice-to-have. Skills не объявляются
-verified. Grade breakdown также содержит `exact_match`, Nice — `matched` и `total`.
-
-Preview не раскрывает email, phone, Telegram, полную фамилию, user_id, personal
-consent fields, FSP ID, city/address, about, declared grade, assessment history
-или контакты. Verification date только отображается, не влияет на score/rank.
-Matching preview остаётся маскированным. Контакты открываются только в отдельном
-приглашении со статусом ACCEPTED.
-
-### Explicit matching demo
-
-```sh
-docker compose exec backend python -m app.seed --matching-demo
-```
-
-Команда включает base identities `candidate@example.com` / `employer@example.com`,
-три Needs с фиксированными IDs и девять synthetic Matching candidates. Используется
-тот же `DEMO_PASSWORD` (10–128 символов); оба demo modes запрещены в production
-до открытия seed session. Обычный `--demo` по-прежнему создаёт только base identities
-и сохраняет base candidate unverified; он не создаёт Needs или Matching candidates.
-Комбинация `--demo --matching-demo` также допустима.
-
-Matching demo **create-if-absent**: повторные запуски не сбрасывают existing users,
-password hashes, verification, profiles, skills или Need edits/status/relations.
-Identity key кандидата — фиксированный email, Need — фиксированный ID. Несовместимая
-роль existing matching user вызывает fixture conflict вместо смены роли.
-Для полного локального reset удаляют DB volume отдельной командой, описанной выше;
-matching seed не является reset command.
-
-Matching candidates — synthetic fixtures. Их canonical verification trio заполнено
-напрямую для проверки Matching boundary с фиксированной датой `2026-10-05T12:00:00Z`.
-Они не созданы из AssessmentAttempt history; seed не создаёт и не меняет attempts.
-Полный production question bank сейчас только Backend. Frontend fixture существует
-только как negative specialization case; она не проходила настоящий Frontend assessment.
-
-| Fixed Need ID | Setup | Status |
-|---|---|---|
-| demo-need-backend-middle-active | Backend/Middle, must Python + FastAPI, nice PostgreSQL + Django, target 3 | ACTIVE |
-| demo-need-backend-junior-draft | Backend/Junior, must Python, nice FastAPI + PostgreSQL, target 1 | DRAFT |
-| demo-need-backend-senior-closed | Backend/Senior, must Python + PostgreSQL, nice FastAPI + Django, target 7 | CLOSED |
-
-На чистом demo ACTIVE Need имеет ровно четыре eligible candidates:
-
-| Case | Assessment | Outcome / Professional Fit |
-|---|---:|---|
-| Exact Middle, оба nice, experience 3 | 90 | #1, **95.5** |
-| Overqualified Senior, оба nice, experience 3 | 100 | #2, **93.75** |
-| Middle, без Django, experience 1.5 | 90 | Eligible, 80.5 |
-| Middle, оба nice, experience=null | 90 | Eligible, 80.5; Experience contribution=0 |
-| Junior для Middle Need | 100 | Excluded: grade |
-| Middle без FastAPI | 100 | Excluded: must-have |
-| Unverified, canonical trio all-null | — | Excluded: verification/score |
-| Middle без consent | 100 | Excluded: consent |
-| Frontend Middle | 100 | Excluded: specialization |
-
-Exact Middle/90 выше Senior/100 из-за соответствия requested grade; высокий
-assessment score сам по себе не гарантирует первое место. Два результата 80.5
-упорядочиваются по candidate_id, их взаимный порядок не является demo oracle.
-Base candidate также исключён. После пользовательских edits результаты могут
-измениться; повторный seed сохраняет эти edits.
-
-
-### Employer UI manual flow
-
-1. В запущенной локальной среде выполните
-   `docker compose exec backend python -m app.seed --matching-demo`.
-   Повторный seed сохраняет существующие edits и статусы.
-2. Войдите как `employer@example.com` с настроенным `DEMO_PASSWORD` и откройте
-   `/employer/needs`. При отсутствии профиля сначала заполните `/employer/edit`.
-3. У ACTIVE «Backend Python Engineer» нажмите «Подбор кандидатов».
-   В чистом demo total равен 4: первая Мария С. (Middle, оценка 90, соответствие
-   95.5), второй Алексей В. (Senior, оценка 100, точный backend score 93.75,
-   в UI **93.8**). Два оставшихся результата имеют 80.5; их взаимный порядок
-   не является продуктовым oracle. Пагинация использует серверные limit/offset.
-4. Раскройте «Почему такой результат». Для Марии отображаются 40.5 / 45.0,
-   25.0 / 25.0, 15.0 / 15.0, 15.0 / 15.0. Проверьте дату подтверждения,
-   совпавшие обязательные/желательные навыки и отсутствующий Django у кандидата
-   с неполным nice-набором. Неактивные факторы исключены; активный нулевой
-   вклад опыта отображается как 0.0 / 15.0.
-5. Для проверки создания/редактирования используйте отдельную временную
-   потребность: «Новая потребность», заполните обязательные поля и навыки,
-   сохраните DRAFT, отредактируйте и активируйте в списке. Откройте подбор,
-   запомните результаты, перейдите в «Редактировать потребность», измените
-   желательные навыки или целевой опыт и сохраните ACTIVE. Вернитесь через
-   список к подбору: новый GET отражает сохранённые требования.
-6. Закрывайте только временную потребность: CLOSED нельзя редактировать,
-   а прямые `/employer/needs/{id}/matches` для DRAFT/CLOSED показывают блокировку.
-   Не закрывайте canonical ACTIVE demo: seed его не переоткроет.
-7. На ширине 375px проверьте перенос заголовков/навыков и раскрытый breakdown
-   без горизонтальной прокрутки. При ошибке отображается «Повторить», повторная
-   загрузка проверяет актуальный Need. Для пустого pool показывается отдельное
-   сообщение; переходы страниц не показывают старый ranking как текущий.
-8. Без авторизации страница перенаправляет на `/login`, Candidate — на
-   `/candidate`. В карточках и `/matches` response нет контактов, полной фамилии,
-   FSP ID и invitation actions: используются только разрешённые preview fields.
-
-Frontend не вычисляет и не переупорядочивает matching: Professional Fit —
-серверный детерминированный показатель соответствия требованиям, не вероятность
-найма. Округление до одной цифры применяется только при отображении. Навыки и
-опыт указаны кандидатом; дата подтверждения компетенции носит информационный
-характер. Контакты в O1 не раскрываются. Ranking хранится только в состоянии
-страницы и заново запрашивается при возвращении после редактирования.
+Codex используется как инструмент разработки и не является участником команды.
