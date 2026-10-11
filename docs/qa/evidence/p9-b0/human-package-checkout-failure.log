@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "C:\Users\olego\.codex\worktrees\p9-b0-release-readiness\fsp-platform\backend\prepare_matching_v2_review.py", line 247, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\olego\.codex\worktrees\p9-b0-release-readiness\fsp-platform\backend\prepare_matching_v2_review.py", line 231, in main
+    dataset = load_frozen(args.dataset, args.proposed)
+  File "C:\Users\olego\.codex\worktrees\p9-b0-release-readiness\fsp-platform\backend\prepare_matching_v2_review.py", line 59, in load_frozen
+    raise ValueError("Proposed labels SHA256 mismatch: STOP")
+ValueError: Proposed labels SHA256 mismatch: STOP

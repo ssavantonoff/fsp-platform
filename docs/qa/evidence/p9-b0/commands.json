@@ -1,0 +1,60 @@
+[
+  {
+    "name": "required",
+    "files": [
+      "tests/test_p8_matching_snapshot.py",
+      "tests/test_p8_profile_atomic.py",
+      "tests/test_p8_response_snapshot.py",
+      "tests/test_invitation_privacy.py",
+      "tests/test_invitation_matching.py",
+      "tests/test_fsp_matching.py"
+    ],
+    "started": "2026-10-10T12:35:37.168681+00:00",
+    "finished": "2026-10-10T12:36:29.277562+00:00",
+    "exit_code": 0
+  },
+  {
+    "name": "controls",
+    "files": [
+      "tests/test_matching_rules.py",
+      "tests/test_fsp_rules.py",
+      "tests/test_assessments.py",
+      "tests/test_fsp.py",
+      "tests/test_invitation_concurrency.py",
+      "tests/test_invitations.py::test_unavailable_candidates_have_identical_external_error",
+      "tests/test_invitations.py::test_send_requires_active_need",
+      "tests/test_invitations.py::test_reinvite_rules",
+      "tests/test_invitations.py::test_api_transition_matrix",
+      "tests/test_invitations.py::test_invitation_auth_roles",
+      "tests/test_invitations.py::test_foreign_and_missing_resources_are_identical",
+      "tests/test_matching.py::test_matching_breakdown_and_optional_exclusion",
+      "tests/test_matching.py::test_matching_preview_exact_allowlist",
+      "tests/test_matching.py::test_matching_ranks_before_pagination",
+      "tests/test_matching.py::test_matching_batches_queries",
+      "tests/test_matching.py::test_matching_pagination_validation",
+      "tests/test_matching.py::test_matching_is_read_only",
+      "tests/test_auth.py::test_login_cookie_and_current_user",
+      "tests/test_auth.py::test_logout_revokes_session_and_is_repeatable",
+      "tests/test_auth.py::test_concurrent_verification_has_one_winner",
+      "tests/test_auth.py::test_untrusted_origin_rejected",
+      "tests/test_auth.py::test_missing_origin_rejected_for_cookie_mutation",
+      "tests/test_assessment_bank_remediation.py::test_fresh_seed_and_repeat_are_idempotent"
+    ],
+    "started": "2026-10-10T12:36:29.478972+00:00",
+    "finished": "2026-10-10T12:40:52.962711+00:00",
+    "exit_code": 0
+  },
+  {
+    "name": "publication",
+    "files": [
+      "tests/test_question_banks.py::test_production_source_and_publication_unchanged",
+      "tests/test_question_banks.py::test_publication_requires_reviewed_exact_valid_source",
+      "tests/test_question_banks.py::test_draft_source_and_persisted_draft_never_available",
+      "tests/test_question_banks.py::test_partial_or_changed_persisted_bank_blocks_new_start",
+      "tests/test_question_banks.py::test_removing_publication_keeps_active_and_finished_history"
+    ],
+    "started": "2026-10-10T12:41:47.543564+00:00",
+    "finished": "2026-10-10T12:41:58.802474+00:00",
+    "exit_code": 0
+  }
+]
