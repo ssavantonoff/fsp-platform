@@ -1,0 +1,22 @@
+{
+  "baseline": "bce395a8c102491f4cf9ac26106b7263d08ad515",
+  "pairs": 38,
+  "reviewer_fields_blank": true,
+  "files": [
+    {
+      "path": "docs/validation/review/matching-v2-human-review-guide.md",
+      "sha256": "58a274469ecb825fa62a21fa4558d0eac1407ac1bd7b32febb5a1a9bcfb139f0",
+      "bytes": 21865
+    },
+    {
+      "path": "docs/validation/review/matching-v2-human-review-input-v1.csv",
+      "sha256": "16db6fa9ee14b502cefb3e8550fab5c9c9f8e1a5a5fc41b2925a92d5e0924a83",
+      "bytes": 14680
+    },
+    {
+      "path": "docs/validation/review/matching-v2-human-review-template-v1.csv",
+      "sha256": "488738084e1e0155550602b04167af8abad4e12a38a46c2e0209c9bbb62b7fbb",
+      "bytes": 846
+    }
+  ]
+}

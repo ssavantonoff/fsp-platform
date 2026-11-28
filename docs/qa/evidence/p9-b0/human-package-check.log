@@ -1,0 +1,5 @@
+PASS: both frozen SHA256; 38 eligible pairs; 250 excluded; neutral ID order
+PASS: allowed professional fields only; all human reviewer fields blank
+matching-v2-human-review-input-v1.csv SHA256: 16db6fa9ee14b502cefb3e8550fab5c9c9f8e1a5a5fc41b2925a92d5e0924a83
+matching-v2-human-review-template-v1.csv SHA256: 488738084e1e0155550602b04167af8abad4e12a38a46c2e0209c9bbb62b7fbb
+Human review NOT performed. Stage 2/production ranking NOT executed.

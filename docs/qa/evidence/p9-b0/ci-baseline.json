@@ -1,0 +1,271 @@
+{
+  "baseline": "bce395a8c102491f4cf9ac26106b7263d08ad515",
+  "run_id": 38048994399,
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/ssavantonoff/fsp-platform/actions/runs/38048994399",
+  "created_at": "2026-10-10T11:36:16Z",
+  "updated_at": "2026-10-10T11:44:54Z",
+  "jobs": [
+    {
+      "id": 114204146645,
+      "name": "docker",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 38048994399,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run cp .env.example .env",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run docker compose up --build -d --wait --wait-timeout 180",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run docker compose exec -T backend python -m app.seed --demo",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run docker compose exec -T backend python -m app.seed --matching-demo",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run curl --fail http://localhost:8000/health && curl --fail http://localhost:3000/api/skills",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Verify production logo assets",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run docker compose logs && docker compose down",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        }
+      ]
+    },
+    {
+      "id": 114204146787,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 38048994399,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run pip install -r requirements-dev.txt",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run ruff check . && ruff format --check .",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run mypy app",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run alembic upgrade head && alembic check",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run pytest -q",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19
+        }
+      ]
+    },
+    {
+      "id": 114204146793,
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 38048994399,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run npm ci",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run npm run lint",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run npm run typecheck",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run npm test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run npm run build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17
+        }
+      ]
+    }
+  ],
+  "backend_log_excerpts": [
+    "2026-10-10T11:36:47.7836407Z All checks passed!",
+    "2026-10-10T11:36:47.8178391Z 79 files already formatted",
+    "2026-10-10T11:36:56.3108453Z Success: no issues found in 39 source files",
+    "2026-10-10T11:36:58.0975515Z No new upgrade operations detected.",
+    "2026-10-10T11:44:43.2716760Z 1073 passed, 1 warning in 460.41s (0:07:40)"
+  ],
+  "frontend_log_excerpts": [
+    "2026-10-10T11:37:04.5322030Z # tests 184",
+    "2026-10-10T11:37:04.5361564Z # pass 184",
+    "2026-10-10T11:37:04.5371728Z # fail 0",
+    "2026-10-10T11:37:04.5405377Z # skipped 0"
+  ],
+  "head_sha": "bce395a8c102491f4cf9ac26106b7263d08ad515",
+  "head_branch": "main",
+  "workflow_path": ".github/workflows/checks.yml",
+  "workflow_id": 375169495,
+  "run_number": 89,
+  "run_attempt": 1
+}

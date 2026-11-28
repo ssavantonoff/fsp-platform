@@ -1,0 +1,9 @@
+{
+  "database": "p9audit",
+  "role": "p9audit",
+  "host": "127.0.0.1/32",
+  "port": 55441,
+  "version": "17.11",
+  "data_directory": "C:/Users/olego/.codex/worktrees/p9-b0-release-readiness/fsp-platform/.cache/p9-b0/pgdata",
+  "timezone": "UTC"
+}
